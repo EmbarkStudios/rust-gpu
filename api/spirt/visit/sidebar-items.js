@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"trait":["DynInnerVisit","DynVisit","InnerVisit","Visit","Visitor"]};
+window.SIDEBAR_ITEMS = {"trait":["DynInnerVisit","InnerVisit","Visit","Visitor"]};

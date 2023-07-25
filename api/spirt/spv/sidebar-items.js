@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["Imm"],"mod":["lift","lower","print","read","spec","write"],"struct":["DebugSourceLang","DebugSources","Dialect","Inst","InstWithIds","ModuleDebugInfo"],"type":["Id"]};
+window.SIDEBAR_ITEMS = {"enum":["Imm"],"fn":["encode_literal_string","extract_literal_string"],"mod":["lift","lower","print","read","spec","write"],"struct":["DebugSourceLang","DebugSources","Dialect","Inst","InstWithIds","ModuleDebugInfo"],"type":["Id"]};

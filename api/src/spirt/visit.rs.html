@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spirt-0.2.0/src/visit.rs`."><title>visit.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-f3501f0f5ae15dfb.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="spirt" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.0-nightly (1a5f8bce7 2023-05-26)" data-search-js="search-4926e5fc22a5646a.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../static.files/source-script-11255107d0a65077.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-f0540c1d82cde29b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../spirt/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/git/checkouts/spirt-9c237dd53f05c2cc/82daf25/src/visit.rs`."><title>visit.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-f3501f0f5ae15dfb.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="spirt" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.0-nightly (1a5f8bce7 2023-05-26)" data-search-js="search-4926e5fc22a5646a.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../static.files/source-script-11255107d0a65077.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-f0540c1d82cde29b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../spirt/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -571,67 +571,6 @@
 <a href="#571" id="571">571</a>
 <a href="#572" id="572">572</a>
 <a href="#573" id="573">573</a>
-<a href="#574" id="574">574</a>
-<a href="#575" id="575">575</a>
-<a href="#576" id="576">576</a>
-<a href="#577" id="577">577</a>
-<a href="#578" id="578">578</a>
-<a href="#579" id="579">579</a>
-<a href="#580" id="580">580</a>
-<a href="#581" id="581">581</a>
-<a href="#582" id="582">582</a>
-<a href="#583" id="583">583</a>
-<a href="#584" id="584">584</a>
-<a href="#585" id="585">585</a>
-<a href="#586" id="586">586</a>
-<a href="#587" id="587">587</a>
-<a href="#588" id="588">588</a>
-<a href="#589" id="589">589</a>
-<a href="#590" id="590">590</a>
-<a href="#591" id="591">591</a>
-<a href="#592" id="592">592</a>
-<a href="#593" id="593">593</a>
-<a href="#594" id="594">594</a>
-<a href="#595" id="595">595</a>
-<a href="#596" id="596">596</a>
-<a href="#597" id="597">597</a>
-<a href="#598" id="598">598</a>
-<a href="#599" id="599">599</a>
-<a href="#600" id="600">600</a>
-<a href="#601" id="601">601</a>
-<a href="#602" id="602">602</a>
-<a href="#603" id="603">603</a>
-<a href="#604" id="604">604</a>
-<a href="#605" id="605">605</a>
-<a href="#606" id="606">606</a>
-<a href="#607" id="607">607</a>
-<a href="#608" id="608">608</a>
-<a href="#609" id="609">609</a>
-<a href="#610" id="610">610</a>
-<a href="#611" id="611">611</a>
-<a href="#612" id="612">612</a>
-<a href="#613" id="613">613</a>
-<a href="#614" id="614">614</a>
-<a href="#615" id="615">615</a>
-<a href="#616" id="616">616</a>
-<a href="#617" id="617">617</a>
-<a href="#618" id="618">618</a>
-<a href="#619" id="619">619</a>
-<a href="#620" id="620">620</a>
-<a href="#621" id="621">621</a>
-<a href="#622" id="622">622</a>
-<a href="#623" id="623">623</a>
-<a href="#624" id="624">624</a>
-<a href="#625" id="625">625</a>
-<a href="#626" id="626">626</a>
-<a href="#627" id="627">627</a>
-<a href="#628" id="628">628</a>
-<a href="#629" id="629">629</a>
-<a href="#630" id="630">630</a>
-<a href="#631" id="631">631</a>
-<a href="#632" id="632">632</a>
-<a href="#633" id="633">633</a>
-<a href="#634" id="634">634</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Immutable IR traversal.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::func_at::FuncAt;
@@ -639,10 +578,10 @@
 <span class="kw">use crate</span>::{
     cfg, spv, AddrSpace, Attr, AttrSet, AttrSetDef, Const, ConstCtor, ConstDef, ControlNode,
     ControlNodeDef, ControlNodeKind, ControlNodeOutputDecl, ControlRegion, ControlRegionDef,
-    ControlRegionInputDecl, DataInstDef, DataInstKind, DeclDef, DiagMsgPart, EntityListIter,
-    ExportKey, Exportee, Func, FuncDecl, FuncDefBody, FuncParam, GlobalVar, GlobalVarDecl,
-    GlobalVarDefBody, Import, Module, ModuleDebugInfo, ModuleDialect, SelectionKind, Type,
-    TypeCtor, TypeCtorArg, TypeDef, Value,
+    ControlRegionInputDecl, DataInstDef, DataInstForm, DataInstFormDef, DataInstKind, DeclDef,
+    DiagMsgPart, EntityListIter, ExportKey, Exportee, Func, FuncDecl, FuncDefBody, FuncParam,
+    GlobalVar, GlobalVarDecl, GlobalVarDefBody, Import, Module, ModuleDebugInfo, ModuleDialect,
+    SelectionKind, Type, TypeCtor, TypeCtorArg, TypeDef, Value,
 };
 
 <span class="comment">// FIXME(eddyb) `Sized` bound shouldn&#39;t be needed but removing it requires
@@ -654,6 +593,7 @@
     </span><span class="kw">fn </span>visit_attr_set_use(<span class="kw-2">&amp;mut </span><span class="self">self</span>, attrs: AttrSet);
     <span class="kw">fn </span>visit_type_use(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ty: Type);
     <span class="kw">fn </span>visit_const_use(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ct: Const);
+    <span class="kw">fn </span>visit_data_inst_form_use(<span class="kw-2">&amp;mut </span><span class="self">self</span>, data_inst_form: DataInstForm);
 
     <span class="comment">// Module-stored entity leaves (no default provided).
     </span><span class="kw">fn </span>visit_global_var_use(<span class="kw-2">&amp;mut </span><span class="self">self</span>, gv: GlobalVar);
@@ -700,6 +640,9 @@
     }
     <span class="kw">fn </span>visit_data_inst_def(<span class="kw-2">&amp;mut </span><span class="self">self</span>, data_inst_def: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>DataInstDef) {
         data_inst_def.inner_visit_with(<span class="self">self</span>);
+    }
+    <span class="kw">fn </span>visit_data_inst_form_def(<span class="kw-2">&amp;mut </span><span class="self">self</span>, data_inst_form_def: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>DataInstFormDef) {
+        data_inst_form_def.inner_visit_with(<span class="self">self</span>);
     }
     <span class="kw">fn </span>visit_value_use(<span class="kw-2">&amp;mut </span><span class="self">self</span>, v: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Value) {
         v.inner_visit_with(<span class="self">self</span>);
@@ -771,20 +714,6 @@
     }
 }
 
-<span class="doccomment">/// Dynamic dispatch version of [`Visit`].
-///
-/// `dyn DynVisit&lt;&#39;a, V&gt;` is possible, unlike `dyn Visit`, because of the
-/// `trait`-level type parameter `V`, which replaces the method parameter.
-</span><span class="kw">pub trait </span>DynVisit&lt;<span class="lifetime">&#39;a</span>, V&gt; {
-    <span class="kw">fn </span>dyn_visit_with(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, visitor: <span class="kw-2">&amp;mut </span>V);
-}
-
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, T: Visit, V: Visitor&lt;<span class="lifetime">&#39;a</span>&gt;&gt; DynVisit&lt;<span class="lifetime">&#39;a</span>, V&gt; <span class="kw">for </span>T {
-    <span class="kw">fn </span>dyn_visit_with(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, visitor: <span class="kw-2">&amp;mut </span>V) {
-        <span class="self">self</span>.visit_with(visitor);
-    }
-}
-
 <span class="doccomment">/// Trait implemented on &quot;deeply visitable&quot; types, to further &quot;explore&quot; a type
 /// by visiting its &quot;interior&quot; (i.e. variants and/or fields).
 ///
@@ -815,14 +744,7 @@
 </span><span class="kw">impl </span>InnerVisit <span class="kw">for </span>Module {
     <span class="kw">fn </span>inner_visit_with&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, visitor: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>Visitor&lt;<span class="lifetime">&#39;a</span>&gt;) {
         <span class="comment">// FIXME(eddyb) this can&#39;t be exhaustive because of the private `cx` field.
-        </span><span class="kw">let </span><span class="self">Self </span>{
-            dialect,
-            debug_info,
-            global_vars: <span class="kw">_</span>,
-            funcs: <span class="kw">_</span>,
-            exports,
-            ..
-        } = <span class="self">self</span>;
+        </span><span class="kw">let </span><span class="self">Self </span>{ dialect, debug_info, global_vars: <span class="kw">_</span>, funcs: <span class="kw">_</span>, exports, .. } = <span class="self">self</span>;
 
         visitor.visit_module_dialect(dialect);
         visitor.visit_module_debug_info(debug_info);
@@ -856,10 +778,7 @@
         <span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::LinkName(<span class="kw">_</span>) =&gt; {}
 
-            <span class="self">Self</span>::SpvEntryPoint {
-                imms: <span class="kw">_</span>,
-                interface_global_vars,
-            } =&gt; {
+            <span class="self">Self</span>::SpvEntryPoint { imms: <span class="kw">_</span>, interface_global_vars } =&gt; {
                 <span class="kw">for </span><span class="kw-2">&amp;</span>gv <span class="kw">in </span>interface_global_vars {
                     visitor.visit_global_var_use(gv);
                 }
@@ -896,14 +815,10 @@
             | Attr::SpvBitflagsOperand(<span class="kw">_</span>) =&gt; {}
 
             Attr::QPtr(attr) =&gt; <span class="kw">match </span>attr {
-                QPtrAttr::ToSpvPtrInput {
-                    input_idx: <span class="kw">_</span>,
-                    pointee,
+                QPtrAttr::ToSpvPtrInput { input_idx: <span class="kw">_</span>, pointee }
+                | QPtrAttr::FromSpvPtrOutput { addr_space: <span class="kw">_</span>, pointee } =&gt; {
+                    visitor.visit_type_use(pointee.<span class="number">0</span>);
                 }
-                | QPtrAttr::FromSpvPtrOutput {
-                    addr_space: <span class="kw">_</span>,
-                    pointee,
-                } =&gt; visitor.visit_type_use(pointee.<span class="number">0</span>),
 
                 QPtrAttr::Usage(usage) =&gt; usage.<span class="number">0</span>.inner_visit_with(visitor),
             },
@@ -969,11 +884,7 @@
 
 <span class="kw">impl </span>InnerVisit <span class="kw">for </span>TypeDef {
     <span class="kw">fn </span>inner_visit_with&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, visitor: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>Visitor&lt;<span class="lifetime">&#39;a</span>&gt;) {
-        <span class="kw">let </span><span class="self">Self </span>{
-            attrs,
-            ctor,
-            ctor_args,
-        } = <span class="self">self</span>;
+        <span class="kw">let </span><span class="self">Self </span>{ attrs, ctor, ctor_args } = <span class="self">self</span>;
 
         visitor.visit_attr_set_use(<span class="kw-2">*</span>attrs);
         <span class="kw">match </span>ctor {
@@ -990,12 +901,7 @@
 
 <span class="kw">impl </span>InnerVisit <span class="kw">for </span>ConstDef {
     <span class="kw">fn </span>inner_visit_with&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, visitor: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>Visitor&lt;<span class="lifetime">&#39;a</span>&gt;) {
-        <span class="kw">let </span><span class="self">Self </span>{
-            attrs,
-            ty,
-            ctor,
-            ctor_args,
-        } = <span class="self">self</span>;
+        <span class="kw">let </span><span class="self">Self </span>{ attrs, ty, ctor, ctor_args } = <span class="self">self</span>;
 
         visitor.visit_attr_set_use(<span class="kw-2">*</span>attrs);
         visitor.visit_type_use(<span class="kw-2">*</span>ty);
@@ -1020,13 +926,7 @@
 
 <span class="kw">impl </span>InnerVisit <span class="kw">for </span>GlobalVarDecl {
     <span class="kw">fn </span>inner_visit_with&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, visitor: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>Visitor&lt;<span class="lifetime">&#39;a</span>&gt;) {
-        <span class="kw">let </span><span class="self">Self </span>{
-            attrs,
-            type_of_ptr_to,
-            shape,
-            addr_space,
-            def,
-        } = <span class="self">self</span>;
+        <span class="kw">let </span><span class="self">Self </span>{ attrs, type_of_ptr_to, shape, addr_space, def } = <span class="self">self</span>;
 
         visitor.visit_attr_set_use(<span class="kw-2">*</span>attrs);
         visitor.visit_type_use(<span class="kw-2">*</span>type_of_ptr_to);
@@ -1056,12 +956,7 @@
 
 <span class="kw">impl </span>InnerVisit <span class="kw">for </span>FuncDecl {
     <span class="kw">fn </span>inner_visit_with&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, visitor: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>Visitor&lt;<span class="lifetime">&#39;a</span>&gt;) {
-        <span class="kw">let </span><span class="self">Self </span>{
-            attrs,
-            ret_type,
-            params,
-            def,
-        } = <span class="self">self</span>;
+        <span class="kw">let </span><span class="self">Self </span>{ attrs, ret_type, params, def } = <span class="self">self</span>;
 
         visitor.visit_attr_set_use(<span class="kw-2">*</span>attrs);
         visitor.visit_type_use(<span class="kw-2">*</span>ret_type);
@@ -1102,11 +997,7 @@
 // requirement, whereas this has `&#39;a` in `self: FuncAt&lt;&#39;a, ControlRegion&gt;`.
 </span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; FuncAt&lt;<span class="lifetime">&#39;a</span>, ControlRegion&gt; {
     <span class="kw">pub fn </span>inner_visit_with(<span class="self">self</span>, visitor: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>Visitor&lt;<span class="lifetime">&#39;a</span>&gt;) {
-        <span class="kw">let </span>ControlRegionDef {
-            inputs,
-            children,
-            outputs,
-        } = <span class="self">self</span>.def();
+        <span class="kw">let </span>ControlRegionDef { inputs, children, outputs } = <span class="self">self</span>.def();
 
         <span class="kw">for </span>input <span class="kw">in </span>inputs {
             input.inner_visit_with(visitor);
@@ -1159,11 +1050,7 @@
                     visitor.visit_control_region_def(<span class="self">self</span>.at(case));
                 }
             }
-            ControlNodeKind::Loop {
-                initial_inputs,
-                body,
-                repeat_condition,
-            } =&gt; {
+            ControlNodeKind::Loop { initial_inputs, body, repeat_condition } =&gt; {
                 <span class="kw">for </span>v <span class="kw">in </span>initial_inputs {
                     visitor.visit_value_use(v);
                 }
@@ -1188,14 +1075,20 @@
 
 <span class="kw">impl </span>InnerVisit <span class="kw">for </span>DataInstDef {
     <span class="kw">fn </span>inner_visit_with&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, visitor: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>Visitor&lt;<span class="lifetime">&#39;a</span>&gt;) {
-        <span class="kw">let </span><span class="self">Self </span>{
-            attrs,
-            kind,
-            output_type,
-            inputs,
-        } = <span class="self">self</span>;
+        <span class="kw">let </span><span class="self">Self </span>{ attrs, form, inputs } = <span class="self">self</span>;
 
         visitor.visit_attr_set_use(<span class="kw-2">*</span>attrs);
+        visitor.visit_data_inst_form_use(<span class="kw-2">*</span>form);
+        <span class="kw">for </span>v <span class="kw">in </span>inputs {
+            visitor.visit_value_use(v);
+        }
+    }
+}
+
+<span class="kw">impl </span>InnerVisit <span class="kw">for </span>DataInstFormDef {
+    <span class="kw">fn </span>inner_visit_with&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, visitor: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>Visitor&lt;<span class="lifetime">&#39;a</span>&gt;) {
+        <span class="kw">let </span><span class="self">Self </span>{ kind, output_type } = <span class="self">self</span>;
+
         <span class="kw">match </span>kind {
             <span class="kw-2">&amp;</span>DataInstKind::FuncCall(func) =&gt; visitor.visit_func_use(func),
             DataInstKind::QPtr(op) =&gt; <span class="kw">match </span><span class="kw-2">*</span>op {
@@ -1213,21 +1106,12 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(ty) = <span class="kw-2">*</span>output_type {
             visitor.visit_type_use(ty);
         }
-        <span class="kw">for </span>v <span class="kw">in </span>inputs {
-            visitor.visit_value_use(v);
-        }
     }
 }
 
 <span class="kw">impl </span>InnerVisit <span class="kw">for </span>cfg::ControlInst {
     <span class="kw">fn </span>inner_visit_with&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, visitor: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>Visitor&lt;<span class="lifetime">&#39;a</span>&gt;) {
-        <span class="kw">let </span><span class="self">Self </span>{
-            attrs,
-            kind,
-            inputs,
-            targets: <span class="kw">_</span>,
-            target_inputs,
-        } = <span class="self">self</span>;
+        <span class="kw">let </span><span class="self">Self </span>{ attrs, kind, inputs, targets: <span class="kw">_</span>, target_inputs } = <span class="self">self</span>;
 
         visitor.visit_attr_set_use(<span class="kw-2">*</span>attrs);
         <span class="kw">match </span>kind {
@@ -1254,14 +1138,8 @@
     <span class="kw">fn </span>inner_visit_with&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, visitor: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>Visitor&lt;<span class="lifetime">&#39;a</span>&gt;) {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
             <span class="self">Self</span>::Const(ct) =&gt; visitor.visit_const_use(ct),
-            <span class="self">Self</span>::ControlRegionInput {
-                region: <span class="kw">_</span>,
-                input_idx: <span class="kw">_</span>,
-            }
-            | <span class="self">Self</span>::ControlNodeOutput {
-                control_node: <span class="kw">_</span>,
-                output_idx: <span class="kw">_</span>,
-            }
+            <span class="self">Self</span>::ControlRegionInput { region: <span class="kw">_</span>, input_idx: <span class="kw">_ </span>}
+            | <span class="self">Self</span>::ControlNodeOutput { control_node: <span class="kw">_</span>, output_idx: <span class="kw">_ </span>}
             | <span class="self">Self</span>::DataInstOutput(<span class="kw">_</span>) =&gt; {}
         }
     }

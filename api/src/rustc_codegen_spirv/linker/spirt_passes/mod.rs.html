@@ -631,6 +631,22 @@
 <a href="#631" id="631">631</a>
 <a href="#632" id="632">632</a>
 <a href="#633" id="633">633</a>
+<a href="#634" id="634">634</a>
+<a href="#635" id="635">635</a>
+<a href="#636" id="636">636</a>
+<a href="#637" id="637">637</a>
+<a href="#638" id="638">638</a>
+<a href="#639" id="639">639</a>
+<a href="#640" id="640">640</a>
+<a href="#641" id="641">641</a>
+<a href="#642" id="642">642</a>
+<a href="#643" id="643">643</a>
+<a href="#644" id="644">644</a>
+<a href="#645" id="645">645</a>
+<a href="#646" id="646">646</a>
+<a href="#647" id="647">647</a>
+<a href="#648" id="648">648</a>
+<a href="#649" id="649">649</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! SPIR-T pass infrastructure and supporting utilities.
 
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>controlflow;
@@ -646,8 +662,8 @@
 <span class="kw">use </span>spirt::visit::{InnerVisit, Visitor};
 <span class="kw">use </span>spirt::{
     spv, AttrSet, Const, Context, ControlNode, ControlNodeKind, ControlRegion, DataInstDef,
-    DataInstKind, DeclDef, EntityOrientedDenseMap, Func, FuncDefBody, GlobalVar, Module, Type,
-    Value,
+    DataInstForm, DataInstFormDef, DataInstKind, DeclDef, EntityOrientedDenseMap, Func,
+    FuncDefBody, GlobalVar, Module, Type, Value,
 };
 <span class="kw">use </span>std::collections::VecDeque;
 <span class="kw">use </span>std::hash::Hash;
@@ -763,6 +779,7 @@
 
             seen_types: FxIndexSet::default(),
             seen_consts: FxIndexSet::default(),
+            seen_data_inst_forms: FxIndexSet::default(),
             seen_global_vars: FxIndexSet::default(),
             seen_funcs: FxIndexSet::default(),
         };
@@ -814,7 +831,7 @@
                 pass_fn(cx, func_def_body);
 
                 <span class="comment">// FIXME(eddyb) avoid doing this except where changes occurred.
-                </span>remove_unused_values_in_func(func_def_body);
+                </span>remove_unused_values_in_func(cx, func_def_body);
             }
         }
         after_pass(full_name, module, profiler);
@@ -829,6 +846,7 @@
     <span class="comment">// FIXME(eddyb) build some automation to avoid ever repeating these.
     </span>seen_types: FxIndexSet&lt;Type&gt;,
     seen_consts: FxIndexSet&lt;Const&gt;,
+    seen_data_inst_forms: FxIndexSet&lt;DataInstForm&gt;,
     seen_global_vars: FxIndexSet&lt;GlobalVar&gt;,
     seen_funcs: FxIndexSet&lt;Func&gt;,
 }
@@ -844,6 +862,11 @@
     <span class="kw">fn </span>visit_const_use(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ct: Const) {
         <span class="kw">if </span><span class="self">self</span>.seen_consts.insert(ct) {
             <span class="self">self</span>.visit_const_def(<span class="kw-2">&amp;</span><span class="self">self</span>.cx[ct]);
+        }
+    }
+    <span class="kw">fn </span>visit_data_inst_form_use(<span class="kw-2">&amp;mut </span><span class="self">self</span>, data_inst_form: DataInstForm) {
+        <span class="kw">if </span><span class="self">self</span>.seen_data_inst_forms.insert(data_inst_form) {
+            <span class="self">self</span>.visit_data_inst_form_def(<span class="kw-2">&amp;</span><span class="self">self</span>.cx[data_inst_form]);
         }
     }
 
@@ -880,6 +903,7 @@
         </span><span class="kw">fn </span>visit_attr_set_use(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: AttrSet) {}
         <span class="kw">fn </span>visit_type_use(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: Type) {}
         <span class="kw">fn </span>visit_const_use(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: Const) {}
+        <span class="kw">fn </span>visit_data_inst_form_use(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: DataInstForm) {}
         <span class="kw">fn </span>visit_global_var_use(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: GlobalVar) {}
         <span class="kw">fn </span>visit_func_use(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: Func) {}
 
@@ -987,7 +1011,7 @@
 /// a function body (both `DataInst`s and `ControlRegion` inputs/outputs).
 </span><span class="comment">//
 // FIXME(eddyb) should this be a dedicated pass?
-</span><span class="kw">fn </span>remove_unused_values_in_func(func_def_body: <span class="kw-2">&amp;mut </span>FuncDefBody) {
+</span><span class="kw">fn </span>remove_unused_values_in_func(cx: <span class="kw-2">&amp;</span>Context, func_def_body: <span class="kw-2">&amp;mut </span>FuncDefBody) {
     <span class="comment">// Avoid having to support unstructured control-flow.
     </span><span class="kw">if </span>func_def_body.unstructured_cfg.is_some() {
         <span class="kw">return</span>;
@@ -1106,7 +1130,9 @@
                             <span class="kw">for </span>func_at_inst <span class="kw">in </span>func_at_control_node.at(insts) {
                                 <span class="comment">// Ignore pure instructions (i.e. they&#39;re only used
                                 // if their output value is used, from somewhere else).
-                                </span><span class="kw">if let </span>DataInstKind::SpvInst(spv_inst) = <span class="kw-2">&amp;</span>func_at_inst.def().kind {
+                                </span><span class="kw">if let </span>DataInstKind::SpvInst(spv_inst) =
+                                    <span class="kw-2">&amp;</span>cx[func_at_inst.def().form].kind
+                                {
                                     <span class="comment">// HACK(eddyb) small selection relevant for now,
                                     // but should be extended using e.g. a bitset.
                                     </span><span class="kw">if </span>[wk.OpNop, wk.OpCompositeInsert].contains(<span class="kw-2">&amp;</span>spv_inst.opcode) {
@@ -1151,7 +1177,9 @@
                 <span class="kw">let </span><span class="kw-2">mut </span>all_nops = <span class="bool-val">true</span>;
                 <span class="kw">let </span><span class="kw-2">mut </span>func_at_inst_iter = func_def_body.at_mut(insts).into_iter();
                 <span class="kw">while let </span><span class="prelude-val">Some</span>(<span class="kw-2">mut </span>func_at_inst) = func_at_inst_iter.next() {
-                    <span class="kw">if let </span>DataInstKind::SpvInst(spv_inst) = <span class="kw-2">&amp;</span>func_at_inst.reborrow().def().kind {
+                    <span class="kw">if let </span>DataInstKind::SpvInst(spv_inst) =
+                        <span class="kw-2">&amp;</span>cx[func_at_inst.reborrow().def().form].kind
+                    {
                         <span class="kw">if </span>spv_inst.opcode == wk.OpNop {
                             <span class="kw">continue</span>;
                         }
@@ -1161,10 +1189,14 @@
                     {
                         <span class="comment">// Replace the removed `DataInstDef` itself with `OpNop`,
                         // removing the ability to use its &quot;name&quot; as a value.
+                        //
+                        // FIXME(eddyb) cache the interned `OpNop`.
                         </span><span class="kw-2">*</span>func_at_inst.def() = DataInstDef {
                             attrs: Default::default(),
-                            kind: DataInstKind::SpvInst(wk.OpNop.into()),
-                            output_type: <span class="prelude-val">None</span>,
+                            form: cx.intern(DataInstFormDef {
+                                kind: DataInstKind::SpvInst(wk.OpNop.into()),
+                                output_type: <span class="prelude-val">None</span>,
+                            }),
                             inputs: iter::empty().collect(),
                         };
                         <span class="kw">continue</span>;

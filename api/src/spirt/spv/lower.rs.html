@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spirt-0.2.0/src/spv/lower.rs`."><title>lower.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-f3501f0f5ae15dfb.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="spirt" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.0-nightly (1a5f8bce7 2023-05-26)" data-search-js="search-4926e5fc22a5646a.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../static.files/source-script-11255107d0a65077.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-f0540c1d82cde29b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../spirt/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/git/checkouts/spirt-9c237dd53f05c2cc/82daf25/src/spv/lower.rs`."><title>lower.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-f3501f0f5ae15dfb.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="spirt" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.0-nightly (1a5f8bce7 2023-05-26)" data-search-js="search-4926e5fc22a5646a.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../static.files/source-script-11255107d0a65077.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-f0540c1d82cde29b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../spirt/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1542,50 +1542,6 @@
 <a href="#1542" id="1542">1542</a>
 <a href="#1543" id="1543">1543</a>
 <a href="#1544" id="1544">1544</a>
-<a href="#1545" id="1545">1545</a>
-<a href="#1546" id="1546">1546</a>
-<a href="#1547" id="1547">1547</a>
-<a href="#1548" id="1548">1548</a>
-<a href="#1549" id="1549">1549</a>
-<a href="#1550" id="1550">1550</a>
-<a href="#1551" id="1551">1551</a>
-<a href="#1552" id="1552">1552</a>
-<a href="#1553" id="1553">1553</a>
-<a href="#1554" id="1554">1554</a>
-<a href="#1555" id="1555">1555</a>
-<a href="#1556" id="1556">1556</a>
-<a href="#1557" id="1557">1557</a>
-<a href="#1558" id="1558">1558</a>
-<a href="#1559" id="1559">1559</a>
-<a href="#1560" id="1560">1560</a>
-<a href="#1561" id="1561">1561</a>
-<a href="#1562" id="1562">1562</a>
-<a href="#1563" id="1563">1563</a>
-<a href="#1564" id="1564">1564</a>
-<a href="#1565" id="1565">1565</a>
-<a href="#1566" id="1566">1566</a>
-<a href="#1567" id="1567">1567</a>
-<a href="#1568" id="1568">1568</a>
-<a href="#1569" id="1569">1569</a>
-<a href="#1570" id="1570">1570</a>
-<a href="#1571" id="1571">1571</a>
-<a href="#1572" id="1572">1572</a>
-<a href="#1573" id="1573">1573</a>
-<a href="#1574" id="1574">1574</a>
-<a href="#1575" id="1575">1575</a>
-<a href="#1576" id="1576">1576</a>
-<a href="#1577" id="1577">1577</a>
-<a href="#1578" id="1578">1578</a>
-<a href="#1579" id="1579">1579</a>
-<a href="#1580" id="1580">1580</a>
-<a href="#1581" id="1581">1581</a>
-<a href="#1582" id="1582">1582</a>
-<a href="#1583" id="1583">1583</a>
-<a href="#1584" id="1584">1584</a>
-<a href="#1585" id="1585">1585</a>
-<a href="#1586" id="1586">1586</a>
-<a href="#1587" id="1587">1587</a>
-<a href="#1588" id="1588">1588</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! SPIR-V to SPIR-T lowering.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::spv::{<span class="self">self</span>, spec};
@@ -1593,9 +1549,9 @@
 </span><span class="kw">use crate</span>::{
     cfg, print, AddrSpace, Attr, AttrSet, Const, ConstCtor, ConstDef, Context, ControlNodeDef,
     ControlNodeKind, ControlRegion, ControlRegionDef, ControlRegionInputDecl, DataInstDef,
-    DataInstKind, DeclDef, EntityDefs, EntityList, ExportKey, Exportee, Func, FuncDecl,
-    FuncDefBody, FuncParam, FxIndexMap, GlobalVarDecl, GlobalVarDefBody, Import, InternedStr,
-    Module, SelectionKind, Type, TypeCtor, TypeCtorArg, TypeDef, Value,
+    DataInstFormDef, DataInstKind, DeclDef, Diag, EntityDefs, EntityList, ExportKey, Exportee,
+    Func, FuncDecl, FuncDefBody, FuncParam, FxIndexMap, GlobalVarDecl, GlobalVarDefBody, Import,
+    InternedStr, Module, SelectionKind, Type, TypeCtor, TypeCtorArg, TypeDef, Value,
 };
 <span class="kw">use </span>rustc_hash::FxHashMap;
 <span class="kw">use </span>smallvec::SmallVec;
@@ -1670,10 +1626,7 @@
 
 <span class="comment">// FIXME(eddyb) stop abusing `io::Error` for error reporting.
 </span><span class="kw">fn </span>invalid(reason: <span class="kw-2">&amp;</span>str) -&gt; io::Error {
-    io::Error::new(
-        io::ErrorKind::InvalidData,
-        <span class="macro">format!</span>(<span class="string">&quot;malformed SPIR-V ({reason})&quot;</span>),
-    )
+    io::Error::new(io::ErrorKind::InvalidData, <span class="macro">format!</span>(<span class="string">&quot;malformed SPIR-V ({reason})&quot;</span>))
 }
 
 <span class="comment">// FIXME(eddyb) provide more information about any normalization that happened:
@@ -1705,23 +1658,13 @@
         </span><span class="kw">let </span>storage_class_function_imm = spv::Imm::Short(wk.StorageClass, wk.Function);
 
         <span class="kw">let </span><span class="kw-2">mut </span>module = {
-            <span class="kw">let </span>[
-                magic,
-                version,
-                generator_magic,
-                id_bound,
-                reserved_inst_schema,
-            ] = parser.header;
+            <span class="kw">let </span>[magic, version, generator_magic, id_bound, reserved_inst_schema] = parser.header;
 
             <span class="comment">// Ensured above (this is the value after any endianness swapping).
             </span><span class="macro">assert_eq!</span>(magic, spv_spec.magic);
 
-            <span class="kw">let </span>[
-                version_reserved_hi,
-                version_major,
-                version_minor,
-                version_reserved_lo,
-            ] = version.to_be_bytes();
+            <span class="kw">let </span>[version_reserved_hi, version_major, version_minor, version_reserved_lo] =
+                version.to_be_bytes();
 
             <span class="kw">if </span>(version_reserved_lo, version_reserved_hi) != (<span class="number">0</span>, <span class="number">0</span>) {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(invalid(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
@@ -1846,10 +1789,8 @@
             }
             current_block_id = new_block_id;
 
-            <span class="kw">let </span><span class="kw-2">mut </span>attrs = inst
-                .result_id
-                .and_then(|id| pending_attrs.remove(<span class="kw-2">&amp;</span>id))
-                .unwrap_or_default();
+            <span class="kw">let </span><span class="kw-2">mut </span>attrs =
+                inst.result_id.and_then(|id| pending_attrs.remove(<span class="kw-2">&amp;</span>id)).unwrap_or_default();
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>((file_path, line, col)) = current_debug_line {
                 <span class="comment">// FIXME(eddyb) use `get_or_insert_default` once that&#39;s stabilized.
@@ -1970,11 +1911,7 @@
             } <span class="kw">else if </span>opcode == wk.OpSource {
                 <span class="macro">assert!</span>(inst.result_type_id.is_none() &amp;&amp; inst.result_id.is_none());
                 <span class="kw">let </span>(lang, version) = <span class="kw">match </span>inst.imms[..] {
-                    [
-                        spv::Imm::Short(l_kind, lang),
-                        spv::Imm::Short(v_kind, version),
-                        ..,
-                    ] =&gt; {
+                    [spv::Imm::Short(l_kind, lang), spv::Imm::Short(v_kind, version), ..] =&gt; {
                         <span class="macro">assert_eq!</span>([l_kind, v_kind], [wk.SourceLanguage, wk.LiteralInteger]);
                         (lang, version)
                     }
@@ -2137,16 +2074,10 @@
                 } <span class="kw">else </span>{
                     Seq::Decoration
                 }
-            } <span class="kw">else if </span>[
-                wk.OpDecorationGroup,
-                wk.OpGroupDecorate,
-                wk.OpGroupMemberDecorate,
-            ]
-            .contains(<span class="kw-2">&amp;</span>opcode)
+            } <span class="kw">else if </span>[wk.OpDecorationGroup, wk.OpGroupDecorate, wk.OpGroupMemberDecorate]
+                .contains(<span class="kw-2">&amp;</span>opcode)
             {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(invalid(
-                    <span class="string">&quot;unsupported decoration groups (officially deprecated)&quot;</span>,
-                ));
+                <span class="kw">return </span><span class="prelude-val">Err</span>(invalid(<span class="string">&quot;unsupported decoration groups (officially deprecated)&quot;</span>));
             } <span class="kw">else if </span>opcode == wk.OpTypeForwardPointer {
                 <span class="macro">assert!</span>(inst.result_type_id.is_none() &amp;&amp; inst.result_id.is_none());
                 <span class="kw">let </span>(id, sc) = <span class="kw">match </span>(<span class="kw-2">&amp;</span>inst.imms[..], <span class="kw-2">&amp;</span>inst.ids[..]) {
@@ -2159,10 +2090,7 @@
                 // serves as a first approximation for a &quot;deferred error&quot;.
                 </span><span class="kw">let </span>ty = cx.intern(TypeDef {
                     attrs: mem::take(<span class="kw-2">&amp;mut </span>attrs),
-                    ctor: TypeCtor::SpvInst(spv::Inst {
-                        opcode,
-                        imms: [sc].into_iter().collect(),
-                    }),
+                    ctor: TypeCtor::SpvInst(spv::Inst { opcode, imms: [sc].into_iter().collect() }),
                     ctor_args: [].into_iter().collect(),
                 });
                 id_defs.insert(id, IdDef::Type(ty));
@@ -2328,27 +2256,28 @@
                         <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
                     }
                     .ok_or_else(|| {
-                        invalid(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                            <span class="string">&quot;function type %{func_type_id} not an `OpTypeFunction`&quot;
-                        </span>))
+                        invalid(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;function type %{func_type_id} not an `OpTypeFunction`&quot;</span>))
                     })<span class="question-mark">?</span>;
 
                 <span class="kw">if </span>func_ret_type != func_type_ret_type {
                     <span class="comment">// FIXME(remove) embed IDs in errors by moving them to the
                     // `let invalid = |...| ...;` closure that wraps insts.
-                    </span><span class="kw">return </span><span class="prelude-val">Err</span>(invalid(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                        <span class="string">&quot;in %{}, return type differs between `OpFunction` (expected) \
-                         and `OpTypeFunction` (found):\n\n{}&quot;</span>,
-                        func_id,
-                        print::Plan::for_root(
+                    </span><span class="kw">return </span><span class="prelude-val">Err</span>(invalid(
+                        <span class="kw-2">&amp;</span>print::Plan::for_root(
                             <span class="kw-2">&amp;</span>cx,
-                            <span class="kw-2">&amp;</span>print::ExpectedVsFound {
-                                expected: func_ret_type,
-                                found: func_type_ret_type,
-                            }
+                            <span class="kw-2">&amp;</span>Diag::err([
+                                <span class="macro">format!</span>(<span class="string">&quot;in %{}, &quot;</span>, func_id).into(),
+                                <span class="string">&quot;return type differs between `OpFunction` (&quot;</span>.into(),
+                                func_ret_type.into(),
+                                <span class="string">&quot;) and `OpTypeFunction` (&quot;</span>.into(),
+                                func_type_ret_type.into(),
+                                <span class="string">&quot;)&quot;</span>.into(),
+                            ])
+                            .message,
                         )
                         .pretty_print()
-                    )));
+                        .to_string(),
+                    ));
                 }
 
                 <span class="kw">let </span>def = <span class="kw">match </span>pending_imports.remove(<span class="kw-2">&amp;</span>func_id) {
@@ -2379,21 +2308,14 @@
                         attrs: mem::take(<span class="kw-2">&amp;mut </span>attrs),
                         ret_type: func_ret_type,
                         params: func_type_param_types
-                            .map(|ty| FuncParam {
-                                attrs: AttrSet::default(),
-                                ty,
-                            })
+                            .map(|ty| FuncParam { attrs: AttrSet::default(), ty })
                             .collect(),
                         def,
                     },
                 );
                 id_defs.insert(func_id, IdDef::Func(func));
 
-                current_func_body = <span class="prelude-val">Some</span>(FuncBody {
-                    func_id,
-                    func,
-                    insts: <span class="macro">vec!</span>[],
-                });
+                current_func_body = <span class="prelude-val">Some</span>(FuncBody { func_id, func, insts: <span class="macro">vec!</span>[] });
 
                 Seq::Function
             } <span class="kw">else if </span>opcode == wk.OpFunctionEnd {
@@ -2417,10 +2339,7 @@
                     attrs: mem::take(<span class="kw-2">&amp;mut </span>attrs),
                     result_type,
 
-                    without_ids: spv::Inst {
-                        opcode,
-                        imms: inst.without_ids.imms,
-                    },
+                    without_ids: spv::Inst { opcode, imms: inst.without_ids.imms },
                     result_id: inst.result_id,
                     ids: inst.ids,
                 });
@@ -2454,13 +2373,21 @@
             <span class="kw">return </span><span class="prelude-val">Err</span>(invalid(<span class="string">&quot;OpFunction without matching OpFunctionEnd&quot;</span>));
         }
 
+        <span class="comment">// HACK(eddyb) `OpNop` is useful for defining `DataInst`s before they&#39;re
+        // actually lowered (to be able to refer to their outputs `Value`s).
+        </span><span class="kw">let </span><span class="kw-2">mut </span>cached_op_nop_form = <span class="prelude-val">None</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>get_op_nop_form = || {
+            <span class="kw-2">*</span>cached_op_nop_form.get_or_insert_with(|| {
+                cx.intern(DataInstFormDef {
+                    kind: DataInstKind::SpvInst(wk.OpNop.into()),
+                    output_type: <span class="prelude-val">None</span>,
+                })
+            })
+        };
+
         <span class="comment">// Process function bodies, having seen the whole module.
         </span><span class="kw">for </span>func_body <span class="kw">in </span>pending_func_bodies {
-            <span class="kw">let </span>FuncBody {
-                func_id,
-                func,
-                insts: raw_insts,
-            } = func_body;
+            <span class="kw">let </span>FuncBody { func_id, func, insts: raw_insts } = func_body;
 
             <span class="kw">let </span>func_decl = <span class="kw-2">&amp;mut </span>module.funcs[func];
 
@@ -2537,13 +2464,8 @@
                                         },
                                     )
                                 };
-                                block_details.insert(
-                                    block,
-                                    BlockDetails {
-                                        label_id: id,
-                                        phi_count: <span class="number">0</span>,
-                                    },
-                                );
+                                block_details
+                                    .insert(block, BlockDetails { label_id: id, phi_count: <span class="number">0 </span>});
                                 LocalIdDef::BlockLabel(block)
                             } <span class="kw">else if </span>opcode == wk.OpPhi {
                                 <span class="kw">let </span>(<span class="kw-2">&amp;</span>current_block, block_details) = <span class="kw">match </span>block_details.last_mut()
@@ -2583,8 +2505,8 @@
                                     <span class="kw-2">&amp;</span>cx,
                                     DataInstDef {
                                         attrs: AttrSet::default(),
-                                        kind: DataInstKind::SpvInst(wk.OpNop.into()),
-                                        output_type: <span class="prelude-val">None</span>,
+                                        <span class="comment">// FIXME(eddyb) cache this form locally.
+                                        </span>form: get_op_nop_form(),
                                         inputs: [].into_iter().collect(),
                                     }
                                     .into(),
@@ -2627,11 +2549,8 @@
 
             <span class="kw">let </span><span class="kw-2">mut </span>current_block_control_region_and_details = <span class="prelude-val">None</span>;
             <span class="kw">for </span>(raw_inst_idx, raw_inst) <span class="kw">in </span>raw_insts.iter().enumerate() {
-                <span class="kw">let </span>lookahead_raw_inst = |dist| {
-                    raw_inst_idx
-                        .checked_add(dist)
-                        .and_then(|i| raw_insts.get(i))
-                };
+                <span class="kw">let </span>lookahead_raw_inst =
+                    |dist| raw_inst_idx.checked_add(dist).and_then(|i| raw_insts.get(i));
 
                 <span class="kw">let </span>IntraFuncInst {
                     attrs,
@@ -2715,9 +2634,8 @@
                 }
                 <span class="kw">let </span>func_def_body = func_def_body.as_deref_mut().unwrap();
 
-                <span class="kw">let </span>is_last_in_block = lookahead_raw_inst(<span class="number">1</span>).map_or(<span class="bool-val">true</span>, |next_raw_inst| {
-                    next_raw_inst.without_ids.opcode == wk.OpLabel
-                });
+                <span class="kw">let </span>is_last_in_block = lookahead_raw_inst(<span class="number">1</span>)
+                    .map_or(<span class="bool-val">true</span>, |next_raw_inst| next_raw_inst.without_ids.opcode == wk.OpLabel);
 
                 <span class="kw">if </span>opcode == wk.OpLabel {
                     <span class="kw">if </span>is_last_in_block {
@@ -2865,13 +2783,7 @@
                         .control_inst_on_exit_from
                         .insert(
                             current_block_control_region,
-                            cfg::ControlInst {
-                                attrs,
-                                kind,
-                                inputs,
-                                targets,
-                                target_inputs,
-                            },
+                            cfg::ControlInst { attrs, kind, inputs, targets, target_inputs },
                         );
                 } <span class="kw">else if </span>opcode == wk.OpPhi {
                     <span class="kw">if </span>!current_block_control_region_def.children.is_empty() {
@@ -2883,10 +2795,7 @@
 
                     current_block_control_region_def
                         .inputs
-                        .push(ControlRegionInputDecl {
-                            attrs,
-                            ty: result_type.unwrap(),
-                        });
+                        .push(ControlRegionInputDecl { attrs, ty: result_type.unwrap() });
                 } <span class="kw">else if </span>[wk.OpSelectionMerge, wk.OpLoopMerge].contains(<span class="kw-2">&amp;</span>opcode) {
                     <span class="kw">let </span>is_second_to_last_in_block = lookahead_raw_inst(<span class="number">2</span>)
                         .map_or(<span class="bool-val">true</span>, |next_raw_inst| {
@@ -2963,16 +2872,19 @@
 
                     <span class="kw">let </span>data_inst_def = DataInstDef {
                         attrs,
-                        kind,
-                        output_type: result_id
-                            .map(|<span class="kw">_</span>| {
-                                result_type.ok_or_else(|| {
-                                    invalid(
-                                        <span class="string">&quot;expected value-producing instruction, with a result type&quot;</span>,
-                                    )
+                        form: cx.intern(DataInstFormDef {
+                            kind,
+                            output_type: result_id
+                                .map(|<span class="kw">_</span>| {
+                                    result_type.ok_or_else(|| {
+                                        invalid(
+                                            <span class="string">&quot;expected value-producing instruction, \
+                                             with a result type&quot;</span>,
+                                        )
+                                    })
                                 })
-                            })
-                            .transpose()<span class="question-mark">?</span>,
+                                .transpose()<span class="question-mark">?</span>,
+                        }),
                         inputs: ids
                             .iter()
                             .map(|<span class="kw-2">&amp;</span>id| {
@@ -3015,9 +2927,7 @@
                             <span class="kw">let </span>block_node = func_def_body.control_nodes.define(
                                 <span class="kw-2">&amp;</span>cx,
                                 ControlNodeDef {
-                                    kind: ControlNodeKind::Block {
-                                        insts: EntityList::empty(),
-                                    },
+                                    kind: ControlNodeKind::Block { insts: EntityList::empty() },
                                     outputs: SmallVec::new(),
                                 }
                                 .into(),
@@ -3058,21 +2968,23 @@
                     <span class="kw">if </span>func_decl_param.ty != param.ty {
                         <span class="comment">// FIXME(remove) embed IDs in errors by moving them to the
                         // `let invalid = |...| ...;` closure that wraps insts.
-                        </span><span class="kw">return </span><span class="prelude-val">Err</span>(invalid(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                            <span class="string">&quot;in %{}, param {}&#39;s type differs between \
-                             `OpTypeFunction` (expected) and \
-                             `OpFunctionParameter` (found):\n\n{}&quot;</span>,
-                            func_id,
-                            i,
-                            print::Plan::for_root(
+                        </span><span class="kw">return </span><span class="prelude-val">Err</span>(invalid(
+                            <span class="kw-2">&amp;</span>print::Plan::for_root(
                                 <span class="kw-2">&amp;</span>cx,
-                                <span class="kw-2">&amp;</span>print::ExpectedVsFound {
-                                    expected: func_decl_param.ty,
-                                    found: param.ty,
-                                }
+                                <span class="kw-2">&amp;</span>Diag::err([
+                                    <span class="macro">format!</span>(<span class="string">&quot;in %{}, &quot;</span>, func_id).into(),
+                                    <span class="macro">format!</span>(<span class="string">&quot;param #{i}&#39;s type differs between `OpTypeFunction` (&quot;</span>)
+                                        .into(),
+                                    func_decl_param.ty.into(),
+                                    <span class="string">&quot;) and `OpFunctionParameter` (&quot;</span>.into(),
+                                    param.ty.into(),
+                                    <span class="string">&quot;)&quot;</span>.into(),
+                                ])
+                                .message,
                             )
                             .pretty_print()
-                        )));
+                            .to_string(),
+                        ));
                     }
                 }
             }

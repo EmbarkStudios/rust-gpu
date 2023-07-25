@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["AttrStyle"],"struct":["AttrsAndDef","ExpectedVsFound","Plan","Printer"],"trait":["Print"]};
+window.SIDEBAR_ITEMS = {"struct":["AttrsAndDef","Plan","Printer"],"trait":["Print"]};

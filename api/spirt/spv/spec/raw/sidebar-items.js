@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["DecOrHex","OperandKindCategory","Quantifier"],"struct":["CoreGrammar","Instruction","InstructionPrintingClass","Operand","OperandKind","OperandKindEnumerant"]};
+window.SIDEBAR_ITEMS = {"enum":["CowStr","DecOrHex","OperandKindCategory","Quantifier"],"struct":["CoreGrammar","ExtInstGrammar","Instruction","InstructionPrintingClass","Operand","OperandKind","OperandKindEnumerant"]};

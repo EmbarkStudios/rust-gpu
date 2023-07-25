@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spirt-0.2.0/src/print/pretty.rs`."><title>pretty.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-f3501f0f5ae15dfb.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="spirt" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.0-nightly (1a5f8bce7 2023-05-26)" data-search-js="search-4926e5fc22a5646a.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../static.files/source-script-11255107d0a65077.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-f0540c1d82cde29b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../spirt/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/git/checkouts/spirt-9c237dd53f05c2cc/82daf25/src/print/pretty.rs`."><title>pretty.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-f3501f0f5ae15dfb.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="spirt" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.0-nightly (1a5f8bce7 2023-05-26)" data-search-js="search-4926e5fc22a5646a.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../static.files/source-script-11255107d0a65077.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-f0540c1d82cde29b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../spirt/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1083,6 +1083,96 @@
 <a href="#1083" id="1083">1083</a>
 <a href="#1084" id="1084">1084</a>
 <a href="#1085" id="1085">1085</a>
+<a href="#1086" id="1086">1086</a>
+<a href="#1087" id="1087">1087</a>
+<a href="#1088" id="1088">1088</a>
+<a href="#1089" id="1089">1089</a>
+<a href="#1090" id="1090">1090</a>
+<a href="#1091" id="1091">1091</a>
+<a href="#1092" id="1092">1092</a>
+<a href="#1093" id="1093">1093</a>
+<a href="#1094" id="1094">1094</a>
+<a href="#1095" id="1095">1095</a>
+<a href="#1096" id="1096">1096</a>
+<a href="#1097" id="1097">1097</a>
+<a href="#1098" id="1098">1098</a>
+<a href="#1099" id="1099">1099</a>
+<a href="#1100" id="1100">1100</a>
+<a href="#1101" id="1101">1101</a>
+<a href="#1102" id="1102">1102</a>
+<a href="#1103" id="1103">1103</a>
+<a href="#1104" id="1104">1104</a>
+<a href="#1105" id="1105">1105</a>
+<a href="#1106" id="1106">1106</a>
+<a href="#1107" id="1107">1107</a>
+<a href="#1108" id="1108">1108</a>
+<a href="#1109" id="1109">1109</a>
+<a href="#1110" id="1110">1110</a>
+<a href="#1111" id="1111">1111</a>
+<a href="#1112" id="1112">1112</a>
+<a href="#1113" id="1113">1113</a>
+<a href="#1114" id="1114">1114</a>
+<a href="#1115" id="1115">1115</a>
+<a href="#1116" id="1116">1116</a>
+<a href="#1117" id="1117">1117</a>
+<a href="#1118" id="1118">1118</a>
+<a href="#1119" id="1119">1119</a>
+<a href="#1120" id="1120">1120</a>
+<a href="#1121" id="1121">1121</a>
+<a href="#1122" id="1122">1122</a>
+<a href="#1123" id="1123">1123</a>
+<a href="#1124" id="1124">1124</a>
+<a href="#1125" id="1125">1125</a>
+<a href="#1126" id="1126">1126</a>
+<a href="#1127" id="1127">1127</a>
+<a href="#1128" id="1128">1128</a>
+<a href="#1129" id="1129">1129</a>
+<a href="#1130" id="1130">1130</a>
+<a href="#1131" id="1131">1131</a>
+<a href="#1132" id="1132">1132</a>
+<a href="#1133" id="1133">1133</a>
+<a href="#1134" id="1134">1134</a>
+<a href="#1135" id="1135">1135</a>
+<a href="#1136" id="1136">1136</a>
+<a href="#1137" id="1137">1137</a>
+<a href="#1138" id="1138">1138</a>
+<a href="#1139" id="1139">1139</a>
+<a href="#1140" id="1140">1140</a>
+<a href="#1141" id="1141">1141</a>
+<a href="#1142" id="1142">1142</a>
+<a href="#1143" id="1143">1143</a>
+<a href="#1144" id="1144">1144</a>
+<a href="#1145" id="1145">1145</a>
+<a href="#1146" id="1146">1146</a>
+<a href="#1147" id="1147">1147</a>
+<a href="#1148" id="1148">1148</a>
+<a href="#1149" id="1149">1149</a>
+<a href="#1150" id="1150">1150</a>
+<a href="#1151" id="1151">1151</a>
+<a href="#1152" id="1152">1152</a>
+<a href="#1153" id="1153">1153</a>
+<a href="#1154" id="1154">1154</a>
+<a href="#1155" id="1155">1155</a>
+<a href="#1156" id="1156">1156</a>
+<a href="#1157" id="1157">1157</a>
+<a href="#1158" id="1158">1158</a>
+<a href="#1159" id="1159">1159</a>
+<a href="#1160" id="1160">1160</a>
+<a href="#1161" id="1161">1161</a>
+<a href="#1162" id="1162">1162</a>
+<a href="#1163" id="1163">1163</a>
+<a href="#1164" id="1164">1164</a>
+<a href="#1165" id="1165">1165</a>
+<a href="#1166" id="1166">1166</a>
+<a href="#1167" id="1167">1167</a>
+<a href="#1168" id="1168">1168</a>
+<a href="#1169" id="1169">1169</a>
+<a href="#1170" id="1170">1170</a>
+<a href="#1171" id="1171">1171</a>
+<a href="#1172" id="1172">1172</a>
+<a href="#1173" id="1173">1173</a>
+<a href="#1174" id="1174">1174</a>
+<a href="#1175" id="1175">1175</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Pretty-printing functionality (such as automatic indentation).
 
 </span><span class="kw">use </span>indexmap::IndexSet;
@@ -1093,6 +1183,7 @@
 <span class="kw">use </span>std::borrow::Cow;
 <span class="kw">use </span>std::fmt::Write <span class="kw">as _</span>;
 <span class="kw">use </span>std::ops::ControlFlow;
+<span class="kw">use </span>std::rc::Rc;
 <span class="kw">use </span>std::{fmt, iter, mem};
 
 <span class="doccomment">/// Part of a pretty document, made up of [`Node`]s.
@@ -1105,10 +1196,17 @@
 
 <span class="attr">#[derive(Clone, PartialEq)]
 </span><span class="kw">pub enum </span>Node {
-    Text(Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;),
+    Text(<span class="prelude-ty">Option</span>&lt;Styles&gt;, Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;),
 
-    <span class="comment">// FIXME(eddyb) should this contain a `Node` instead of being text-only?
-    </span>StyledText(Box&lt;(Styles, Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;)&gt;),
+    <span class="doccomment">/// Anchor (HTML `&lt;a href=&quot;#...&quot;&gt;`, optionally with `id=&quot;...&quot;` when `is_def`),
+    /// using [`Node::Text`]-like &quot;styled text&quot; nodes for its text contents.
+    </span><span class="comment">//
+    // FIXME(eddyb) could this use `Box&lt;Fragment&gt;` instead? may complicate layout
+    </span>Anchor {
+        is_def: bool,
+        anchor: Rc&lt;str&gt;,
+        text: Box&lt;[(<span class="prelude-ty">Option</span>&lt;Styles&gt;, Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;)]&gt;,
+    },
 
     <span class="doccomment">/// Container for [`Fragment`]s, using block layout (indented on separate lines).
     </span>IndentedBlock(Vec&lt;Fragment&gt;),
@@ -1138,11 +1236,8 @@
     </span>IfBlockLayout(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str),
 }
 
-<span class="attr">#[derive(Clone, Default, PartialEq)]
+<span class="attr">#[derive(Copy, Clone, Default, PartialEq)]
 </span><span class="kw">pub struct </span>Styles {
-    <span class="kw">pub </span>anchor: <span class="prelude-ty">Option</span>&lt;String&gt;,
-    <span class="kw">pub </span>anchor_is_def: bool,
-
     <span class="doccomment">/// RGB color.
     </span><span class="kw">pub </span>color: <span class="prelude-ty">Option</span>&lt;[u8; <span class="number">3</span>]&gt;,
 
@@ -1172,14 +1267,17 @@
 
 <span class="kw">impl </span>Styles {
     <span class="kw">pub fn </span>color(color: [u8; <span class="number">3</span>]) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            color: <span class="prelude-val">Some</span>(color),
-            ..<span class="self">Self</span>::default()
-        }
+        <span class="self">Self </span>{ color: <span class="prelude-val">Some</span>(color), ..<span class="self">Self</span>::default() }
     }
 
     <span class="kw">pub fn </span>apply(<span class="self">self</span>, text: <span class="kw">impl </span>Into&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;) -&gt; Node {
-        Node::StyledText(Box::new((<span class="self">self</span>, text.into())))
+        Node::Text(<span class="prelude-val">Some</span>(<span class="self">self</span>), text.into())
+    }
+
+    <span class="comment">// HACK(eddyb) this allows us to control `&lt;sub&gt;`/`&lt;sup&gt;` `font-size` exactly,
+    // and use the same information for both layout and the CSS we emit.
+    </span><span class="kw">fn </span>effective_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;i8&gt; {
+        <span class="self">self</span>.size.or(<span class="kw">if </span><span class="self">self</span>.subscript || <span class="self">self</span>.superscript { <span class="prelude-val">Some</span>(-<span class="number">2</span>) } <span class="kw">else </span>{ <span class="prelude-val">None </span>})
     }
 }
 
@@ -1188,6 +1286,7 @@
     <span class="doccomment">/// Minimalist palette, chosen to work with both light and dark backgrounds.
     </span><span class="kw">pub mod </span>simple {
         <span class="kw">pub const </span>DARK_GRAY: [u8; <span class="number">3</span>] = [<span class="number">0x44</span>, <span class="number">0x44</span>, <span class="number">0x44</span>];
+        <span class="kw">pub const </span>LIGHT_GRAY: [u8; <span class="number">3</span>] = [<span class="number">0x88</span>, <span class="number">0x88</span>, <span class="number">0x88</span>];
 
         <span class="kw">pub const </span>RED: [u8; <span class="number">3</span>] = [<span class="number">0xcc</span>, <span class="number">0x55</span>, <span class="number">0x55</span>];
         <span class="kw">pub const </span>GREEN: [u8; <span class="number">3</span>] = [<span class="number">0x44</span>, <span class="number">0x99</span>, <span class="number">0x44</span>];
@@ -1203,41 +1302,35 @@
 
 <span class="kw">impl </span>From&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str&gt; <span class="kw">for </span>Node {
     <span class="kw">fn </span>from(text: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str) -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>::Text(text.into())
+        <span class="self">Self</span>::Text(<span class="prelude-val">None</span>, text.into())
     }
 }
 
 <span class="kw">impl </span>From&lt;String&gt; <span class="kw">for </span>Node {
     <span class="kw">fn </span>from(text: String) -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>::Text(text.into())
+        <span class="self">Self</span>::Text(<span class="prelude-val">None</span>, text.into())
     }
 }
 
 <span class="kw">impl</span>&lt;T: Into&lt;Node&gt;&gt; From&lt;T&gt; <span class="kw">for </span>Fragment {
     <span class="kw">fn </span>from(x: T) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            nodes: [x.into()].into_iter().collect(),
-        }
+        <span class="self">Self </span>{ nodes: [x.into()].into_iter().collect() }
     }
 }
 
 <span class="kw">impl </span>Fragment {
     <span class="kw">pub fn </span>new(fragments: <span class="kw">impl </span>IntoIterator&lt;Item = <span class="kw">impl </span>Into&lt;<span class="self">Self</span>&gt;&gt;) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            nodes: fragments
-                .into_iter()
-                .flat_map(|fragment| fragment.into().nodes)
-                .collect(),
-        }
+        <span class="self">Self </span>{ nodes: fragments.into_iter().flat_map(|fragment| fragment.into().nodes).collect() }
     }
 
     <span class="doccomment">/// Perform layout on the [`Fragment`], limiting lines to `max_line_width`
     /// columns where possible.
     </span><span class="kw">pub fn </span>layout_with_max_line_width(<span class="kw-2">mut </span><span class="self">self</span>, max_line_width: usize) -&gt; FragmentPostLayout {
-        <span class="self">self</span>.approx_layout(MaxWidths {
-            inline: max_line_width,
-            block: max_line_width,
-        });
+        <span class="comment">// FIXME(eddyb) maybe make this a method on `Columns`?
+        </span><span class="kw">let </span>max_line_width =
+            Columns { char_width_tenths: max_line_width.try_into().unwrap_or(u16::MAX) * <span class="number">10 </span>};
+
+        <span class="self">self</span>.approx_layout(MaxWidths { inline: max_line_width, block: max_line_width });
         FragmentPostLayout(<span class="self">self</span>)
     }
 }
@@ -1254,8 +1347,7 @@
                 <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
             })
             .try_for_each(|text| {
-                f.write_str(text)
-                    .map_or_else(ControlFlow::Break, ControlFlow::Continue)
+                f.write_str(text).map_or_else(ControlFlow::Break, ControlFlow::Continue)
             });
         <span class="kw">match </span>result {
             ControlFlow::Continue(()) =&gt; <span class="prelude-val">Ok</span>(()),
@@ -1380,7 +1472,7 @@
         margin: 1ch;
 
         /* HACK(eddyb) avoid unnecessarily small or thin text. */
-        font-size: 15px;
+        font-size: 17px;
         font-weight: 500;
     }
     SCOPE a {
@@ -1393,9 +1485,22 @@
     SCOPE sub, SCOPE sup {
         line-height: 0;
     }
+
+    /* HACK(eddyb) using a class (instead of an inline style) so that hovering
+       over a multiversion table cell can disable its desaturation/dimming */
+    SCOPE:not(:hover) .unchanged {
+        filter: saturate(0.3) opacity(0.5);
+    }
 &lt;/style&gt;
 &quot;
         </span>.replace(<span class="string">&quot;SCOPE&quot;</span>, <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;pre.{ROOT_CLASS_NAME}&quot;</span>));
+
+        <span class="kw">let </span>push_attr = |body: <span class="kw-2">&amp;mut </span>String, attr, value: <span class="kw-2">&amp;</span>str| {
+            <span class="comment">// Quick sanity check.
+            </span><span class="macro">assert!</span>(value.chars().all(|c| !(c == <span class="string">&#39;&quot;&#39; </span>|| c == <span class="string">&#39;&amp;&#39;</span>)));
+
+            body.extend([<span class="string">&quot; &quot;</span>, attr, <span class="string">&quot;=\&quot;&quot;</span>, value, <span class="string">&quot;\&quot;&quot;</span>]);
+        };
 
         <span class="comment">// HACK(eddyb) load-bearing newline after `&lt;pre ...&gt;`, to front-load any
         // weird HTML whitespace handling, and allow the actual contents to start
@@ -1403,14 +1508,10 @@
         </span><span class="kw">let </span><span class="kw-2">mut </span>body = <span class="macro">format!</span>(<span class="string">&quot;&lt;pre class=\&quot;{ROOT_CLASS_NAME}\&quot;&gt;\n&quot;</span>);
         text_ops.into_internal_iter().for_each(|op| <span class="kw">match </span>op {
             TextOp::PushStyles(styles) | TextOp::PopStyles(styles) =&gt; {
-                <span class="kw">let </span><span class="kw-2">mut </span>special_tags = [
-                    (<span class="string">&quot;a&quot;</span>, styles.anchor.is_some()),
-                    (<span class="string">&quot;sub&quot;</span>, styles.subscript),
-                    (<span class="string">&quot;super&quot;</span>, styles.superscript),
-                ]
-                .into_iter()
-                .filter(|<span class="kw-2">&amp;</span>(<span class="kw">_</span>, cond)| cond)
-                .map(|(tag, <span class="kw">_</span>)| tag);
+                <span class="kw">let </span><span class="kw-2">mut </span>special_tags = [(<span class="string">&quot;sub&quot;</span>, styles.subscript), (<span class="string">&quot;sup&quot;</span>, styles.superscript)]
+                    .into_iter()
+                    .filter(|<span class="kw-2">&amp;</span>(<span class="kw">_</span>, cond)| cond)
+                    .map(|(tag, <span class="kw">_</span>)| tag);
                 <span class="kw">let </span>tag = special_tags.next().unwrap_or(<span class="string">&quot;span&quot;</span>);
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(other_tag) = special_tags.next() {
                     <span class="comment">// FIXME(eddyb) support by opening/closing multiple tags.
@@ -1424,31 +1525,15 @@
                 body += tag;
 
                 <span class="kw">if let </span>TextOp::PushStyles(<span class="kw">_</span>) = op {
-                    <span class="kw">let </span><span class="kw-2">mut </span>push_attr = |attr, value: <span class="kw-2">&amp;</span>str| {
-                        <span class="comment">// Quick sanity check.
-                        </span><span class="macro">assert!</span>(value.chars().all(|c| !(c == <span class="string">&#39;&quot;&#39; </span>|| c == <span class="string">&#39;&amp;&#39;</span>)));
-
-                        body.extend([<span class="string">&quot; &quot;</span>, attr, <span class="string">&quot;=\&quot;&quot;</span>, value, <span class="string">&quot;\&quot;&quot;</span>]);
-                    };
-
                     <span class="kw">let </span>Styles {
-                        <span class="kw-2">ref </span>anchor,
-                        anchor_is_def,
                         color,
                         color_opacity,
                         thickness,
-                        size,
-                        subscript: <span class="kw">_</span>,
-                        superscript: <span class="kw">_</span>,
+                        size: <span class="kw">_</span>,
+                        subscript,
+                        superscript,
                         desaturate_and_dim_for_unchanged_multiversion_line,
                     } = <span class="kw-2">*</span>styles;
-
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = anchor {
-                        <span class="kw">if </span>anchor_is_def {
-                            push_attr(<span class="string">&quot;id&quot;</span>, id);
-                        }
-                        push_attr(<span class="string">&quot;href&quot;</span>, <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;#{id}&quot;</span>));
-                    }
 
                     <span class="kw">let </span><span class="kw-2">mut </span>css_style = String::new();
 
@@ -1462,19 +1547,36 @@
                         <span class="macro">write!</span>(css_style, <span class="string">&quot;font-weight:{};&quot;</span>, <span class="number">500 </span>+ (thickness <span class="kw">as </span>i32) * <span class="number">100</span>)
                             .unwrap();
                     }
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(size) = size {
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(size) = styles.effective_size() {
                         <span class="macro">write!</span>(css_style, <span class="string">&quot;font-size:{}em;&quot;</span>, <span class="number">1.0 </span>+ (size <span class="kw">as </span>f64) * <span class="number">0.1</span>).unwrap();
-                    }
-                    <span class="kw">if </span>desaturate_and_dim_for_unchanged_multiversion_line {
-                        <span class="macro">write!</span>(css_style, <span class="string">&quot;filter:saturate(0.3)opacity(0.5);&quot;</span>).unwrap();
+                        <span class="kw">if </span>!(subscript || superscript) {
+                            <span class="comment">// HACK(eddyb) without this, small text is placed too low.
+                            </span><span class="macro">write!</span>(css_style, <span class="string">&quot;vertical-align:middle;&quot;</span>).unwrap();
+                        }
                     }
                     <span class="kw">if </span>!css_style.is_empty() {
-                        push_attr(<span class="string">&quot;style&quot;</span>, <span class="kw-2">&amp;</span>css_style);
+                        push_attr(<span class="kw-2">&amp;mut </span>body, <span class="string">&quot;style&quot;</span>, <span class="kw-2">&amp;</span>css_style);
+                    }
+
+                    <span class="kw">if </span>desaturate_and_dim_for_unchanged_multiversion_line {
+                        push_attr(<span class="kw-2">&amp;mut </span>body, <span class="string">&quot;class&quot;</span>, <span class="string">&quot;unchanged&quot;</span>);
                     }
                 }
 
                 body += <span class="string">&quot;&gt;&quot;</span>;
             }
+            TextOp::PushAnchor { is_def, anchor } =&gt; {
+                body += <span class="string">&quot;&lt;a&quot;</span>;
+
+                <span class="comment">// HACK(eddyb) this avoids `push_attr` because anchors are pre-escaped.
+                // FIXME(eddyb) should escaping anchors be left to here?
+                </span><span class="macro">assert!</span>(anchor.chars().all(|c| c != <span class="string">&#39;&quot;&#39;</span>));
+                <span class="kw">if </span>is_def {
+                    <span class="macro">write!</span>(body, <span class="string">&quot; id=\&quot;{anchor}\&quot;&quot;</span>).unwrap();
+                }
+                <span class="macro">write!</span>(body, <span class="string">&quot; href=\&quot;#{anchor}\&quot;&gt;&quot;</span>).unwrap();
+            }
+            TextOp::PopAnchor { .. } =&gt; body += <span class="string">&quot;&lt;/a&gt;&quot;</span>,
             TextOp::Text(text) =&gt; {
                 <span class="comment">// Minimal escaping, just enough to produce valid HTML.
                 </span><span class="kw">let </span>escape_from = [<span class="string">&#39;&amp;&#39;</span>, <span class="string">&#39;&lt;&#39;</span>];
@@ -1495,69 +1597,103 @@
         });
         body += <span class="string">&quot;&lt;/pre&gt;&quot;</span>;
 
-        HtmlSnippet {
-            head_deduplicatable_elements: [style_elem].into_iter().collect(),
-            body,
-        }
+        HtmlSnippet { head_deduplicatable_elements: [style_elem].into_iter().collect(), body }
     }
 }
 
 <span class="comment">// Rendering implementation details (including approximate layout).
 
-</span><span class="doccomment">/// The approximate shape of a [`Node`], regarding its 2D placement.
+</span><span class="doccomment">/// Fractional number of columns, used here to account for `Node::StyledText`
+/// being used to intentionally reduce the size of many &quot;helper&quot; pieces of text,
+/// at least for the HTML output (while this may lead to a less consistently
+/// formatted plaintext output, making good use of width is far more important
+/// for the HTML output, especially when used with `multiversion` tables).
+</span><span class="attr">#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+</span><span class="kw">struct </span>Columns {
+    <span class="doccomment">/// As our `font-size` control granularity is in multiples of `0.1em`,
+    /// the overall width of a line should end up a multiple of `0.1ch`,
+    /// i.e. we&#39;re counting tenths of a column&#39;s width at the default font size.
+    </span>char_width_tenths: u16,
+}
+
+<span class="kw">impl </span>Columns {
+    <span class="kw">const </span>ZERO: <span class="self">Self </span>= <span class="self">Self </span>{ char_width_tenths: <span class="number">0 </span>};
+
+    <span class="kw">fn </span>text_width(text: <span class="kw-2">&amp;</span>str) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::maybe_styled_text_width(text, <span class="prelude-val">None</span>)
+    }
+
+    <span class="kw">fn </span>maybe_styled_text_width(text: <span class="kw-2">&amp;</span>str, style: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Styles&gt;) -&gt; <span class="self">Self </span>{
+        <span class="macro">assert!</span>(!text.contains(<span class="string">&#39;\n&#39;</span>));
+
+        <span class="kw">let </span>font_size =
+            u16::try_from(<span class="number">10 </span>+ style.and_then(|style| style.effective_size()).unwrap_or(<span class="number">0</span>))
+                .unwrap_or(<span class="number">0</span>);
+
+        <span class="comment">// FIXME(eddyb) use `unicode-width` crate for accurate column count.
+        </span><span class="self">Self </span>{
+            char_width_tenths: text.len().try_into().unwrap_or(u16::MAX).saturating_mul(font_size),
+        }
+    }
+
+    <span class="kw">fn </span>saturating_add(<span class="self">self</span>, other: <span class="self">Self</span>) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ char_width_tenths: <span class="self">self</span>.char_width_tenths.saturating_add(other.char_width_tenths) }
+    }
+
+    <span class="kw">fn </span>saturating_sub(<span class="self">self</span>, other: <span class="self">Self</span>) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ char_width_tenths: <span class="self">self</span>.char_width_tenths.saturating_sub(other.char_width_tenths) }
+    }
+}
+
+<span class="doccomment">/// The approximate shape of a [`Node`], regarding its 2D placement.
 </span><span class="attr">#[derive(Copy, Clone)]
 </span><span class="kw">enum </span>ApproxLayout {
     <span class="doccomment">/// Only occupies part of a line, (at most) `worst_width` columns wide.
     ///
     /// `worst_width` can exceed the `inline` field of [`MaxWidths`], in which
     /// case the choice of inline vs block is instead made by a surrounding node.
-    </span>Inline { worst_width: usize },
+    </span>Inline {
+        worst_width: Columns,
+
+        <span class="doccomment">/// How much of `worst_width` comes from `Node::IfBlockLayout` - that is,
+        /// `worst_width` still includes `Node::IfBlockLayout`, so conservative
+        /// decisions will still be made, but `excess_width_from_only_if_block`
+        /// can be used to reduce `worst_width` when block layout is no longer
+        /// a possibility (i.e. by the enclosing `Node::InlineOrIndentedBlock`).
+        </span>excess_width_from_only_if_block: Columns,
+    },
 
     <span class="doccomment">/// Needs to occupy multiple lines, but may also have the equivalent of
     /// an `Inline` before (`pre_`) and after (`post_`) the multi-line block.
     </span><span class="comment">//
     // FIXME(eddyb) maybe turn `ApproxLayout` into a `struct` instead?
-    </span>BlockOrMixed {
-        pre_worst_width: usize,
-        post_worst_width: usize,
-    },
+    </span>BlockOrMixed { pre_worst_width: Columns, post_worst_width: Columns },
 }
 
 <span class="kw">impl </span>ApproxLayout {
     <span class="kw">fn </span>append(<span class="self">self</span>, other: <span class="self">Self</span>) -&gt; <span class="self">Self </span>{
         <span class="kw">match </span>(<span class="self">self</span>, other) {
-            (<span class="self">Self</span>::Inline { worst_width: a }, <span class="self">Self</span>::Inline { worst_width: b }) =&gt; <span class="self">Self</span>::Inline {
+            (
+                <span class="self">Self</span>::Inline { worst_width: a, excess_width_from_only_if_block: a_excess_foib },
+                <span class="self">Self</span>::Inline { worst_width: b, excess_width_from_only_if_block: b_excess_foib },
+            ) =&gt; <span class="self">Self</span>::Inline {
                 worst_width: a.saturating_add(b),
+                excess_width_from_only_if_block: a_excess_foib.saturating_add(b_excess_foib),
             },
             (
-                <span class="self">Self</span>::BlockOrMixed {
-                    pre_worst_width, ..
-                },
-                <span class="self">Self</span>::BlockOrMixed {
-                    post_worst_width, ..
-                },
-            ) =&gt; <span class="self">Self</span>::BlockOrMixed {
-                pre_worst_width,
-                post_worst_width,
-            },
+                <span class="self">Self</span>::BlockOrMixed { pre_worst_width, .. },
+                <span class="self">Self</span>::BlockOrMixed { post_worst_width, .. },
+            ) =&gt; <span class="self">Self</span>::BlockOrMixed { pre_worst_width, post_worst_width },
             (
-                <span class="self">Self</span>::BlockOrMixed {
-                    pre_worst_width,
-                    post_worst_width: post_a,
-                },
-                <span class="self">Self</span>::Inline {
-                    worst_width: post_b,
-                },
+                <span class="self">Self</span>::BlockOrMixed { pre_worst_width, post_worst_width: post_a },
+                <span class="self">Self</span>::Inline { worst_width: post_b, excess_width_from_only_if_block: <span class="kw">_ </span>},
             ) =&gt; <span class="self">Self</span>::BlockOrMixed {
                 pre_worst_width,
                 post_worst_width: post_a.saturating_add(post_b),
             },
             (
-                <span class="self">Self</span>::Inline { worst_width: pre_a },
-                <span class="self">Self</span>::BlockOrMixed {
-                    pre_worst_width: pre_b,
-                    post_worst_width,
-                },
+                <span class="self">Self</span>::Inline { worst_width: pre_a, excess_width_from_only_if_block: <span class="kw">_ </span>},
+                <span class="self">Self</span>::BlockOrMixed { pre_worst_width: pre_b, post_worst_width },
             ) =&gt; <span class="self">Self</span>::BlockOrMixed {
                 pre_worst_width: pre_a.saturating_add(pre_b),
                 post_worst_width,
@@ -1574,8 +1710,8 @@
 /// cases, and those choices will be made inside-out based on actual widths.
 </span><span class="attr">#[derive(Copy, Clone)]
 </span><span class="kw">struct </span>MaxWidths {
-    inline: usize,
-    block: usize,
+    inline: Columns,
+    block: Columns,
 }
 
 <span class="comment">// FIXME(eddyb) make this configurable.
@@ -1589,56 +1725,69 @@
     </span><span class="kw">fn </span>approx_rigid_layout(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ApproxLayout {
         <span class="comment">// HACK(eddyb) workaround for the `Self::StyledText` arm not being able
         // to destructure through the `Box&lt;(_, Cow&lt;str&gt;)&gt;`.
-        </span><span class="kw">let </span>text_approx_rigid_layout = |text: <span class="kw-2">&amp;</span>str| {
+        </span><span class="kw">let </span>text_approx_rigid_layout = |styles: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;<span class="kw">_</span>&gt;, text: <span class="kw-2">&amp;</span>str| {
+            <span class="kw">let </span>styles = styles.as_ref();
             <span class="kw">if let </span><span class="prelude-val">Some</span>((pre, non_pre)) = text.split_once(<span class="string">&#39;\n&#39;</span>) {
                 <span class="kw">let </span>(<span class="kw">_</span>, post) = non_pre.rsplit_once(<span class="string">&#39;\n&#39;</span>).unwrap_or((<span class="string">&quot;&quot;</span>, non_pre));
 
-                <span class="comment">// FIXME(eddyb) use `unicode-width` crate for accurate column count.
-                </span><span class="kw">let </span>pre_width = pre.len();
-                <span class="kw">let </span>post_width = post.len();
-
                 ApproxLayout::BlockOrMixed {
-                    pre_worst_width: pre_width,
-                    post_worst_width: post_width,
+                    pre_worst_width: Columns::maybe_styled_text_width(pre, styles),
+                    post_worst_width: Columns::maybe_styled_text_width(post, styles),
                 }
             } <span class="kw">else </span>{
-                <span class="comment">// FIXME(eddyb) use `unicode-width` crate for accurate column count.
-                </span><span class="kw">let </span>width = text.len();
-
-                ApproxLayout::Inline { worst_width: width }
+                ApproxLayout::Inline {
+                    worst_width: Columns::maybe_styled_text_width(text, styles),
+                    excess_width_from_only_if_block: Columns::ZERO,
+                }
             }
         };
 
         <span class="attr">#[allow(clippy::match_same_arms)]
         </span><span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::Text(text) =&gt; text_approx_rigid_layout(text),
-            <span class="self">Self</span>::StyledText(styles_and_text) =&gt; text_approx_rigid_layout(<span class="kw-2">&amp;</span>styles_and_text.<span class="number">1</span>),
+            <span class="self">Self</span>::Text(styles, text) =&gt; text_approx_rigid_layout(styles, text),
+
+            <span class="self">Self</span>::Anchor { is_def: <span class="kw">_</span>, anchor: <span class="kw">_</span>, text } =&gt; text
+                .iter()
+                .map(|(styles, text)| text_approx_rigid_layout(styles, text))
+                .reduce(ApproxLayout::append)
+                .unwrap_or(ApproxLayout::Inline {
+                    worst_width: Columns::ZERO,
+                    excess_width_from_only_if_block: Columns::ZERO,
+                }),
 
             <span class="self">Self</span>::IndentedBlock(<span class="kw">_</span>) =&gt; ApproxLayout::BlockOrMixed {
-                pre_worst_width: <span class="number">0</span>,
-                post_worst_width: <span class="number">0</span>,
+                pre_worst_width: Columns::ZERO,
+                post_worst_width: Columns::ZERO,
             },
 
-            <span class="self">Self</span>::BreakingOnlySpace =&gt; ApproxLayout::Inline { worst_width: <span class="number">1 </span>},
+            <span class="self">Self</span>::BreakingOnlySpace =&gt; ApproxLayout::Inline {
+                worst_width: Columns::text_width(<span class="string">&quot; &quot;</span>),
+                excess_width_from_only_if_block: Columns::ZERO,
+            },
             <span class="self">Self</span>::ForceLineSeparation =&gt; ApproxLayout::BlockOrMixed {
-                pre_worst_width: <span class="number">0</span>,
-                post_worst_width: <span class="number">0</span>,
+                pre_worst_width: Columns::ZERO,
+                post_worst_width: Columns::ZERO,
             },
             <span class="kw-2">&amp;</span><span class="self">Self</span>::IfBlockLayout(text) =&gt; {
                 <span class="comment">// Keep the inline `worst_width`, just in case this node is
                 // going to be used as part of an inline child of a block.
                 // NOTE(eddyb) this is currently only the case for the trailing
                 // comma added by `join_comma_sep`.
-                </span><span class="kw">let </span>text_layout = <span class="self">Self</span>::Text(text.into()).approx_rigid_layout();
+                </span><span class="kw">let </span>text_layout = <span class="self">Self</span>::Text(<span class="prelude-val">None</span>, text.into()).approx_rigid_layout();
                 <span class="kw">let </span>worst_width = <span class="kw">match </span>text_layout {
-                    ApproxLayout::Inline { worst_width } =&gt; worst_width,
-                    ApproxLayout::BlockOrMixed { .. } =&gt; <span class="number">0</span>,
+                    ApproxLayout::Inline { worst_width, excess_width_from_only_if_block: <span class="kw">_ </span>} =&gt; {
+                        worst_width
+                    }
+                    ApproxLayout::BlockOrMixed { .. } =&gt; Columns::ZERO,
                 };
-                ApproxLayout::Inline { worst_width }
+                ApproxLayout::Inline { worst_width, excess_width_from_only_if_block: worst_width }
             }
 
             <span class="comment">// Layout computed only in `approx_flex_layout`.
-            </span><span class="self">Self</span>::InlineOrIndentedBlock(<span class="kw">_</span>) =&gt; ApproxLayout::Inline { worst_width: <span class="number">0 </span>},
+            </span><span class="self">Self</span>::InlineOrIndentedBlock(<span class="kw">_</span>) =&gt; ApproxLayout::Inline {
+                worst_width: Columns::ZERO,
+                excess_width_from_only_if_block: Columns::ZERO,
+            },
         }
     }
 
@@ -1651,7 +1800,8 @@
         <span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::IndentedBlock(fragments) =&gt; {
                 <span class="comment">// Apply one more level of indentation to the block layout.
-                </span><span class="kw">let </span>indented_block_max_width = max_widths.block.saturating_sub(INDENT.len());
+                </span><span class="kw">let </span>indented_block_max_width =
+                    max_widths.block.saturating_sub(Columns::text_width(INDENT));
 
                 <span class="comment">// Recurse on `fragments`, so they can compute their own layouts.
                 </span><span class="kw">for </span>fragment <span class="kw">in </span><span class="kw-2">&amp;mut </span>fragments[..] {
@@ -1662,14 +1812,15 @@
                 }
 
                 ApproxLayout::BlockOrMixed {
-                    pre_worst_width: <span class="number">0</span>,
-                    post_worst_width: <span class="number">0</span>,
+                    pre_worst_width: Columns::ZERO,
+                    post_worst_width: Columns::ZERO,
                 }
             }
 
             <span class="self">Self</span>::InlineOrIndentedBlock(fragments) =&gt; {
                 <span class="comment">// Apply one more level of indentation to the block layout.
-                </span><span class="kw">let </span>indented_block_max_width = max_widths.block.saturating_sub(INDENT.len());
+                </span><span class="kw">let </span>indented_block_max_width =
+                    max_widths.block.saturating_sub(Columns::text_width(INDENT));
 
                 <span class="comment">// Maximize the inline width available to `fragments`, usually
                 // increasing it to the maximum allowed by the block layout.
@@ -1681,7 +1832,10 @@
                     block: indented_block_max_width,
                 };
 
-                <span class="kw">let </span><span class="kw-2">mut </span>layout = ApproxLayout::Inline { worst_width: <span class="number">0 </span>};
+                <span class="kw">let </span><span class="kw-2">mut </span>layout = ApproxLayout::Inline {
+                    worst_width: Columns::ZERO,
+                    excess_width_from_only_if_block: Columns::ZERO,
+                };
                 <span class="kw">for </span>fragment <span class="kw">in </span><span class="kw-2">&amp;mut </span>fragments[..] {
                     <span class="comment">// Offer the same `inner_max_widths` to each `fragment`.
                     // Worst case, they all remain inline and block layout is
@@ -1690,18 +1844,32 @@
                     </span>layout = layout.append(fragment.approx_layout(inner_max_widths));
                 }
 
-                layout = <span class="kw">match </span>layout {
-                    ApproxLayout::Inline { worst_width } <span class="kw">if </span>worst_width &lt;= max_widths.inline =&gt; {
-                        layout
+                <span class="comment">// *If* we pick the inline layout, it will not end up using *any*
+                // `Node::OnlyIfBlock`s, so `excess_width_from_only_if_block` can
+                // be safely subtracted from the &quot;candidate&quot; inline `worst_width`.
+                </span><span class="kw">let </span>candidate_inline_worst_width = <span class="kw">match </span>layout {
+                    ApproxLayout::Inline { worst_width, excess_width_from_only_if_block } =&gt; {
+                        <span class="prelude-val">Some</span>(worst_width.saturating_sub(excess_width_from_only_if_block))
                     }
 
+                    ApproxLayout::BlockOrMixed { .. } =&gt; <span class="prelude-val">None</span>,
+                };
+
+                <span class="kw">let </span>inline_layout = candidate_inline_worst_width
+                    .filter(|<span class="kw-2">&amp;</span>worst_width| worst_width &lt;= max_widths.inline)
+                    .map(|worst_width| ApproxLayout::Inline {
+                        worst_width,
+                        excess_width_from_only_if_block: Columns::ZERO,
+                    });
+
+                layout = inline_layout.unwrap_or(
                     <span class="comment">// Even if `layout` is already `ApproxLayout::BlockOrMixed`,
                     // always reset it to a plain block, with no pre/post widths.
-                    </span><span class="kw">_ </span>=&gt; ApproxLayout::BlockOrMixed {
-                        pre_worst_width: <span class="number">0</span>,
-                        post_worst_width: <span class="number">0</span>,
+                    </span>ApproxLayout::BlockOrMixed {
+                        pre_worst_width: Columns::ZERO,
+                        post_worst_width: Columns::ZERO,
                     },
-                };
+                );
 
                 <span class="kw">match </span>layout {
                     ApproxLayout::Inline { .. } =&gt; {
@@ -1717,11 +1885,14 @@
             }
 
             <span class="comment">// Layout computed only in `approx_rigid_layout`.
-            </span><span class="self">Self</span>::Text(<span class="kw">_</span>)
-            | <span class="self">Self</span>::StyledText(<span class="kw">_</span>)
+            </span><span class="self">Self</span>::Text(..)
+            | <span class="self">Self</span>::Anchor { .. }
             | <span class="self">Self</span>::BreakingOnlySpace
             | <span class="self">Self</span>::ForceLineSeparation
-            | <span class="self">Self</span>::IfBlockLayout(<span class="kw">_</span>) =&gt; ApproxLayout::Inline { worst_width: <span class="number">0 </span>},
+            | <span class="self">Self</span>::IfBlockLayout(<span class="kw">_</span>) =&gt; ApproxLayout::Inline {
+                worst_width: Columns::ZERO,
+                excess_width_from_only_if_block: Columns::ZERO,
+            },
         }
     }
 }
@@ -1730,16 +1901,19 @@
     <span class="doccomment">/// Determine the [`ApproxLayout`] of this [`Fragment`], potentially making
     /// adjustments in order to fit within `max_widths`.
     </span><span class="kw">fn </span>approx_layout(<span class="kw-2">&amp;mut </span><span class="self">self</span>, max_widths: MaxWidths) -&gt; ApproxLayout {
-        <span class="kw">let </span><span class="kw-2">mut </span>layout = ApproxLayout::Inline { worst_width: <span class="number">0 </span>};
+        <span class="kw">let </span><span class="kw-2">mut </span>layout = ApproxLayout::Inline {
+            worst_width: Columns::ZERO,
+            excess_width_from_only_if_block: Columns::ZERO,
+        };
 
         <span class="kw">let </span>child_max_widths = |layout| MaxWidths {
             inline: <span class="kw">match </span>layout {
-                ApproxLayout::Inline { worst_width } =&gt; {
+                ApproxLayout::Inline { worst_width, excess_width_from_only_if_block: <span class="kw">_ </span>} =&gt; {
                     max_widths.inline.saturating_sub(worst_width)
                 }
-                ApproxLayout::BlockOrMixed {
-                    post_worst_width, ..
-                } =&gt; max_widths.block.saturating_sub(post_worst_width),
+                ApproxLayout::BlockOrMixed { post_worst_width, .. } =&gt; {
+                    max_widths.block.saturating_sub(post_worst_width)
+                }
             },
             block: max_widths.block,
         };
@@ -1753,14 +1927,12 @@
                 rigid_layout @ ApproxLayout::Inline { .. } =&gt; {
                     layout = layout.append(rigid_layout);
                 }
-                ApproxLayout::BlockOrMixed {
-                    pre_worst_width,
-                    post_worst_width,
-                } =&gt; {
+                ApproxLayout::BlockOrMixed { pre_worst_width, post_worst_width } =&gt; {
                     <span class="comment">// Split the `BlockOrMixed` just before the block, and
                     // process &quot;recent&quot; flexible nodes in between the halves.
                     </span>layout = layout.append(ApproxLayout::Inline {
                         worst_width: pre_worst_width,
+                        excess_width_from_only_if_block: Columns::ZERO,
                     });
                     <span class="comment">// FIXME(eddyb) what happens if the same node has both
                     // rigid and flexible `ApproxLayout`s?
@@ -1771,7 +1943,7 @@
                         next_flex_idx += <span class="number">1</span>;
                     }
                     layout = layout.append(ApproxLayout::BlockOrMixed {
-                        pre_worst_width: <span class="number">0</span>,
+                        pre_worst_width: Columns::ZERO,
                         post_worst_width,
                     });
                 }
@@ -1799,10 +1971,12 @@
     PopIndent,
     PushStyles(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Styles),
     PopStyles(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Styles),
+    PushAnchor { is_def: bool, anchor: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str },
+    PopAnchor { is_def: bool, anchor: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str },
 
-    <span class="comment">// HACK(eddyb) `PushStyles`+`PopStyles`, indicating no visible text is needed
+    <span class="comment">// HACK(eddyb) `PushAnchor`+`PopAnchor`, indicating no visible text is needed
     // (i.e. this is only for helper anchors, which only need vertical positioning).
-    </span>StyledEmptyText(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Styles),
+    </span>EmptyAnchor { is_def: bool, anchor: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str },
 
     AppendToLine(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str),
     StartNewLine,
@@ -1848,9 +2022,8 @@
         directly_in_block: bool,
         <span class="kw-2">mut </span>each_line_op: <span class="kw">impl </span>FnMut(LineOp&lt;<span class="lifetime">&#39;a</span>&gt;) -&gt; ControlFlow&lt;T&gt;,
     ) -&gt; ControlFlow&lt;T&gt; {
-        <span class="comment">// HACK(eddyb) workaround for the `Self::StyledText` arm not being able
-        // to destructure through the `Box&lt;(_, Cow&lt;str&gt;)&gt;`.
-        </span><span class="kw">let </span>text_render_to_line_ops = |styles: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Styles&gt;, text: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str| {
+        <span class="kw">let </span>text_render_to_line_ops = |styles: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="prelude-ty">Option</span>&lt;Styles&gt;, text: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str| {
+            <span class="kw">let </span>styles = styles.as_ref();
             <span class="kw">let </span><span class="kw-2">mut </span>lines = text.split(<span class="string">&#39;\n&#39;</span>);
             styles
                 .map(LineOp::PushStyles)
@@ -1864,31 +2037,35 @@
                 .chain(styles.map(LineOp::PopStyles))
         };
         <span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::Text(text) =&gt; {
-                text_render_to_line_ops(<span class="prelude-val">None</span>, text).try_for_each(each_line_op)<span class="question-mark">?</span>;
+            <span class="self">Self</span>::Text(styles, text) =&gt; {
+                text_render_to_line_ops(styles, text).try_for_each(each_line_op)<span class="question-mark">?</span>;
             }
-            <span class="self">Self</span>::StyledText(styles_and_text) =&gt; {
-                <span class="kw">let </span>(styles, text) = <span class="kw-2">&amp;**</span>styles_and_text;
+
+            <span class="kw-2">&amp;</span><span class="self">Self</span>::Anchor { is_def, <span class="kw-2">ref </span>anchor, <span class="kw-2">ref </span>text } =&gt; {
                 <span class="kw">if </span>text.is_empty() {
-                    each_line_op(LineOp::StyledEmptyText(styles))<span class="question-mark">?</span>;
+                    each_line_op(LineOp::EmptyAnchor { is_def, anchor })<span class="question-mark">?</span>;
                 } <span class="kw">else </span>{
-                    text_render_to_line_ops(<span class="prelude-val">Some</span>(styles), text).try_for_each(each_line_op)<span class="question-mark">?</span>;
+                    [LineOp::PushAnchor { is_def, anchor }]
+                        .into_internal_iter()
+                        .chain(
+                            text.into_internal_iter()
+                                .flat_map(|(styles, text)| text_render_to_line_ops(styles, text)),
+                        )
+                        .chain([LineOp::PopAnchor { is_def, anchor }])
+                        .try_for_each(each_line_op)<span class="question-mark">?</span>;
                 }
             }
 
             <span class="self">Self</span>::IndentedBlock(fragments) =&gt; {
-                [
-                    LineOp::PushIndent,
-                    LineOp::BreakIfWithinLine(Break::NewLine),
-                ]
-                .into_internal_iter()
-                .chain(fragments.into_internal_iter().flat_map(|fragment| {
-                    fragment
-                        .render_to_line_ops(<span class="bool-val">true</span>)
-                        .chain([LineOp::BreakIfWithinLine(Break::NewLine)])
-                }))
-                .chain([LineOp::PopIndent])
-                .try_for_each(each_line_op)<span class="question-mark">?</span>;
+                [LineOp::PushIndent, LineOp::BreakIfWithinLine(Break::NewLine)]
+                    .into_internal_iter()
+                    .chain(fragments.into_internal_iter().flat_map(|fragment| {
+                        fragment
+                            .render_to_line_ops(<span class="bool-val">true</span>)
+                            .chain([LineOp::BreakIfWithinLine(Break::NewLine)])
+                    }))
+                    .chain([LineOp::PopIndent])
+                    .try_for_each(each_line_op)<span class="question-mark">?</span>;
             }
             <span class="comment">// Post-layout, this is only used for the inline layout.
             </span><span class="self">Self</span>::InlineOrIndentedBlock(fragments) =&gt; {
@@ -1902,7 +2079,7 @@
             <span class="self">Self</span>::ForceLineSeparation =&gt; each_line_op(LineOp::BreakIfWithinLine(Break::NewLine))<span class="question-mark">?</span>,
             <span class="kw-2">&amp;</span><span class="self">Self</span>::IfBlockLayout(text) =&gt; {
                 <span class="kw">if </span>directly_in_block {
-                    text_render_to_line_ops(<span class="prelude-val">None</span>, text).try_for_each(each_line_op)<span class="question-mark">?</span>;
+                    text_render_to_line_ops(<span class="kw-2">&amp;</span><span class="prelude-val">None</span>, text).try_for_each(each_line_op)<span class="question-mark">?</span>;
                 }
             }
         }
@@ -1928,11 +2105,13 @@
     }
 }
 
-<span class="doccomment">/// Text-oriented operation (plain text snippets interleaved with style push/pop).
+<span class="doccomment">/// Text-oriented operation (plain text snippets interleaved with style/anchor push/pop).
 </span><span class="attr">#[derive(Copy, Clone, PartialEq)]
 </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">enum </span>TextOp&lt;<span class="lifetime">&#39;a</span>&gt; {
     PushStyles(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Styles),
     PopStyles(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Styles),
+    PushAnchor { is_def: bool, anchor: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str },
+    PopAnchor { is_def: bool, anchor: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str },
 
     Text(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str),
 }
@@ -1968,7 +2147,7 @@
             <span class="doccomment">/// This line was just started, lacking any text.
             ///
             /// The first (non-empty) `LineOp::AppendToLine` on that line, or
-            /// `LineOp::PushStyles`/`LineOp::PopStyles`, needs to materialize
+            /// `LineOp::{Push,Pop}{Styles,Anchor}`, needs to materialize
             /// `indent` levels of indentation (before emitting its `TextOp`s).
             </span><span class="comment">//
             // NOTE(eddyb) indentation is not immediatelly materialized in order
@@ -1978,16 +2157,16 @@
             <span class="doccomment">/// This line has `indent_so_far` levels of indentation, and may have
             /// styling applied to it, but lacks any other text.
             ///
-            /// Only used by `LineOp::StyledEmptyText` (i.e. helper anchors),
+            /// Only used by `LineOp::EmptyAnchor` (i.e. helper anchors),
             /// to avoid them adding trailing-whitespace-only lines.
             </span><span class="comment">//
-            // NOTE(eddyb) the new line is started by `StyledEmptyText` so that
+            // NOTE(eddyb) the new line is started by `EmptyAnchor` so that
             // there remains separation with the previous (unrelated) line,
             // whereas the following lines are very likely related to the
             // helper anchor (but if that changes, this would need to be fixed).
-            // HACK(eddyb) `StyledEmptyText` uses `indent_so_far: 0` to
+            // HACK(eddyb) `EmptyAnchor` uses `indent_so_far: 0` to
             // allow lower-indentation text to follow on the same line.
-            </span>OnlyIndentedOrStyled { indent_so_far: usize },
+            </span>OnlyIndentedOrAnchored { indent_so_far: usize },
 
             <span class="doccomment">/// This line has had text emitted (other than indentation).
             </span>HasText,
@@ -2008,7 +2187,9 @@
             <span class="kw">if let </span>LineOp::AppendToLine(<span class="kw">_</span>)
             | LineOp::PushStyles(<span class="kw">_</span>)
             | LineOp::PopStyles(<span class="kw">_</span>)
-            | LineOp::StyledEmptyText(<span class="kw">_</span>) = op
+            | LineOp::PushAnchor { .. }
+            | LineOp::PopAnchor { .. }
+            | LineOp::EmptyAnchor { .. } = op
             {
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(br) = pending_break_if_within_line.take() {
                     each_text_op(TextOp::Text(<span class="kw">match </span>br {
@@ -2021,15 +2202,15 @@
                 }
 
                 <span class="kw">let </span>target_indent = <span class="kw">match </span>line_state {
-                    <span class="comment">// HACK(eddyb) `StyledEmptyText` uses `indent_so_far: 0` to
+                    <span class="comment">// HACK(eddyb) `EmptyAnchor` uses `indent_so_far: 0` to
                     // allow lower-indentation text to follow on the same line.
-                    </span>LineState::Empty | LineState::OnlyIndentedOrStyled { indent_so_far: <span class="number">0 </span>}
-                        <span class="kw">if </span><span class="macro">matches!</span>(op, LineOp::StyledEmptyText(<span class="kw">_</span>)) =&gt;
+                    </span>LineState::Empty | LineState::OnlyIndentedOrAnchored { indent_so_far: <span class="number">0 </span>}
+                        <span class="kw">if </span><span class="macro">matches!</span>(op, LineOp::EmptyAnchor { .. }) =&gt;
                     {
                         <span class="prelude-val">Some</span>(<span class="number">0</span>)
                     }
 
-                    LineState::Empty | LineState::OnlyIndentedOrStyled { .. } =&gt; <span class="prelude-val">Some</span>(indent),
+                    LineState::Empty | LineState::OnlyIndentedOrAnchored { .. } =&gt; <span class="prelude-val">Some</span>(indent),
                     LineState::HasText =&gt; <span class="prelude-val">None</span>,
                 };
 
@@ -2037,9 +2218,9 @@
                     <span class="kw">let </span>indent_so_far = <span class="kw">match </span>line_state {
                         LineState::Empty =&gt; <span class="number">0</span>,
 
-                        <span class="comment">// FIXME(eddyb) `StyledEmptyText` doesn&#39;t need this, so this
+                        <span class="comment">// FIXME(eddyb) `EmptyAnchor` doesn&#39;t need this, so this
                         // is perhaps unnecessarily over-engineered? (see above)
-                        </span>LineState::OnlyIndentedOrStyled { indent_so_far } =&gt; {
+                        </span>LineState::OnlyIndentedOrAnchored { indent_so_far } =&gt; {
                             <span class="comment">// Disallow reusing lines already indented too much.
                             </span><span class="kw">if </span>indent_so_far &gt; target_indent {
                                 each_text_op(TextOp::Text(<span class="string">&quot;\n&quot;</span>))<span class="question-mark">?</span>;
@@ -2055,9 +2236,7 @@
                     <span class="kw">for _ in </span>indent_so_far..target_indent {
                         each_text_op(TextOp::Text(INDENT))<span class="question-mark">?</span>;
                     }
-                    line_state = LineState::OnlyIndentedOrStyled {
-                        indent_so_far: target_indent,
-                    };
+                    line_state = LineState::OnlyIndentedOrAnchored { indent_so_far: target_indent };
                 }
             }
 
@@ -2074,9 +2253,16 @@
                 LineOp::PushStyles(styles) =&gt; each_text_op(TextOp::PushStyles(styles))<span class="question-mark">?</span>,
                 LineOp::PopStyles(styles) =&gt; each_text_op(TextOp::PopStyles(styles))<span class="question-mark">?</span>,
 
-                LineOp::StyledEmptyText(styles) =&gt; {
-                    each_text_op(TextOp::PushStyles(styles))<span class="question-mark">?</span>;
-                    each_text_op(TextOp::PopStyles(styles))<span class="question-mark">?</span>;
+                LineOp::PushAnchor { is_def, anchor } =&gt; {
+                    each_text_op(TextOp::PushAnchor { is_def, anchor })<span class="question-mark">?</span>;
+                }
+                LineOp::PopAnchor { is_def, anchor } =&gt; {
+                    each_text_op(TextOp::PopAnchor { is_def, anchor })<span class="question-mark">?</span>;
+                }
+
+                LineOp::EmptyAnchor { is_def, anchor } =&gt; {
+                    each_text_op(TextOp::PushAnchor { is_def, anchor })<span class="question-mark">?</span>;
+                    each_text_op(TextOp::PopAnchor { is_def, anchor })<span class="question-mark">?</span>;
                 }
 
                 LineOp::AppendToLine(text) =&gt; {
@@ -2095,7 +2281,7 @@
                 LineOp::BreakIfWithinLine(br) =&gt; {
                     <span class="kw">let </span>elide = <span class="kw">match </span>line_state {
                         LineState::Empty =&gt; <span class="bool-val">true</span>,
-                        LineState::OnlyIndentedOrStyled { indent_so_far } =&gt; {
+                        LineState::OnlyIndentedOrAnchored { indent_so_far } =&gt; {
                             indent_so_far &lt;= indent
                         }
                         LineState::HasText =&gt; <span class="bool-val">false</span>,
@@ -2153,19 +2339,13 @@
 
     <span class="kw">if let </span><span class="prelude-val">Some</span>((last_child, non_last_children)) = children.split_last_mut() {
         <span class="kw">for </span>non_last_child <span class="kw">in </span>non_last_children {
-            non_last_child
-                .nodes
-                .extend([<span class="string">&quot;,&quot;</span>.into(), Node::BreakingOnlySpace]);
+            non_last_child.nodes.extend([<span class="string">&quot;,&quot;</span>.into(), Node::BreakingOnlySpace]);
         }
 
         <span class="comment">// Trailing comma is only needed after the very last element.
         </span>last_child.nodes.push(Node::IfBlockLayout(<span class="string">&quot;,&quot;</span>));
     }
 
-    Fragment::new([
-        prefix.into(),
-        Node::InlineOrIndentedBlock(children),
-        suffix.into(),
-    ])
+    Fragment::new([prefix.into(), Node::InlineOrIndentedBlock(children), suffix.into()])
 }
 </code></pre></div></section></main></body></html>

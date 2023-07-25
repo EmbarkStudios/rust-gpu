@@ -184,6 +184,51 @@
 <a href="#184" id="184">184</a>
 <a href="#185" id="185">185</a>
 <a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
+<a href="#230" id="230">230</a>
+<a href="#231" id="231">231</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! SPIR-V (extended) instructions specific to `rustc_codegen_spirv`, produced
 //! during the original codegen of a crate, and consumed by the `linker`.
 
@@ -201,6 +246,18 @@
 /// See `CUSTOM_EXT_INST_SET`&#39;s docs for further constraints on the full name.
 </span><span class="kw">pub const </span>CUSTOM_EXT_INST_SET_PREFIX: <span class="kw-2">&amp;</span>str = <span class="macro">concat!</span>(<span class="string">&quot;Rust.&quot;</span>, <span class="macro">env!</span>(<span class="string">&quot;CARGO_PKG_NAME&quot;</span>), <span class="string">&quot;.&quot;</span>);
 
+<span class="macro">macro_rules! </span>join_cargo_pkg_version_major_minor_patch {
+    (<span class="macro-nonterminal">$sep</span>:literal) =&gt; {
+        <span class="macro">concat!</span>(
+            <span class="macro">env!</span>(<span class="string">&quot;CARGO_PKG_VERSION_MAJOR&quot;</span>),
+            <span class="macro-nonterminal">$sep</span>,
+            <span class="macro">env!</span>(<span class="string">&quot;CARGO_PKG_VERSION_MINOR&quot;</span>),
+            <span class="macro-nonterminal">$sep</span>,
+            <span class="macro">env!</span>(<span class="string">&quot;CARGO_PKG_VERSION_PATCH&quot;</span>),
+        )
+    };
+}
+
 <span class="macro">lazy_static! </span>{
     <span class="doccomment">/// `OpExtInstImport` &quot;instruction set&quot; name for all Rust-GPU instructions.
     ///
@@ -216,10 +273,6 @@
     ///   if the definitions of the custom instructions have changed - this is
     ///   achieved by hashing the `SCHEMA` constant from `def_custom_insts!` below
     </span><span class="kw">pub static </span><span class="kw-2">ref </span>CUSTOM_EXT_INST_SET: String = {
-        <span class="kw">const </span>VER_MAJOR: <span class="kw-2">&amp;</span>str = <span class="macro">env!</span>(<span class="string">&quot;CARGO_PKG_VERSION_MAJOR&quot;</span>);
-        <span class="kw">const </span>VER_MINOR: <span class="kw-2">&amp;</span>str = <span class="macro">env!</span>(<span class="string">&quot;CARGO_PKG_VERSION_MINOR&quot;</span>);
-        <span class="kw">const </span>VER_PATCH: <span class="kw-2">&amp;</span>str = <span class="macro">env!</span>(<span class="string">&quot;CARGO_PKG_VERSION_PATCH&quot;</span>);
-
         <span class="kw">let </span>schema_hash = {
             <span class="kw">use </span>rustc_data_structures::stable_hasher::StableHasher;
             <span class="kw">use </span>std::hash::Hash;
@@ -229,9 +282,45 @@
             <span class="kw">let </span>(lo, hi) = hasher.finalize();
             (lo <span class="kw">as </span>u128) | ((hi <span class="kw">as </span>u128) &lt;&lt; <span class="number">64</span>)
         };
-
-        <span class="macro">format!</span>(<span class="string">&quot;{CUSTOM_EXT_INST_SET_PREFIX}{VER_MAJOR}_{VER_MINOR}_{VER_PATCH}.{schema_hash:x}&quot;</span>)
+        <span class="kw">let </span>version = <span class="macro">join_cargo_pkg_version_major_minor_patch!</span>(<span class="string">&quot;_&quot;</span>);
+        <span class="macro">format!</span>(<span class="string">&quot;{CUSTOM_EXT_INST_SET_PREFIX}{version}.{schema_hash:x}&quot;</span>)
     };
+}
+
+<span class="kw">pub fn </span>register_to_spirt_context(cx: <span class="kw-2">&amp;</span>spirt::Context) {
+    <span class="kw">use </span>spirt::spv::spec::{ExtInstSetDesc, ExtInstSetInstructionDesc};
+    cx.register_custom_ext_inst_set(
+        <span class="kw-2">&amp;</span>CUSTOM_EXT_INST_SET,
+        ExtInstSetDesc {
+            <span class="comment">// HACK(eddyb) this is the most compact form I&#39;ve found, that isn&#39;t
+            // outright lossy by omitting &quot;Rust vs Rust-GPU&quot; or the version.
+            </span>short_alias: <span class="prelude-val">Some</span>(
+                <span class="macro">concat!</span>(<span class="string">&quot;Rust-GPU &quot;</span>, <span class="macro">join_cargo_pkg_version_major_minor_patch!</span>(<span class="string">&quot;.&quot;</span>)).into(),
+            ),
+            instructions: SCHEMA
+                .iter()
+                .map(|<span class="kw-2">&amp;</span>(i, name, operand_names)| {
+                    (
+                        i,
+                        ExtInstSetInstructionDesc {
+                            name: name.into(),
+                            operand_names: operand_names
+                                .iter()
+                                .map(|name| {
+                                    name.strip_prefix(<span class="string">&quot;..&quot;</span>)
+                                        .unwrap_or(name)
+                                        .replace(<span class="string">&#39;_&#39;</span>, <span class="string">&quot; &quot;</span>)
+                                        .into()
+                                })
+                                .collect(),
+                            is_debuginfo: name.contains(<span class="string">&quot;Debug&quot;</span>)
+                                || name.contains(<span class="string">&quot;InlinedCallFrame&quot;</span>),
+                        },
+                    )
+                })
+                .collect(),
+        },
+    );
 }
 
 <span class="macro">macro_rules! </span>def_custom_insts {
@@ -337,9 +426,10 @@
     // users to do `catch_unwind` at the top-level of their shader to handle
     // panics specially (e.g. by appending to a custom buffer, or using some
     // specific color in a fragment shader, to indicate a panic happened).
-    // NOTE(eddyb) the `message` string follows `debugPrintf` rules, with remaining
-    // operands (collected into `debug_printf_args`) being its formatting arguments.
-    </span><span class="number">4 </span>=&gt; Abort { message, ..debug_printf_args },
+    // NOTE(eddyb) `message_debug_printf` operands form a complete `debugPrintf`
+    // invocation (format string followed by inputs) for the &quot;message&quot;, while
+    // `kind` only distinguishes broad categories like `&quot;abort&quot;` vs `&quot;panic&quot;`.
+    </span><span class="number">4 </span>=&gt; Abort { kind, ..message_debug_printf },
 }
 
 <span class="kw">impl </span>CustomOp {

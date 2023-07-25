@@ -877,6 +877,30 @@
 <a href="#877" id="877">877</a>
 <a href="#878" id="878">878</a>
 <a href="#879" id="879">879</a>
+<a href="#880" id="880">880</a>
+<a href="#881" id="881">881</a>
+<a href="#882" id="882">882</a>
+<a href="#883" id="883">883</a>
+<a href="#884" id="884">884</a>
+<a href="#885" id="885">885</a>
+<a href="#886" id="886">886</a>
+<a href="#887" id="887">887</a>
+<a href="#888" id="888">888</a>
+<a href="#889" id="889">889</a>
+<a href="#890" id="890">890</a>
+<a href="#891" id="891">891</a>
+<a href="#892" id="892">892</a>
+<a href="#893" id="893">893</a>
+<a href="#894" id="894">894</a>
+<a href="#895" id="895">895</a>
+<a href="#896" id="896">896</a>
+<a href="#897" id="897">897</a>
+<a href="#898" id="898">898</a>
+<a href="#899" id="899">899</a>
+<a href="#900" id="900">900</a>
+<a href="#901" id="901">901</a>
+<a href="#902" id="902">902</a>
+<a href="#903" id="903">903</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>rustc_data_structures::fx::FxHashMap;
 <span class="kw">use </span>smallvec::SmallVec;
 <span class="kw">use </span>spirt::func_at::{FuncAt, FuncAtMut};
@@ -885,8 +909,8 @@
 <span class="kw">use </span>spirt::{
     spv, Const, ConstCtor, ConstDef, Context, ControlNode, ControlNodeDef, ControlNodeKind,
     ControlNodeOutputDecl, ControlRegion, ControlRegionInputDecl, DataInst, DataInstDef,
-    DataInstKind, EntityOrientedDenseMap, FuncDefBody, SelectionKind, Type, TypeCtor, TypeDef,
-    Value,
+    DataInstFormDef, DataInstKind, EntityOrientedDenseMap, FuncDefBody, SelectionKind, Type,
+    TypeCtor, TypeDef, Value,
 };
 <span class="kw">use </span>std::collections::hash_map::Entry;
 <span class="kw">use </span>std::convert::{TryFrom, TryInto};
@@ -944,7 +968,7 @@
                     ..
                 } =&gt; {
                     <span class="kw">for </span>func_at_inst <span class="kw">in </span>func_at_control_node.at(insts) {
-                        <span class="kw">if let </span><span class="prelude-val">Ok</span>(redu) = Reducible::try_from(func_at_inst.def()) {
+                        <span class="kw">if let </span><span class="prelude-val">Ok</span>(redu) = Reducible::try_from((cx, func_at_inst.def())) {
                             <span class="kw">let </span>redu_target = ReductionTarget::DataInst(func_at_inst.position);
                             reduction_queue.push((redu_target, redu));
                         }
@@ -1081,10 +1105,14 @@
 
                         <span class="comment">// Replace the reduced `DataInstDef` itself with `OpNop`,
                         // removing the ability to use its &quot;name&quot; as a value.
+                        //
+                        // FIXME(eddyb) cache the interned `OpNop`.
                         </span><span class="kw-2">*</span>func_def_body.at_mut(inst).def() = DataInstDef {
                             attrs: Default::default(),
-                            kind: DataInstKind::SpvInst(wk.OpNop.into()),
-                            output_type: <span class="prelude-val">None</span>,
+                            form: cx.intern(DataInstFormDef {
+                                kind: DataInstKind::SpvInst(wk.OpNop.into()),
+                                output_type: <span class="prelude-val">None</span>,
+                            }),
                             inputs: iter::empty().collect(),
                         };
                     }
@@ -1114,15 +1142,23 @@
             <span class="kw">break</span>;
         }
 
-        func_def_body.inner_in_place_transform_with(<span class="kw-2">&amp;mut </span>ReplaceValueWith(|v| <span class="kw">match </span>v {
-            Value::Const(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
-            <span class="kw">_ </span>=&gt; value_replacements
-                .get(<span class="kw-2">&amp;</span>HashableValue(v))
-                .copied()
-                .map(|new| {
-                    any_changes = <span class="bool-val">true</span>;
-                    new
-                }),
+        func_def_body.inner_in_place_transform_with(<span class="kw-2">&amp;mut </span>ReplaceValueWith(|<span class="kw-2">mut </span>v| {
+            <span class="kw">let </span>old = v;
+            <span class="kw">loop </span>{
+                <span class="kw">match </span>v {
+                    Value::Const(<span class="kw">_</span>) =&gt; <span class="kw">break</span>,
+                    <span class="kw">_ </span>=&gt; <span class="kw">match </span>value_replacements.get(<span class="kw-2">&amp;</span>HashableValue(v)) {
+                        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>new) =&gt; v = new,
+                        <span class="prelude-val">None </span>=&gt; <span class="kw">break</span>,
+                    },
+                }
+            }
+            <span class="kw">if </span>v != old {
+                any_changes = <span class="bool-val">true</span>;
+                <span class="prelude-val">Some</span>(v)
+            } <span class="kw">else </span>{
+                <span class="prelude-val">None
+            </span>}
         }));
     }
 }
@@ -1370,12 +1406,14 @@
     }
 }
 
-<span class="kw">impl </span>TryFrom&lt;<span class="kw-2">&amp;</span>DataInstDef&gt; <span class="kw">for </span>Reducible {
+<span class="comment">// FIXME(eddyb) instead of taking a `&amp;Context`, could `Reducible` hold a `DataInstForm`?
+</span><span class="kw">impl </span>TryFrom&lt;(<span class="kw-2">&amp;</span>Context, <span class="kw-2">&amp;</span>DataInstDef)&gt; <span class="kw">for </span>Reducible {
     <span class="kw">type </span>Error = ();
-    <span class="kw">fn </span>try_from(inst_def: <span class="kw-2">&amp;</span>DataInstDef) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, ()&gt; {
-        <span class="kw">if let </span>DataInstKind::SpvInst(spv_inst) = <span class="kw-2">&amp;</span>inst_def.kind {
+    <span class="kw">fn </span>try_from((cx, inst_def): (<span class="kw-2">&amp;</span>Context, <span class="kw-2">&amp;</span>DataInstDef)) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, ()&gt; {
+        <span class="kw">let </span>inst_form_def = <span class="kw-2">&amp;</span>cx[inst_def.form];
+        <span class="kw">if let </span>DataInstKind::SpvInst(spv_inst) = <span class="kw-2">&amp;</span>inst_form_def.kind {
             <span class="kw">let </span>op = PureOp::try_from(spv_inst)<span class="question-mark">?</span>;
-            <span class="kw">let </span>output_type = inst_def.output_type.unwrap();
+            <span class="kw">let </span>output_type = inst_form_def.output_type.unwrap();
             <span class="kw">if let </span>[input] = inst_def.inputs[..] {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="self">Self </span>{
                     op,
@@ -1388,15 +1426,21 @@
     }
 }
 
-<span class="comment">// HACK(eddyb) `IntToBool` is the only reason this is `TryFrom` not `From`.
-</span><span class="kw">impl </span>TryFrom&lt;Reducible&gt; <span class="kw">for </span>DataInstDef {
-    <span class="kw">type </span>Error = ();
-    <span class="kw">fn </span>try_from(redu: Reducible) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, ()&gt; {
-        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+<span class="kw">impl </span>Reducible {
+    <span class="comment">// HACK(eddyb) `IntToBool` is the only reason this can return `None`.
+    </span><span class="kw">fn </span>try_into_inst(<span class="self">self</span>, cx: <span class="kw-2">&amp;</span>Context) -&gt; <span class="prelude-ty">Option</span>&lt;DataInstDef&gt; {
+        <span class="kw">let </span><span class="self">Self </span>{
+            op,
+            output_type,
+            input,
+        } = <span class="self">self</span>;
+        <span class="prelude-val">Some</span>(DataInstDef {
             attrs: Default::default(),
-            kind: DataInstKind::SpvInst(redu.op.try_into()<span class="question-mark">?</span>),
-            output_type: <span class="prelude-val">Some</span>(redu.output_type),
-            inputs: iter::once(redu.input).collect(),
+            form: cx.intern(DataInstFormDef {
+                kind: DataInstKind::SpvInst(op.try_into().ok()<span class="question-mark">?</span>),
+                output_type: <span class="prelude-val">Some</span>(output_type),
+            }),
+            inputs: iter::once(input).collect(),
         })
     }
 }
@@ -1495,11 +1539,11 @@
 
 <span class="kw">impl </span>Reducible&lt;<span class="kw-2">&amp;</span>DataInstDef&gt; {
     <span class="comment">// FIXME(eddyb) force the input to actually be itself some kind of pure op.
-    </span><span class="kw">fn </span>try_reduce_output_of_data_inst(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;ReductionStep&gt; {
+    </span><span class="kw">fn </span>try_reduce_output_of_data_inst(<span class="kw-2">&amp;</span><span class="self">self</span>, cx: <span class="kw-2">&amp;</span>Context) -&gt; <span class="prelude-ty">Option</span>&lt;ReductionStep&gt; {
         <span class="kw">let </span>wk = <span class="kw-2">&amp;</span><span class="kw">super</span>::SpvSpecWithExtras::get().well_known;
 
         <span class="kw">let </span>input_inst_def = <span class="self">self</span>.input;
-        <span class="kw">if let </span>DataInstKind::SpvInst(input_spv_inst) = <span class="kw-2">&amp;</span>input_inst_def.kind {
+        <span class="kw">if let </span>DataInstKind::SpvInst(input_spv_inst) = <span class="kw-2">&amp;</span>cx[input_inst_def.form].kind {
             <span class="comment">// NOTE(eddyb) do not destroy information left in e.g. comments.
             </span><span class="attr">#[allow(clippy::match_same_arms)]
             </span><span class="kw">match </span><span class="self">self</span>.op {
@@ -1608,8 +1652,9 @@
                     .try_reduce(cx, func.reborrow(), value_replacements, parent_map, cache)<span class="question-mark">?</span>;
                 <span class="comment">// HACK(eddyb) this is here because it can fail, see the comment
                 // on `output_from_updated_state` for what&#39;s actually going on.
-                </span><span class="kw">let </span>output_from_updated_state_inst =
-                    DataInstDef::try_from(<span class="self">self</span>.with_input(input_from_updated_state)).ok()<span class="question-mark">?</span>;
+                </span><span class="kw">let </span>output_from_updated_state_inst = <span class="self">self
+                    </span>.with_input(input_from_updated_state)
+                    .try_into_inst(cx)<span class="question-mark">?</span>;
 
                 <span class="comment">// Now that the reduction succeeded for the initial state,
                 // we can proceed with augmenting the loop with the extra state.
@@ -1745,7 +1790,10 @@
             }
             Value::DataInstOutput(inst) =&gt; {
                 <span class="kw">let </span>inst_def = <span class="kw-2">&amp;*</span>func.reborrow().at(inst).def();
-                <span class="kw">match </span><span class="self">self</span>.with_input(inst_def).try_reduce_output_of_data_inst()<span class="question-mark">? </span>{
+                <span class="kw">match </span><span class="self">self
+                    </span>.with_input(inst_def)
+                    .try_reduce_output_of_data_inst(cx)<span class="question-mark">?
+                </span>{
                     ReductionStep::Complete(v) =&gt; <span class="prelude-val">Some</span>(v),
                     <span class="comment">// FIXME(eddyb) actually use a loop instead of recursing here.
                     </span>ReductionStep::Partial(redu) =&gt; {

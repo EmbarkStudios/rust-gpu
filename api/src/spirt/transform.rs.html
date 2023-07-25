@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spirt-0.2.0/src/transform.rs`."><title>transform.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-f3501f0f5ae15dfb.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="spirt" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.0-nightly (1a5f8bce7 2023-05-26)" data-search-js="search-4926e5fc22a5646a.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../static.files/source-script-11255107d0a65077.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-f0540c1d82cde29b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../spirt/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/git/checkouts/spirt-9c237dd53f05c2cc/82daf25/src/transform.rs`."><title>transform.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-f3501f0f5ae15dfb.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="spirt" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.0-nightly (1a5f8bce7 2023-05-26)" data-search-js="search-4926e5fc22a5646a.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../static.files/source-script-11255107d0a65077.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-f0540c1d82cde29b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../spirt/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -760,65 +760,6 @@
 <a href="#760" id="760">760</a>
 <a href="#761" id="761">761</a>
 <a href="#762" id="762">762</a>
-<a href="#763" id="763">763</a>
-<a href="#764" id="764">764</a>
-<a href="#765" id="765">765</a>
-<a href="#766" id="766">766</a>
-<a href="#767" id="767">767</a>
-<a href="#768" id="768">768</a>
-<a href="#769" id="769">769</a>
-<a href="#770" id="770">770</a>
-<a href="#771" id="771">771</a>
-<a href="#772" id="772">772</a>
-<a href="#773" id="773">773</a>
-<a href="#774" id="774">774</a>
-<a href="#775" id="775">775</a>
-<a href="#776" id="776">776</a>
-<a href="#777" id="777">777</a>
-<a href="#778" id="778">778</a>
-<a href="#779" id="779">779</a>
-<a href="#780" id="780">780</a>
-<a href="#781" id="781">781</a>
-<a href="#782" id="782">782</a>
-<a href="#783" id="783">783</a>
-<a href="#784" id="784">784</a>
-<a href="#785" id="785">785</a>
-<a href="#786" id="786">786</a>
-<a href="#787" id="787">787</a>
-<a href="#788" id="788">788</a>
-<a href="#789" id="789">789</a>
-<a href="#790" id="790">790</a>
-<a href="#791" id="791">791</a>
-<a href="#792" id="792">792</a>
-<a href="#793" id="793">793</a>
-<a href="#794" id="794">794</a>
-<a href="#795" id="795">795</a>
-<a href="#796" id="796">796</a>
-<a href="#797" id="797">797</a>
-<a href="#798" id="798">798</a>
-<a href="#799" id="799">799</a>
-<a href="#800" id="800">800</a>
-<a href="#801" id="801">801</a>
-<a href="#802" id="802">802</a>
-<a href="#803" id="803">803</a>
-<a href="#804" id="804">804</a>
-<a href="#805" id="805">805</a>
-<a href="#806" id="806">806</a>
-<a href="#807" id="807">807</a>
-<a href="#808" id="808">808</a>
-<a href="#809" id="809">809</a>
-<a href="#810" id="810">810</a>
-<a href="#811" id="811">811</a>
-<a href="#812" id="812">812</a>
-<a href="#813" id="813">813</a>
-<a href="#814" id="814">814</a>
-<a href="#815" id="815">815</a>
-<a href="#816" id="816">816</a>
-<a href="#817" id="817">817</a>
-<a href="#818" id="818">818</a>
-<a href="#819" id="819">819</a>
-<a href="#820" id="820">820</a>
-<a href="#821" id="821">821</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Mutable IR traversal.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::func_at::FuncAtMut;
@@ -826,10 +767,10 @@
 <span class="kw">use crate</span>::{
     cfg, spv, AddrSpace, Attr, AttrSet, AttrSetDef, Const, ConstCtor, ConstDef, ControlNode,
     ControlNodeDef, ControlNodeKind, ControlNodeOutputDecl, ControlRegion, ControlRegionDef,
-    ControlRegionInputDecl, DataInst, DataInstDef, DataInstKind, DeclDef, EntityListIter,
-    ExportKey, Exportee, Func, FuncDecl, FuncDefBody, FuncParam, GlobalVar, GlobalVarDecl,
-    GlobalVarDefBody, Import, Module, ModuleDebugInfo, ModuleDialect, OrdAssertEq, SelectionKind,
-    Type, TypeCtor, TypeCtorArg, TypeDef, Value,
+    ControlRegionInputDecl, DataInst, DataInstDef, DataInstForm, DataInstFormDef, DataInstKind,
+    DeclDef, EntityListIter, ExportKey, Exportee, Func, FuncDecl, FuncDefBody, FuncParam,
+    GlobalVar, GlobalVarDecl, GlobalVarDefBody, Import, Module, ModuleDebugInfo, ModuleDialect,
+    OrdAssertEq, SelectionKind, Type, TypeCtor, TypeCtorArg, TypeDef, Value,
 };
 <span class="kw">use </span>std::cmp::Ordering;
 <span class="kw">use </span>std::rc::Rc;
@@ -966,6 +907,12 @@
     <span class="kw">fn </span>transform_const_use(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _ct: Const) -&gt; Transformed&lt;Const&gt; {
         Transformed::Unchanged
     }
+    <span class="kw">fn </span>transform_data_inst_form_use(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        _data_inst_form: DataInstForm,
+    ) -&gt; Transformed&lt;DataInstForm&gt; {
+        Transformed::Unchanged
+    }
 
     <span class="comment">// Module-stored entity leaves (noop default behavior).
     </span><span class="kw">fn </span>transform_global_var_use(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _gv: GlobalVar) -&gt; Transformed&lt;GlobalVar&gt; {
@@ -992,6 +939,12 @@
     }
     <span class="kw">fn </span>transform_const_def(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ct_def: <span class="kw-2">&amp;</span>ConstDef) -&gt; Transformed&lt;ConstDef&gt; {
         ct_def.inner_transform_with(<span class="self">self</span>)
+    }
+    <span class="kw">fn </span>transform_data_inst_form_def(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        data_inst_form_def: <span class="kw-2">&amp;</span>DataInstFormDef,
+    ) -&gt; Transformed&lt;DataInstFormDef&gt; {
+        data_inst_form_def.inner_transform_with(<span class="self">self</span>)
     }
     <span class="kw">fn </span>transform_value_use(<span class="kw-2">&amp;mut </span><span class="self">self</span>, v: <span class="kw-2">&amp;</span>Value) -&gt; Transformed&lt;Value&gt; {
         v.inner_transform_with(<span class="self">self</span>)
@@ -1049,14 +1002,7 @@
 </span><span class="kw">impl </span>InnerInPlaceTransform <span class="kw">for </span>Module {
     <span class="kw">fn </span>inner_in_place_transform_with(<span class="kw-2">&amp;mut </span><span class="self">self</span>, transformer: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>Transformer) {
         <span class="comment">// FIXME(eddyb) this can&#39;t be exhaustive because of the private `cx` field.
-        </span><span class="kw">let </span><span class="self">Self </span>{
-            dialect,
-            debug_info,
-            global_vars: <span class="kw">_</span>,
-            funcs: <span class="kw">_</span>,
-            exports,
-            ..
-        } = <span class="self">self</span>;
+        </span><span class="kw">let </span><span class="self">Self </span>{ dialect, debug_info, global_vars: <span class="kw">_</span>, funcs: <span class="kw">_</span>, exports, .. } = <span class="self">self</span>;
 
         transformer.in_place_transform_module_dialect(dialect);
         transformer.in_place_transform_module_debug_info(debug_info);
@@ -1065,9 +1011,7 @@
         // to be able to use in-place mutable iteration for the former, and
         // `Transformed::map_iter` (i.e. immutable iteration) for the latter.
         </span><span class="kw">for </span>exportee <span class="kw">in </span>exports.values_mut() {
-            exportee
-                .inner_transform_with(transformer)
-                .apply_to(exportee);
+            exportee.inner_transform_with(transformer).apply_to(exportee);
         }
         Transformed::map_iter(exports.keys(), |export_key| {
             export_key.inner_transform_with(transformer)
@@ -1103,10 +1047,7 @@
         <span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::LinkName(<span class="kw">_</span>) =&gt; Transformed::Unchanged,
 
-            <span class="self">Self</span>::SpvEntryPoint {
-                imms,
-                interface_global_vars,
-            } =&gt; <span class="macro">transform!</span>({
+            <span class="self">Self</span>::SpvEntryPoint { imms, interface_global_vars } =&gt; <span class="macro">transform!</span>({
                 imms -&gt; Transformed::Unchanged,
                 interface_global_vars -&gt; Transformed::map_iter(
                     interface_global_vars.iter(),
@@ -1240,11 +1181,7 @@
 
 <span class="kw">impl </span>InnerTransform <span class="kw">for </span>TypeDef {
     <span class="kw">fn </span>inner_transform_with(<span class="kw-2">&amp;</span><span class="self">self</span>, transformer: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>Transformer) -&gt; Transformed&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">let </span><span class="self">Self </span>{
-            attrs,
-            ctor,
-            ctor_args,
-        } = <span class="self">self</span>;
+        <span class="kw">let </span><span class="self">Self </span>{ attrs, ctor, ctor_args } = <span class="self">self</span>;
 
         <span class="macro">transform!</span>({
             attrs -&gt; transformer.transform_attr_set_use(<span class="kw-2">*</span>attrs),
@@ -1272,12 +1209,7 @@
 
 <span class="kw">impl </span>InnerTransform <span class="kw">for </span>ConstDef {
     <span class="kw">fn </span>inner_transform_with(<span class="kw-2">&amp;</span><span class="self">self</span>, transformer: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>Transformer) -&gt; Transformed&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">let </span><span class="self">Self </span>{
-            attrs,
-            ty,
-            ctor,
-            ctor_args,
-        } = <span class="self">self</span>;
+        <span class="kw">let </span><span class="self">Self </span>{ attrs, ty, ctor, ctor_args } = <span class="self">self</span>;
 
         <span class="macro">transform!</span>({
             attrs -&gt; transformer.transform_attr_set_use(<span class="kw-2">*</span>attrs),
@@ -1316,18 +1248,10 @@
 
 <span class="kw">impl </span>InnerInPlaceTransform <span class="kw">for </span>GlobalVarDecl {
     <span class="kw">fn </span>inner_in_place_transform_with(<span class="kw-2">&amp;mut </span><span class="self">self</span>, transformer: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>Transformer) {
-        <span class="kw">let </span><span class="self">Self </span>{
-            attrs,
-            type_of_ptr_to,
-            shape,
-            addr_space,
-            def,
-        } = <span class="self">self</span>;
+        <span class="kw">let </span><span class="self">Self </span>{ attrs, type_of_ptr_to, shape, addr_space, def } = <span class="self">self</span>;
 
         transformer.transform_attr_set_use(<span class="kw-2">*</span>attrs).apply_to(attrs);
-        transformer
-            .transform_type_use(<span class="kw-2">*</span>type_of_ptr_to)
-            .apply_to(type_of_ptr_to);
+        transformer.transform_type_use(<span class="kw-2">*</span>type_of_ptr_to).apply_to(type_of_ptr_to);
         <span class="kw">if let </span><span class="prelude-val">Some</span>(shape) = shape {
             <span class="kw">match </span>shape {
                 qptr::shapes::GlobalVarShape::TypedInterface(ty) =&gt; {
@@ -1349,21 +1273,14 @@
         <span class="kw">let </span><span class="self">Self </span>{ initializer } = <span class="self">self</span>;
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(initializer) = initializer {
-            transformer
-                .transform_const_use(<span class="kw-2">*</span>initializer)
-                .apply_to(initializer);
+            transformer.transform_const_use(<span class="kw-2">*</span>initializer).apply_to(initializer);
         }
     }
 }
 
 <span class="kw">impl </span>InnerInPlaceTransform <span class="kw">for </span>FuncDecl {
     <span class="kw">fn </span>inner_in_place_transform_with(<span class="kw-2">&amp;mut </span><span class="self">self</span>, transformer: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>Transformer) {
-        <span class="kw">let </span><span class="self">Self </span>{
-            attrs,
-            ret_type,
-            params,
-            def,
-        } = <span class="self">self</span>;
+        <span class="kw">let </span><span class="self">Self </span>{ attrs, ret_type, params, def } = <span class="self">self</span>;
 
         transformer.transform_attr_set_use(<span class="kw-2">*</span>attrs).apply_to(attrs);
         transformer.transform_type_use(<span class="kw-2">*</span>ret_type).apply_to(ret_type);
@@ -1391,16 +1308,13 @@
 <span class="kw">impl </span>InnerInPlaceTransform <span class="kw">for </span>FuncDefBody {
     <span class="kw">fn </span>inner_in_place_transform_with(<span class="kw-2">&amp;mut </span><span class="self">self</span>, transformer: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>Transformer) {
         <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.unstructured_cfg {
-            <span class="prelude-val">None </span>=&gt; <span class="self">self
-                </span>.at_mut_body()
-                .inner_in_place_transform_with(transformer),
+            <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.at_mut_body().inner_in_place_transform_with(transformer),
             <span class="prelude-val">Some</span>(cfg) =&gt; {
                 <span class="comment">// HACK(eddyb) have to compute this before borrowing any `self` fields.
                 </span><span class="kw">let </span>rpo = cfg.rev_post_order(<span class="self">self</span>);
 
                 <span class="kw">for </span>region <span class="kw">in </span>rpo {
-                    <span class="self">self</span>.at_mut(region)
-                        .inner_in_place_transform_with(transformer);
+                    <span class="self">self</span>.at_mut(region).inner_in_place_transform_with(transformer);
 
                     <span class="kw">let </span>cfg = <span class="self">self</span>.unstructured_cfg.as_mut().unwrap();
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(control_inst) = cfg.control_inst_on_exit_from.get_mut(region) {
@@ -1416,25 +1330,14 @@
     <span class="kw">fn </span>inner_in_place_transform_with(<span class="kw-2">&amp;mut </span><span class="self">self</span>, transformer: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>Transformer) {
         <span class="comment">// HACK(eddyb) handle the fields of `ControlRegion` separately, to
         // allow reborrowing `FuncAtMut` (for recursing into `ControlNode`s).
-        </span><span class="kw">let </span>ControlRegionDef {
-            inputs,
-            children: <span class="kw">_</span>,
-            outputs: <span class="kw">_</span>,
-        } = <span class="self">self</span>.reborrow().def();
+        </span><span class="kw">let </span>ControlRegionDef { inputs, children: <span class="kw">_</span>, outputs: <span class="kw">_ </span>} = <span class="self">self</span>.reborrow().def();
         <span class="kw">for </span>input <span class="kw">in </span>inputs {
             input.inner_transform_with(transformer).apply_to(input);
         }
 
-        <span class="self">self</span>.reborrow()
-            .at_children()
-            .into_iter()
-            .inner_in_place_transform_with(transformer);
+        <span class="self">self</span>.reborrow().at_children().into_iter().inner_in_place_transform_with(transformer);
 
-        <span class="kw">let </span>ControlRegionDef {
-            inputs: <span class="kw">_</span>,
-            children: <span class="kw">_</span>,
-            outputs,
-        } = <span class="self">self</span>.reborrow().def();
+        <span class="kw">let </span>ControlRegionDef { inputs: <span class="kw">_</span>, children: <span class="kw">_</span>, outputs } = <span class="self">self</span>.reborrow().def();
         <span class="kw">for </span>v <span class="kw">in </span>outputs {
             transformer.transform_value_use(v).apply_to(v);
         }
@@ -1491,15 +1394,9 @@
                 scrutinee,
                 cases: <span class="kw">_</span>,
             } =&gt; {
-                transformer
-                    .transform_value_use(scrutinee)
-                    .apply_to(scrutinee);
+                transformer.transform_value_use(scrutinee).apply_to(scrutinee);
             }
-            ControlNodeKind::Loop {
-                initial_inputs,
-                body: <span class="kw">_</span>,
-                repeat_condition: <span class="kw">_</span>,
-            } =&gt; {
+            ControlNodeKind::Loop { initial_inputs, body: <span class="kw">_</span>, repeat_condition: <span class="kw">_ </span>} =&gt; {
                 <span class="kw">for </span>v <span class="kw">in </span>initial_inputs {
                     transformer.transform_value_use(v).apply_to(v);
                 }
@@ -1510,9 +1407,7 @@
         // in a `Vec` (or `SmallVec`), which requires workarounds like this.
         </span><span class="kw">for </span>child_region_idx <span class="kw">in </span><span class="number">0</span>..<span class="self">self</span>.child_regions().len() {
             <span class="kw">let </span>child_region = <span class="self">self</span>.child_regions()[child_region_idx];
-            <span class="self">self</span>.reborrow()
-                .at(child_region)
-                .inner_in_place_transform_with(transformer);
+            <span class="self">self</span>.reborrow().at(child_region).inner_in_place_transform_with(transformer);
         }
 
         <span class="kw">let </span>ControlNodeDef { kind, outputs } = <span class="self">self</span>.reborrow().def();
@@ -1520,20 +1415,10 @@
         <span class="kw">match </span>kind {
             <span class="comment">// Fully handled above, before recursing into any child regions.
             </span>ControlNodeKind::Block { insts: <span class="kw">_ </span>}
-            | ControlNodeKind::Select {
-                kind: <span class="kw">_</span>,
-                scrutinee: <span class="kw">_</span>,
-                cases: <span class="kw">_</span>,
-            } =&gt; {}
+            | ControlNodeKind::Select { kind: <span class="kw">_</span>, scrutinee: <span class="kw">_</span>, cases: <span class="kw">_ </span>} =&gt; {}
 
-            ControlNodeKind::Loop {
-                initial_inputs: <span class="kw">_</span>,
-                body: <span class="kw">_</span>,
-                repeat_condition,
-            } =&gt; {
-                transformer
-                    .transform_value_use(repeat_condition)
-                    .apply_to(repeat_condition);
+            ControlNodeKind::Loop { initial_inputs: <span class="kw">_</span>, body: <span class="kw">_</span>, repeat_condition } =&gt; {
+                transformer.transform_value_use(repeat_condition).apply_to(repeat_condition);
             }
         };
 
@@ -1559,46 +1444,49 @@
 
 <span class="kw">impl </span>InnerInPlaceTransform <span class="kw">for </span>FuncAtMut&lt;<span class="lifetime">&#39;_</span>, DataInst&gt; {
     <span class="kw">fn </span>inner_in_place_transform_with(<span class="kw-2">&amp;mut </span><span class="self">self</span>, transformer: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>Transformer) {
-        <span class="kw">let </span>DataInstDef {
-            attrs,
-            kind,
-            output_type,
-            inputs,
-        } = <span class="self">self</span>.reborrow().def();
+        <span class="kw">let </span>DataInstDef { attrs, form, inputs } = <span class="self">self</span>.reborrow().def();
 
         transformer.transform_attr_set_use(<span class="kw-2">*</span>attrs).apply_to(attrs);
-        <span class="kw">match </span>kind {
-            DataInstKind::FuncCall(func) =&gt; transformer.transform_func_use(<span class="kw-2">*</span>func).apply_to(func),
-            DataInstKind::QPtr(op) =&gt; <span class="kw">match </span>op {
-                QPtrOp::FuncLocalVar(<span class="kw">_</span>)
-                | QPtrOp::HandleArrayIndex
-                | QPtrOp::BufferData
-                | QPtrOp::BufferDynLen { .. }
-                | QPtrOp::Offset(<span class="kw">_</span>)
-                | QPtrOp::DynOffset { .. }
-                | QPtrOp::Load
-                | QPtrOp::Store =&gt; {}
-            },
-            DataInstKind::SpvInst(<span class="kw">_</span>) | DataInstKind::SpvExtInst { .. } =&gt; {}
-        }
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(ty) = output_type {
-            transformer.transform_type_use(<span class="kw-2">*</span>ty).apply_to(ty);
-        }
+        transformer.transform_data_inst_form_use(<span class="kw-2">*</span>form).apply_to(form);
         <span class="kw">for </span>v <span class="kw">in </span>inputs {
             transformer.transform_value_use(v).apply_to(v);
         }
     }
 }
 
+<span class="kw">impl </span>InnerTransform <span class="kw">for </span>DataInstFormDef {
+    <span class="kw">fn </span>inner_transform_with(<span class="kw-2">&amp;</span><span class="self">self</span>, transformer: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>Transformer) -&gt; Transformed&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span><span class="self">Self </span>{ kind, output_type } = <span class="self">self</span>;
+
+        <span class="macro">transform!</span>({
+            kind -&gt; <span class="kw">match </span>kind {
+                DataInstKind::FuncCall(func) =&gt; transformer.transform_func_use(<span class="kw-2">*</span>func).map(DataInstKind::FuncCall),
+                DataInstKind::QPtr(op) =&gt; <span class="kw">match </span>op {
+                    QPtrOp::FuncLocalVar(<span class="kw">_</span>)
+                    | QPtrOp::HandleArrayIndex
+                    | QPtrOp::BufferData
+                    | QPtrOp::BufferDynLen { .. }
+                    | QPtrOp::Offset(<span class="kw">_</span>)
+                    | QPtrOp::DynOffset { .. }
+                    | QPtrOp::Load
+                    | QPtrOp::Store =&gt; Transformed::Unchanged,
+                },
+                DataInstKind::SpvInst(<span class="kw">_</span>) | DataInstKind::SpvExtInst { .. } =&gt; Transformed::Unchanged,
+            },
+            <span class="comment">// FIXME(eddyb) this should be replaced with an impl of `InnerTransform`
+            // for `Option&lt;T&gt;` or some other helper, to avoid &quot;manual transpose&quot;.
+            </span>output_type -&gt; output_type.map(|ty| transformer.transform_type_use(ty))
+                .map_or(Transformed::Unchanged, |t| t.map(<span class="prelude-val">Some</span>)),
+        } =&gt; <span class="self">Self </span>{
+            kind,
+            output_type,
+        })
+    }
+}
+
 <span class="kw">impl </span>InnerInPlaceTransform <span class="kw">for </span>cfg::ControlInst {
     <span class="kw">fn </span>inner_in_place_transform_with(<span class="kw-2">&amp;mut </span><span class="self">self</span>, transformer: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>Transformer) {
-        <span class="kw">let </span><span class="self">Self </span>{
-            attrs,
-            kind,
-            inputs,
-            targets: <span class="kw">_</span>,
-            target_inputs,
-        } = <span class="self">self</span>;
+        <span class="kw">let </span><span class="self">Self </span>{ attrs, kind, inputs, targets: <span class="kw">_</span>, target_inputs } = <span class="self">self</span>;
 
         transformer.transform_attr_set_use(<span class="kw-2">*</span>attrs).apply_to(attrs);
         <span class="kw">match </span>kind {
@@ -1628,14 +1516,8 @@
                 ct -&gt; transformer.transform_const_use(<span class="kw-2">*</span>ct),
             } =&gt; <span class="self">Self</span>::Const(ct)),
 
-            <span class="self">Self</span>::ControlRegionInput {
-                region: <span class="kw">_</span>,
-                input_idx: <span class="kw">_</span>,
-            }
-            | <span class="self">Self</span>::ControlNodeOutput {
-                control_node: <span class="kw">_</span>,
-                output_idx: <span class="kw">_</span>,
-            }
+            <span class="self">Self</span>::ControlRegionInput { region: <span class="kw">_</span>, input_idx: <span class="kw">_ </span>}
+            | <span class="self">Self</span>::ControlNodeOutput { control_node: <span class="kw">_</span>, output_idx: <span class="kw">_ </span>}
             | <span class="self">Self</span>::DataInstOutput(<span class="kw">_</span>) =&gt; Transformed::Unchanged,
         }
     }

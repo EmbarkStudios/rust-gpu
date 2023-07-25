@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spirt-0.2.0/src/spv/spec.rs`."><title>spec.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-f3501f0f5ae15dfb.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="spirt" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.0-nightly (1a5f8bce7 2023-05-26)" data-search-js="search-4926e5fc22a5646a.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../static.files/source-script-11255107d0a65077.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-f0540c1d82cde29b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../spirt/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/git/checkouts/spirt-9c237dd53f05c2cc/82daf25/src/spv/spec.rs`."><title>spec.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-f3501f0f5ae15dfb.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="spirt" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.0-nightly (1a5f8bce7 2023-05-26)" data-search-js="search-4926e5fc22a5646a.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../static.files/source-script-11255107d0a65077.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-f0540c1d82cde29b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../spirt/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1240,11 +1240,241 @@
 <a href="#1240" id="1240">1240</a>
 <a href="#1241" id="1241">1241</a>
 <a href="#1242" id="1242">1242</a>
+<a href="#1243" id="1243">1243</a>
+<a href="#1244" id="1244">1244</a>
+<a href="#1245" id="1245">1245</a>
+<a href="#1246" id="1246">1246</a>
+<a href="#1247" id="1247">1247</a>
+<a href="#1248" id="1248">1248</a>
+<a href="#1249" id="1249">1249</a>
+<a href="#1250" id="1250">1250</a>
+<a href="#1251" id="1251">1251</a>
+<a href="#1252" id="1252">1252</a>
+<a href="#1253" id="1253">1253</a>
+<a href="#1254" id="1254">1254</a>
+<a href="#1255" id="1255">1255</a>
+<a href="#1256" id="1256">1256</a>
+<a href="#1257" id="1257">1257</a>
+<a href="#1258" id="1258">1258</a>
+<a href="#1259" id="1259">1259</a>
+<a href="#1260" id="1260">1260</a>
+<a href="#1261" id="1261">1261</a>
+<a href="#1262" id="1262">1262</a>
+<a href="#1263" id="1263">1263</a>
+<a href="#1264" id="1264">1264</a>
+<a href="#1265" id="1265">1265</a>
+<a href="#1266" id="1266">1266</a>
+<a href="#1267" id="1267">1267</a>
+<a href="#1268" id="1268">1268</a>
+<a href="#1269" id="1269">1269</a>
+<a href="#1270" id="1270">1270</a>
+<a href="#1271" id="1271">1271</a>
+<a href="#1272" id="1272">1272</a>
+<a href="#1273" id="1273">1273</a>
+<a href="#1274" id="1274">1274</a>
+<a href="#1275" id="1275">1275</a>
+<a href="#1276" id="1276">1276</a>
+<a href="#1277" id="1277">1277</a>
+<a href="#1278" id="1278">1278</a>
+<a href="#1279" id="1279">1279</a>
+<a href="#1280" id="1280">1280</a>
+<a href="#1281" id="1281">1281</a>
+<a href="#1282" id="1282">1282</a>
+<a href="#1283" id="1283">1283</a>
+<a href="#1284" id="1284">1284</a>
+<a href="#1285" id="1285">1285</a>
+<a href="#1286" id="1286">1286</a>
+<a href="#1287" id="1287">1287</a>
+<a href="#1288" id="1288">1288</a>
+<a href="#1289" id="1289">1289</a>
+<a href="#1290" id="1290">1290</a>
+<a href="#1291" id="1291">1291</a>
+<a href="#1292" id="1292">1292</a>
+<a href="#1293" id="1293">1293</a>
+<a href="#1294" id="1294">1294</a>
+<a href="#1295" id="1295">1295</a>
+<a href="#1296" id="1296">1296</a>
+<a href="#1297" id="1297">1297</a>
+<a href="#1298" id="1298">1298</a>
+<a href="#1299" id="1299">1299</a>
+<a href="#1300" id="1300">1300</a>
+<a href="#1301" id="1301">1301</a>
+<a href="#1302" id="1302">1302</a>
+<a href="#1303" id="1303">1303</a>
+<a href="#1304" id="1304">1304</a>
+<a href="#1305" id="1305">1305</a>
+<a href="#1306" id="1306">1306</a>
+<a href="#1307" id="1307">1307</a>
+<a href="#1308" id="1308">1308</a>
+<a href="#1309" id="1309">1309</a>
+<a href="#1310" id="1310">1310</a>
+<a href="#1311" id="1311">1311</a>
+<a href="#1312" id="1312">1312</a>
+<a href="#1313" id="1313">1313</a>
+<a href="#1314" id="1314">1314</a>
+<a href="#1315" id="1315">1315</a>
+<a href="#1316" id="1316">1316</a>
+<a href="#1317" id="1317">1317</a>
+<a href="#1318" id="1318">1318</a>
+<a href="#1319" id="1319">1319</a>
+<a href="#1320" id="1320">1320</a>
+<a href="#1321" id="1321">1321</a>
+<a href="#1322" id="1322">1322</a>
+<a href="#1323" id="1323">1323</a>
+<a href="#1324" id="1324">1324</a>
+<a href="#1325" id="1325">1325</a>
+<a href="#1326" id="1326">1326</a>
+<a href="#1327" id="1327">1327</a>
+<a href="#1328" id="1328">1328</a>
+<a href="#1329" id="1329">1329</a>
+<a href="#1330" id="1330">1330</a>
+<a href="#1331" id="1331">1331</a>
+<a href="#1332" id="1332">1332</a>
+<a href="#1333" id="1333">1333</a>
+<a href="#1334" id="1334">1334</a>
+<a href="#1335" id="1335">1335</a>
+<a href="#1336" id="1336">1336</a>
+<a href="#1337" id="1337">1337</a>
+<a href="#1338" id="1338">1338</a>
+<a href="#1339" id="1339">1339</a>
+<a href="#1340" id="1340">1340</a>
+<a href="#1341" id="1341">1341</a>
+<a href="#1342" id="1342">1342</a>
+<a href="#1343" id="1343">1343</a>
+<a href="#1344" id="1344">1344</a>
+<a href="#1345" id="1345">1345</a>
+<a href="#1346" id="1346">1346</a>
+<a href="#1347" id="1347">1347</a>
+<a href="#1348" id="1348">1348</a>
+<a href="#1349" id="1349">1349</a>
+<a href="#1350" id="1350">1350</a>
+<a href="#1351" id="1351">1351</a>
+<a href="#1352" id="1352">1352</a>
+<a href="#1353" id="1353">1353</a>
+<a href="#1354" id="1354">1354</a>
+<a href="#1355" id="1355">1355</a>
+<a href="#1356" id="1356">1356</a>
+<a href="#1357" id="1357">1357</a>
+<a href="#1358" id="1358">1358</a>
+<a href="#1359" id="1359">1359</a>
+<a href="#1360" id="1360">1360</a>
+<a href="#1361" id="1361">1361</a>
+<a href="#1362" id="1362">1362</a>
+<a href="#1363" id="1363">1363</a>
+<a href="#1364" id="1364">1364</a>
+<a href="#1365" id="1365">1365</a>
+<a href="#1366" id="1366">1366</a>
+<a href="#1367" id="1367">1367</a>
+<a href="#1368" id="1368">1368</a>
+<a href="#1369" id="1369">1369</a>
+<a href="#1370" id="1370">1370</a>
+<a href="#1371" id="1371">1371</a>
+<a href="#1372" id="1372">1372</a>
+<a href="#1373" id="1373">1373</a>
+<a href="#1374" id="1374">1374</a>
+<a href="#1375" id="1375">1375</a>
+<a href="#1376" id="1376">1376</a>
+<a href="#1377" id="1377">1377</a>
+<a href="#1378" id="1378">1378</a>
+<a href="#1379" id="1379">1379</a>
+<a href="#1380" id="1380">1380</a>
+<a href="#1381" id="1381">1381</a>
+<a href="#1382" id="1382">1382</a>
+<a href="#1383" id="1383">1383</a>
+<a href="#1384" id="1384">1384</a>
+<a href="#1385" id="1385">1385</a>
+<a href="#1386" id="1386">1386</a>
+<a href="#1387" id="1387">1387</a>
+<a href="#1388" id="1388">1388</a>
+<a href="#1389" id="1389">1389</a>
+<a href="#1390" id="1390">1390</a>
+<a href="#1391" id="1391">1391</a>
+<a href="#1392" id="1392">1392</a>
+<a href="#1393" id="1393">1393</a>
+<a href="#1394" id="1394">1394</a>
+<a href="#1395" id="1395">1395</a>
+<a href="#1396" id="1396">1396</a>
+<a href="#1397" id="1397">1397</a>
+<a href="#1398" id="1398">1398</a>
+<a href="#1399" id="1399">1399</a>
+<a href="#1400" id="1400">1400</a>
+<a href="#1401" id="1401">1401</a>
+<a href="#1402" id="1402">1402</a>
+<a href="#1403" id="1403">1403</a>
+<a href="#1404" id="1404">1404</a>
+<a href="#1405" id="1405">1405</a>
+<a href="#1406" id="1406">1406</a>
+<a href="#1407" id="1407">1407</a>
+<a href="#1408" id="1408">1408</a>
+<a href="#1409" id="1409">1409</a>
+<a href="#1410" id="1410">1410</a>
+<a href="#1411" id="1411">1411</a>
+<a href="#1412" id="1412">1412</a>
+<a href="#1413" id="1413">1413</a>
+<a href="#1414" id="1414">1414</a>
+<a href="#1415" id="1415">1415</a>
+<a href="#1416" id="1416">1416</a>
+<a href="#1417" id="1417">1417</a>
+<a href="#1418" id="1418">1418</a>
+<a href="#1419" id="1419">1419</a>
+<a href="#1420" id="1420">1420</a>
+<a href="#1421" id="1421">1421</a>
+<a href="#1422" id="1422">1422</a>
+<a href="#1423" id="1423">1423</a>
+<a href="#1424" id="1424">1424</a>
+<a href="#1425" id="1425">1425</a>
+<a href="#1426" id="1426">1426</a>
+<a href="#1427" id="1427">1427</a>
+<a href="#1428" id="1428">1428</a>
+<a href="#1429" id="1429">1429</a>
+<a href="#1430" id="1430">1430</a>
+<a href="#1431" id="1431">1431</a>
+<a href="#1432" id="1432">1432</a>
+<a href="#1433" id="1433">1433</a>
+<a href="#1434" id="1434">1434</a>
+<a href="#1435" id="1435">1435</a>
+<a href="#1436" id="1436">1436</a>
+<a href="#1437" id="1437">1437</a>
+<a href="#1438" id="1438">1438</a>
+<a href="#1439" id="1439">1439</a>
+<a href="#1440" id="1440">1440</a>
+<a href="#1441" id="1441">1441</a>
+<a href="#1442" id="1442">1442</a>
+<a href="#1443" id="1443">1443</a>
+<a href="#1444" id="1444">1444</a>
+<a href="#1445" id="1445">1445</a>
+<a href="#1446" id="1446">1446</a>
+<a href="#1447" id="1447">1447</a>
+<a href="#1448" id="1448">1448</a>
+<a href="#1449" id="1449">1449</a>
+<a href="#1450" id="1450">1450</a>
+<a href="#1451" id="1451">1451</a>
+<a href="#1452" id="1452">1452</a>
+<a href="#1453" id="1453">1453</a>
+<a href="#1454" id="1454">1454</a>
+<a href="#1455" id="1455">1455</a>
+<a href="#1456" id="1456">1456</a>
+<a href="#1457" id="1457">1457</a>
+<a href="#1458" id="1458">1458</a>
+<a href="#1459" id="1459">1459</a>
+<a href="#1460" id="1460">1460</a>
+<a href="#1461" id="1461">1461</a>
+<a href="#1462" id="1462">1462</a>
+<a href="#1463" id="1463">1463</a>
+<a href="#1464" id="1464">1464</a>
+<a href="#1465" id="1465">1465</a>
+<a href="#1466" id="1466">1466</a>
+<a href="#1467" id="1467">1467</a>
+<a href="#1468" id="1468">1468</a>
+<a href="#1469" id="1469">1469</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! SPIR-V specification parsing/indexing.
 
-</span><span class="kw">use </span>arrayvec::ArrayVec;
+</span><span class="kw">use </span><span class="kw">crate</span>::FxIndexSet;
+<span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>lazy_static::lazy_static;
 <span class="kw">use </span>rustc_hash::FxHashMap;
+<span class="kw">use </span>std::borrow::Cow;
+<span class="kw">use </span>std::collections::BTreeMap;
 <span class="kw">use </span>std::{fmt, iter};
 
 <span class="kw">use </span><span class="self">self</span>::indexed::FlatIdx <span class="kw">as _</span>;
@@ -1260,6 +1490,38 @@
     <span class="kw">pub </span>instructions: indexed::NamedIdxMap&lt;Opcode, InstructionDef, indexed::KhrSegmented&gt;,
 
     <span class="kw">pub </span>operand_kinds: indexed::NamedIdxMap&lt;OperandKind, OperandKindDef, indexed::Flat&gt;,
+
+    <span class="comment">// HACK(eddyb) ad-hoc interning, to reduce the cost of tracking operand names
+    // down to a single extra byte per operand (see `PackedOperandNameAndKind`).
+    </span>operand_names: FxIndexSet&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str&gt;,
+
+    <span class="comment">// HACK(eddyb) the `OnceLock`s allow lazy parsing, avoiding overhead.
+    // FIXME(eddyb) fix type complexity once `LazyLock` stabilizes.
+    </span><span class="attr">#[allow(clippy::type_complexity)]
+    </span>ext_inst_sets: BTreeMap&lt;
+        <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
+        (std::sync::OnceLock&lt;ExtInstSetDesc&gt;, Box&lt;<span class="kw">dyn </span>Fn() -&gt; ExtInstSetDesc + Send + Sync&gt;),
+    &gt;,
+}
+
+<span class="doccomment">/// Simplified information for pretty-printing &quot;extended instruction&quot; sets.
+</span><span class="kw">pub struct </span>ExtInstSetDesc {
+    <span class="doccomment">/// Shorter name to use during pretty-printing.
+    </span><span class="kw">pub </span>short_alias: <span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;,
+
+    <span class="kw">pub </span>instructions: BTreeMap&lt;u32, ExtInstSetInstructionDesc&gt;,
+}
+
+<span class="doccomment">/// Simplified [`InstructionDef`] for pretty-printing &quot;extended instruction&quot; sets.
+</span><span class="kw">pub struct </span>ExtInstSetInstructionDesc {
+    <span class="kw">pub </span>name: Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;,
+    <span class="kw">pub </span>operand_names: Vec&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;,
+
+    <span class="doccomment">/// Whether this instruction is non-semantic debuginfo and should therefore
+    /// be pretty-printed on a single line, as a comment.
+    </span><span class="comment">//
+    // FIXME(eddyb) allow customizing the formatting, but this works for now.
+    </span><span class="kw">pub </span>is_debuginfo: bool,
 }
 
 <span class="macro">macro_rules! </span>def_well_known {
@@ -1323,6 +1585,7 @@
         OpLine,
         OpNoLine,
 
+        OpTypeVoid,
         OpTypeBool,
         OpTypeInt,
         OpTypeFloat,
@@ -1391,7 +1654,10 @@
         LiteralContextDependentNumber,
     ],
     <span class="comment">// FIXME(eddyb) find a way to namespace these to avoid conflicts.
-    </span>storage_class: u32 = [
+    </span>addressing_model: u32 = [
+        Logical,
+    ],
+    storage_class: u32 = [
         Function,
 
         UniformConstant,
@@ -1470,8 +1736,8 @@
     </span><span class="kw">pub </span>has_result_type_id: bool,
     <span class="kw">pub </span>has_result_id: bool,
 
-    <span class="kw">pub </span>req_operands: ArrayVec&lt;OperandKind, <span class="number">16</span>&gt;,
-    <span class="kw">pub </span>opt_operands: ArrayVec&lt;OperandKind, <span class="number">2</span>&gt;,
+    <span class="kw">pub </span>req_operands: ArrayVec&lt;PackedOperandNameAndKind, <span class="number">14</span>&gt;,
+    <span class="kw">pub </span>opt_operands: ArrayVec&lt;PackedOperandNameAndKind, <span class="number">2</span>&gt;,
     <span class="kw">pub </span>rest_operands: <span class="prelude-ty">Option</span>&lt;RestOperandsUnit&gt;,
 }
 
@@ -1503,15 +1769,22 @@
     /// or that an operand&#39;s absence signals the end of operands (`Optional`),
     /// which is also the exit signal for the &quot;rest operands&quot; infinite iterators.
     </span><span class="kw">pub fn </span>all_operands(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = (OperandMode, OperandKind)&gt; + <span class="lifetime">&#39;_ </span>{
+        <span class="self">self</span>.all_operands_with_names().map(|(mode, name_and_kind)| (mode, name_and_kind.kind()))
+    }
+
+    <span class="doccomment">/// Like `all_operands`, but providing access to the operand names as well.
+    </span><span class="kw">pub fn </span>all_operands_with_names(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+    ) -&gt; <span class="kw">impl </span>Iterator&lt;Item = (OperandMode, PackedOperandNameAndKind)&gt; + <span class="lifetime">&#39;_ </span>{
         <span class="self">self</span>.req_operands
             .iter()
             .copied()
-            .map(|kind| (OperandMode::Required, kind))
+            .map(|name_and_kind| (OperandMode::Required, name_and_kind))
             .chain(
                 <span class="self">self</span>.opt_operands
                     .iter()
                     .copied()
-                    .map(|kind| (OperandMode::Optional, kind)),
+                    .map(|name_and_kind| (OperandMode::Optional, name_and_kind)),
             )
             .chain(<span class="self">self</span>.rest_operands.iter().flat_map(|rest_unit| {
                 <span class="comment">// If the rest operands come in pairs, only the first operand in
@@ -1521,10 +1794,12 @@
                     RestOperandsUnit::One(kind) =&gt; (kind, <span class="prelude-val">None</span>),
                     RestOperandsUnit::Two([a_kind, b_kind]) =&gt; (a_kind, <span class="prelude-val">Some</span>(b_kind)),
                 };
-                iter::repeat_with(<span class="kw">move </span>|| {
-                    iter::once((OperandMode::Optional, opt_a))
-                        .chain(req_b.map(|kind| (OperandMode::Required, kind)))
-                })
+                iter::repeat(
+                    iter::once((OperandMode::Optional, PackedOperandNameAndKind::unnamed(opt_a)))
+                        .chain(req_b.map(|kind| {
+                            (OperandMode::Required, PackedOperandNameAndKind::unnamed(kind))
+                        })),
+                )
                 .flatten()
             }))
     }
@@ -1565,6 +1840,52 @@
     </span>}
 }
 
+<span class="comment">// HACK(eddyb) only needed because there are more than 256 unique operand names,
+// but less than 64 `OperandKind`s, so we can split 16 kind:name bits as 6:10.
+</span><span class="attr">#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+</span><span class="kw">pub struct </span>PackedOperandNameAndKind(u16);
+
+<span class="kw">impl </span>fmt::Debug <span class="kw">for </span>PackedOperandNameAndKind {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        <span class="self">self</span>.name_and_kind().fmt(f)
+    }
+}
+
+<span class="kw">impl </span>PackedOperandNameAndKind {
+    <span class="doccomment">/// `operand_names[EMPTY_NAME_IDX]` must be reserved to contain `&quot;&quot;`.
+    </span><span class="kw">const </span>EMPTY_NAME_IDX: usize = <span class="number">0</span>;
+
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>unnamed(kind: OperandKind) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::pack(<span class="self">Self</span>::EMPTY_NAME_IDX, kind)
+    }
+
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>pack(name_idx: usize, kind: OperandKind) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>packed = <span class="self">Self</span>(((name_idx <span class="kw">as </span>u16) &lt;&lt; <span class="number">6</span>) | (kind.<span class="number">0 </span><span class="kw">as </span>u16));
+        <span class="macro">assert_eq!</span>(packed.unpack(), (name_idx, kind));
+        packed
+    }
+
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>unpack(<span class="self">self</span>) -&gt; (usize, OperandKind) {
+        ((<span class="self">self</span>.<span class="number">0 </span>&gt;&gt; <span class="number">6</span>) <span class="kw">as </span>usize, OperandKind((<span class="self">self</span>.<span class="number">0 </span>&amp; ((<span class="number">1 </span>&lt;&lt; <span class="number">6</span>) - <span class="number">1</span>)) <span class="kw">as </span>u8))
+    }
+
+    <span class="doccomment">/// Unpack this `PackedOperandNameAndKind` into just its `OperandKind`.
+    </span><span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>kind(<span class="self">self</span>) -&gt; OperandKind {
+        <span class="self">self</span>.unpack().<span class="number">1
+    </span>}
+
+    <span class="doccomment">/// Unpack this `PackedOperandNameAndKind` into a name and `OperandKind`.
+    </span><span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>name_and_kind(<span class="self">self</span>) -&gt; (<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, OperandKind) {
+        <span class="kw">let </span>(name_idx, kind) = <span class="self">self</span>.unpack();
+        (Spec::get().operand_names.get_index(name_idx).unwrap(), kind)
+    }
+}
+
 <span class="kw">pub enum </span>OperandKindDef {
     BitEnum {
         empty_name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
@@ -1587,11 +1908,7 @@
 <span class="kw">impl </span>BitIdx {
     <span class="doccomment">/// Returns `Some(BitIdx(i))` if and only if `x == (1 &lt;&lt; i)`.
     </span><span class="kw">pub fn </span>of_single_set_bit(x: u32) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">if </span>x.is_power_of_two() {
-            <span class="prelude-val">Some</span>(<span class="self">Self</span>(x.trailing_zeros() <span class="kw">as </span>u8))
-        } <span class="kw">else </span>{
-            <span class="prelude-val">None
-        </span>}
+        <span class="kw">if </span>x.is_power_of_two() { <span class="prelude-val">Some</span>(<span class="self">Self</span>(x.trailing_zeros() <span class="kw">as </span>u8)) } <span class="kw">else </span>{ <span class="prelude-val">None </span>}
     }
 
     <span class="doccomment">/// Returns an iterator of [`BitIdx`]s, from which `x` can be reconstructed
@@ -1626,7 +1943,7 @@
 
 <span class="attr">#[derive(PartialEq, Eq)]
 </span><span class="kw">pub struct </span>Enumerant {
-    <span class="kw">pub </span>req_params: ArrayVec&lt;OperandKind, <span class="number">4</span>&gt;,
+    <span class="kw">pub </span>req_params: ArrayVec&lt;PackedOperandNameAndKind, <span class="number">3</span>&gt;,
     <span class="kw">pub </span>rest_params: <span class="prelude-ty">Option</span>&lt;OperandKind&gt;,
 }
 
@@ -1636,15 +1953,18 @@
     /// or that an operand&#39;s absence signals the end of operands (`Optional`),
     /// which is also the exit signal for the &quot;rest operands&quot; infinite iterators.
     </span><span class="kw">pub fn </span>all_params(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = (OperandMode, OperandKind)&gt; + <span class="lifetime">&#39;_ </span>{
-        <span class="self">self</span>.req_params
-            .iter()
-            .copied()
-            .map(|kind| (OperandMode::Required, kind))
-            .chain(
-                <span class="self">self</span>.rest_params
-                    .into_iter()
-                    .flat_map(|kind| iter::repeat_with(<span class="kw">move </span>|| (OperandMode::Optional, kind))),
-            )
+        <span class="self">self</span>.all_params_with_names().map(|(mode, name_and_kind)| (mode, name_and_kind.kind()))
+    }
+
+    <span class="doccomment">/// Like `all_params`, but providing access to the operand names as well.
+    </span><span class="kw">pub fn </span>all_params_with_names(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+    ) -&gt; <span class="kw">impl </span>Iterator&lt;Item = (OperandMode, PackedOperandNameAndKind)&gt; + <span class="lifetime">&#39;_ </span>{
+        <span class="self">self</span>.req_params.iter().copied().map(|kind| (OperandMode::Required, kind)).chain(
+            <span class="self">self</span>.rest_params.into_iter().flat_map(|kind| {
+                iter::repeat((OperandMode::Optional, PackedOperandNameAndKind::unnamed(kind)))
+            }),
+        )
     }
 }
 
@@ -1660,6 +1980,37 @@
     </span>FromContextualType,
 }
 
+<span class="kw">fn </span>sanitize_operand_name&lt;<span class="lifetime">&#39;a</span>&gt;(name: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;raw::CowStr&lt;<span class="lifetime">&#39;a</span>&gt;&gt;) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str {
+    name.as_ref()
+        .and_then(|name| <span class="kw">match </span>name {
+            <span class="kw-2">&amp;</span>raw::CowStr::Borrowed(s) =&gt; {
+                s.strip_prefix(<span class="string">&#39;\&#39;&#39;</span>)<span class="question-mark">?</span>.strip_suffix(<span class="string">&#39;\&#39;&#39;</span>).filter(|s| {
+                    <span class="comment">// HACK(eddyb) it&#39;s pretty bad that SPIR-V uses spaces
+                    // in operand names, but by constraining the rest of
+                    // the character set (to be identifier-like), we get
+                    // to remove spaces (to get `FooBar`), or even replace
+                    // them with `_` (to get `Foo_Bar` or even `foo_bar`).
+                    </span>s.starts_with(|c: char| c.is_ascii_alphabetic())
+                        &amp;&amp; s.chars().all(|c| c.is_ascii_alphanumeric() || c == <span class="string">&#39; &#39;</span>)
+                })
+            }
+            raw::CowStr::Owned(s) =&gt; {
+                <span class="macro">assert!</span>(s.contains(<span class="string">&quot;&#39;, +\n&#39;&quot;</span>), <span class="string">&quot;unexpected non-zero-copy {s:?}&quot;</span>);
+                <span class="prelude-val">None
+            </span>}
+        })
+        .unwrap_or(<span class="string">&quot;&quot;</span>)
+}
+
+<span class="comment">// HACK(eddyb) make sure parsing JSON doesn&#39;t start failing randomly.
+</span><span class="attr">#[test]
+</span><span class="kw">fn </span>get_spec_and_all_ext_inst_sets() {
+    <span class="kw">let </span>spec = Spec::get();
+    <span class="kw">for </span>name <span class="kw">in </span>spec.ext_inst_sets.keys() {
+        spec.get_ext_inst_set_by_lowercase_name(name);
+    }
+}
+
 <span class="kw">impl </span>Spec {
     <span class="doccomment">/// Return a lazily-loaded [`Spec`] (only does significant work for the first call).
     </span><span class="attr">#[inline(always)]
@@ -1667,23 +2018,73 @@
     </span><span class="kw">pub fn </span>get() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>Spec {
         <span class="macro">lazy_static! </span>{
             <span class="kw">static </span><span class="kw-2">ref </span>SPEC: Spec = {
-                <span class="comment">// NOTE(eddyb) the comment inside the invocation below exists to
-                // show up when the file is missing (due to git submodules not
-                // being checked out), which is why it&#39;s styled the way it is.
-                </span><span class="kw">const </span>SPIRV_CORE_GRAMMAR_JSON: <span class="kw-2">&amp;</span>str = <span class="macro">include_str!</span>(
-                    <span class="comment">// help: when building from a git checkout, git submodules
-                    //     also need to be initialized/checked out, by running:
-                    //     `git submodule update --init`
-                    // note: if the error persists, please open an issue
-                    </span><span class="string">&quot;../../khronos-spec/SPIRV-Headers/include/spirv/unified1/spirv.core.grammar.json&quot;
-                </span>);
+                <span class="kw">mod </span>khr_spv_grammar_jsons {
+                    <span class="macro">include!</span>(<span class="macro">concat!</span>(<span class="macro">env!</span>(<span class="string">&quot;OUT_DIR&quot;</span>), <span class="string">&quot;/khr_spv_grammar_jsons.rs&quot;</span>));
+                }
 
                 <span class="kw">let </span>raw_core_grammar: raw::CoreGrammar&lt;<span class="lifetime">&#39;static</span>&gt; =
-                    serde_json::from_str(SPIRV_CORE_GRAMMAR_JSON).unwrap();
-                Spec::from_raw(raw_core_grammar)
+                    serde_json::from_str(khr_spv_grammar_jsons::SPIRV_CORE_GRAMMAR).unwrap();
+
+                <span class="kw">let </span><span class="kw-2">mut </span>spec = Spec::from_raw(raw_core_grammar);
+
+                <span class="comment">// FIXME(eddyb) this should be moved somewhere better.
+                </span><span class="kw">for </span>(name, json) <span class="kw">in </span>khr_spv_grammar_jsons::EXTINST_NAMES_AND_GRAMMARS {
+                    <span class="kw">let </span>lazy_init = <span class="kw">move </span>|| {
+                        <span class="kw">let </span>is_debuginfo_ext_inst_set = name.contains(<span class="string">&quot;.debuginfo.&quot;</span>);
+                        <span class="kw">let </span>extinst_grammar: raw::ExtInstGrammar&lt;<span class="lifetime">&#39;static</span>&gt; =
+                            serde_json::from_str(json).unwrap();
+                        <span class="kw">let </span>instructions = extinst_grammar
+                            .instructions
+                            .iter()
+                            .map(|inst| {
+                                (
+                                    inst.opcode.into(),
+                                    ExtInstSetInstructionDesc {
+                                        name: inst.opname.into(),
+                                        operand_names: inst
+                                            .operands
+                                            .iter()
+                                            .map(|operand| {
+                                                sanitize_operand_name(<span class="kw-2">&amp;</span>operand.name)
+                                            })
+                                            .take_while(|name| !name.is_empty())
+                                            .map(|name| name.into())
+                                            .collect(),
+
+                                        is_debuginfo: is_debuginfo_ext_inst_set
+                                            &amp;&amp; inst.opname.strip_prefix(<span class="string">&quot;Debug&quot;</span>)
+                                                .is_some_and(|next| next.starts_with(|c: char| c.is_ascii_uppercase()))
+                                    },
+                                )
+                            })
+                            .collect::&lt;BTreeMap&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;&gt;();
+                        ExtInstSetDesc { short_alias: <span class="prelude-val">None</span>, instructions }
+                    };
+                    spec.ext_inst_sets.insert(
+                        name,
+                        (
+                            Default::default(),
+                            Box::new(lazy_init),
+                        ),
+                    );
+                }
+
+                spec
             };
         }
         <span class="kw-2">&amp;</span>SPEC
+    }
+
+    <span class="doccomment">/// Return a lazily-parsed [`ExtInstSetDesc`], if a known one exists for this
+    /// `OpExtInstImport` name (required to be lowercase, due to Khronos&#39; choice
+    /// of case insensitivity, but **not checked by this function**).
+    </span><span class="kw">pub fn </span>get_ext_inst_set_by_lowercase_name(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        lowercase_ext_inst_set_name: <span class="kw-2">&amp;</span>str,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ExtInstSetDesc&gt; {
+        <span class="self">self</span>.ext_inst_sets
+            .get(lowercase_ext_inst_set_name)
+            .map(|(once_cell, init)| once_cell.get_or_init(init))
     }
 
     <span class="doccomment">/// Implementation detail of [`Spec::get`], indexes the raw data to produce a [`Spec`].
@@ -1705,6 +2106,15 @@
             }
         }
 
+        <span class="comment">// HACK(eddyb) ad-hoc interning, to reduce the cost of tracking operand names
+        // down to a single extra byte per operand (see `PackedOperandNameAndKind`).
+        </span><span class="kw">let </span><span class="kw-2">mut </span>operand_names = FxIndexSet::default();
+        <span class="macro">assert_eq!</span>(operand_names.insert_full(<span class="string">&quot;&quot;</span>).<span class="number">0</span>, PackedOperandNameAndKind::EMPTY_NAME_IDX);
+        <span class="kw">let </span><span class="kw-2">mut </span>pack_operand_name_and_kind = |name: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;raw::CowStr&lt;<span class="lifetime">&#39;static</span>&gt;&gt;, kind| {
+            <span class="kw">let </span>(name_idx, <span class="kw">_</span>) = operand_names.insert_full(sanitize_operand_name(name));
+            PackedOperandNameAndKind::pack(name_idx, kind)
+        };
+
         <span class="comment">// Constructing the full `OperandKindDef` may require looking up other
         // `OperandKind`s by name, so build the lookup table for that up-front.
         </span><span class="kw">let </span>operand_kind_by_name: FxHashMap&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt; = raw_core_grammar
@@ -1719,25 +2129,28 @@
             .operand_kinds
             .iter()
             .filter_map(|o| {
-                <span class="kw">let </span>enumerant_from_raw = |e: <span class="kw-2">&amp;</span>raw::OperandKindEnumerant&lt;<span class="lifetime">&#39;_</span>&gt;| {
+                <span class="kw">let </span><span class="kw-2">mut </span>enumerant_from_raw = |e: <span class="kw-2">&amp;</span>raw::OperandKindEnumerant&lt;<span class="lifetime">&#39;static</span>&gt;| {
                     <span class="kw">let </span><span class="kw-2">mut </span>all_params = e
                         .parameters
                         .iter()
-                        .map(|p| (<span class="kw-2">&amp;</span>p.quantifier, operand_kind_by_name[p.kind]));
+                        .map(|p| (<span class="kw-2">&amp;</span>p.name, <span class="kw-2">&amp;</span>p.quantifier, operand_kind_by_name[p.kind]));
 
                     <span class="kw">let </span>rest_params = <span class="kw">match </span>all_params.clone().next_back() {
-                        <span class="prelude-val">Some</span>((<span class="prelude-val">Some</span>(raw::Quantifier::Rest), kind)) =&gt; {
+                        <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="prelude-val">Some</span>(raw::Quantifier::Rest), kind)) =&gt; {
                             all_params.next_back();
                             <span class="prelude-val">Some</span>(kind)
                         }
                         <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
                     };
-                    <span class="kw">let </span>req_params = all_params
-                        .map(|(quantifier, kind)| {
-                            <span class="macro">assert!</span>(quantifier.is_none());
-                            kind
-                        })
-                        .collect();
+
+                    <span class="kw">let </span><span class="kw-2">mut </span>req_params = ArrayVec::new();
+                    <span class="kw">for </span>(name, quantifier, kind) <span class="kw">in </span>all_params {
+                        <span class="macro">assert!</span>(quantifier.is_none());
+                        req_params
+                            .try_push(pack_operand_name_and_kind(name, kind))
+                            .map_err(|err| <span class="macro">format!</span>(<span class="string">&quot;{}/{name:?}: {err}&quot;</span>, o.kind))
+                            .unwrap();
+                    }
 
                     Enumerant {
                         req_params,
@@ -1884,10 +2297,8 @@
 
         <span class="comment">// FIXME(eddyb) automate this in `indexed::NamedIdxMap`.
         </span><span class="macro">assert_eq!</span>(operand_kind_by_name.len(), operand_kinds.len());
-        <span class="kw">let </span>operand_kinds = indexed::NamedIdxMap {
-            idx_by_name: operand_kind_by_name,
-            storage: operand_kinds,
-        };
+        <span class="kw">let </span>operand_kinds =
+            indexed::NamedIdxMap { idx_by_name: operand_kind_by_name, storage: operand_kinds };
 
         <span class="kw">let </span>operand_kind_pairs_by_name: FxHashMap&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt; = raw_core_grammar
             .operand_kinds
@@ -1924,8 +2335,7 @@
                 </span><span class="kw">let </span>has_categorical_prefix = |prefix| {
                     inst.opname
                         .strip_prefix(prefix)
-                        .filter(|next| next.starts_with(|c: char| c.is_ascii_uppercase()))
-                        .is_some()
+                        .is_some_and(|next| next.starts_with(|c: char| c.is_ascii_uppercase()))
                 };
 
                 <span class="kw">let </span>category_from_prefix = <span class="kw">if </span>has_categorical_prefix(<span class="string">&quot;OpType&quot;</span>) {
@@ -2011,23 +2421,29 @@
 
                     <span class="kw">let </span>next_seq = <span class="kw">match </span>o.quantifier {
                         <span class="kw">_ if </span>single == <span class="prelude-val">Some</span>(id_result_type) =&gt; {
-                            <span class="macro">assert!</span>(<span class="macro">matches!</span>(o.quantifier, <span class="prelude-val">None</span>));
+                            <span class="macro">assert!</span>(o.quantifier.is_none());
                             <span class="macro">assert!</span>(!def.has_result_type_id);
                             def.has_result_type_id = <span class="bool-val">true</span>;
                             Seq::IdResultType
                         }
                         <span class="kw">_ if </span>single == <span class="prelude-val">Some</span>(id_result) =&gt; {
-                            <span class="macro">assert!</span>(<span class="macro">matches!</span>(o.quantifier, <span class="prelude-val">None</span>));
+                            <span class="macro">assert!</span>(o.quantifier.is_none());
                             <span class="macro">assert!</span>(!def.has_result_id);
                             def.has_result_id = <span class="bool-val">true</span>;
                             Seq::IdResult
                         }
                         <span class="prelude-val">None </span>=&gt; {
-                            def.req_operands.push(single.unwrap());
+                            def.req_operands
+                                .try_push(pack_operand_name_and_kind(<span class="kw-2">&amp;</span>o.name, single.unwrap()))
+                                .map_err(|err| <span class="macro">format!</span>(<span class="string">&quot;{}/{:?}: {err}&quot;</span>, inst.opname, o.name))
+                                .unwrap();
                             Seq::Required
                         }
                         <span class="prelude-val">Some</span>(raw::Quantifier::Optional) =&gt; {
-                            def.opt_operands.push(single.unwrap());
+                            def.opt_operands
+                                .try_push(pack_operand_name_and_kind(<span class="kw-2">&amp;</span>o.name, single.unwrap()))
+                                .map_err(|err| <span class="macro">format!</span>(<span class="string">&quot;{}/{:?}: {err}&quot;</span>, inst.opname, o.name))
+                                .unwrap();
                             Seq::Optional
                         }
                         <span class="prelude-val">Some</span>(raw::Quantifier::Rest) =&gt; {
@@ -2071,6 +2487,11 @@
             storage: instructions,
         };
 
+        <span class="kw">let </span>addressing_models =
+            <span class="kw">match </span><span class="kw-2">&amp;</span>operand_kinds[operand_kinds.lookup(<span class="string">&quot;AddressingModel&quot;</span>).unwrap()] {
+                OperandKindDef::ValueEnum { variants } =&gt; variants,
+                <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+            };
         <span class="kw">let </span>storage_classes = <span class="kw">match </span><span class="kw-2">&amp;</span>operand_kinds[operand_kinds.lookup(<span class="string">&quot;StorageClass&quot;</span>).unwrap()] {
             OperandKindDef::ValueEnum { variants } =&gt; variants,
             <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
@@ -2089,6 +2510,7 @@
         </span><span class="kw">let </span>well_known = WellKnown::lookup_with(PerWellKnownGroup {
             opcode: |name| instructions.lookup(name).unwrap(),
             operand_kind: |name| operand_kinds.lookup(name).unwrap(),
+            addressing_model: |name| addressing_models.lookup(name).unwrap().into(),
             storage_class: |name| storage_classes.lookup(name).unwrap().into(),
             decoration: |name| decorations.lookup(name).unwrap().into(),
             linkage_type: |name| linkage_types.lookup(name).unwrap().into(),
@@ -2100,6 +2522,10 @@
             instructions,
             well_known,
             operand_kinds,
+
+            operand_names,
+
+            ext_inst_sets: BTreeMap::new(),
         }
     }
 }
@@ -2108,13 +2534,12 @@
 </span><span class="kw">pub mod </span>raw {
     <span class="kw">use </span>serde::Deserialize;
     <span class="kw">use </span>smallvec::SmallVec;
-    <span class="kw">use </span>std::borrow::Cow;
 
     <span class="attr">#[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
     </span><span class="kw">pub struct </span>CoreGrammar&lt;<span class="lifetime">&#39;a</span>&gt; {
         <span class="attr">#[serde(borrow)]
-        </span><span class="kw">pub </span>copyright: Vec&lt;Cow&lt;<span class="lifetime">&#39;a</span>, str&gt;&gt;,
+        </span><span class="kw">pub </span>copyright: Vec&lt;CowStr&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
 
         <span class="attr">#[serde(deserialize_with = <span class="string">&quot;dew_u32_maybe_hex&quot;</span>)]
         </span><span class="kw">pub </span>magic_number: u32,
@@ -2130,6 +2555,20 @@
 
     <span class="attr">#[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
+    </span><span class="kw">pub struct </span>ExtInstGrammar&lt;<span class="lifetime">&#39;a</span>&gt; {
+        <span class="attr">#[serde(borrow)]
+        </span><span class="kw">pub </span>copyright: <span class="prelude-ty">Option</span>&lt;Vec&lt;CowStr&lt;<span class="lifetime">&#39;a</span>&gt;&gt;&gt;,
+
+        <span class="kw">pub </span>version: <span class="prelude-ty">Option</span>&lt;u8&gt;,
+        <span class="kw">pub </span>revision: u8,
+
+        <span class="kw">pub </span>instructions: Vec&lt;Instruction&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+        <span class="attr">#[serde(default)]
+        </span><span class="kw">pub </span>operand_kinds: Vec&lt;OperandKind&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+    }
+
+    <span class="attr">#[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
     </span><span class="kw">pub struct </span>InstructionPrintingClass&lt;<span class="lifetime">&#39;a</span>&gt; {
         <span class="kw">pub </span>tag: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
         <span class="kw">pub </span>heading: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str&gt;,
@@ -2139,7 +2578,8 @@
     #[serde(deny_unknown_fields)]
     </span><span class="kw">pub struct </span>Instruction&lt;<span class="lifetime">&#39;a</span>&gt; {
         <span class="kw">pub </span>opname: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
-        <span class="kw">pub </span>class: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
+        <span class="attr">#[serde(default)]
+        </span><span class="kw">pub </span>class: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
         <span class="kw">pub </span>opcode: u16,
         <span class="attr">#[serde(default)]
         </span><span class="kw">pub </span>operands: Vec&lt;Operand&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
@@ -2148,6 +2588,8 @@
         </span><span class="kw">pub </span>extensions: SmallVec&lt;[<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str; <span class="number">1</span>]&gt;,
         <span class="attr">#[serde(default)]
         </span><span class="kw">pub </span>capabilities: SmallVec&lt;[<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str; <span class="number">1</span>]&gt;,
+        <span class="comment">// HACK(eddyb) some `extinst.*.json` use this form.
+        </span><span class="kw">pub </span>capability: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str&gt;,
 
         <span class="kw">pub </span>version: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str&gt;,
         <span class="attr">#[serde(rename = <span class="string">&quot;lastVersion&quot;</span>)]
@@ -2159,7 +2601,8 @@
     </span><span class="kw">pub struct </span>Operand&lt;<span class="lifetime">&#39;a</span>&gt; {
         <span class="kw">pub </span>kind: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
         <span class="kw">pub </span>quantifier: <span class="prelude-ty">Option</span>&lt;Quantifier&gt;,
-        <span class="kw">pub </span>name: <span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">&#39;a</span>, str&gt;&gt;,
+        <span class="attr">#[serde(borrow)]
+        </span><span class="kw">pub </span>name: <span class="prelude-ty">Option</span>&lt;CowStr&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
     }
 
     <span class="attr">#[derive(Deserialize)]
@@ -2214,6 +2657,15 @@
         </span><span class="kw">pub </span>last_version: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str&gt;,
     }
 
+    <span class="comment">// HACK(eddyb) `Cow&lt;&#39;a, str&gt;` that works w/ zero-copy deserialization, even
+    // when nested (`serde` only special-cases `Cow` used directly as a field type).
+    </span><span class="attr">#[derive(Deserialize, Debug)]
+    #[serde(untagged)]
+    </span><span class="kw">pub enum </span>CowStr&lt;<span class="lifetime">&#39;a</span>&gt; {
+        Borrowed(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str),
+        Owned(String),
+    }
+
     <span class="doccomment">/// Helper to generate functions usable with `deserialize_with` (hence &quot;dew&quot;),
     /// that deserialize to an intermediary type, which is then passed through the
     /// supplied closure, which is allowed to error. This is similar to the serde
@@ -2242,17 +2694,24 @@
     #[serde(untagged)]
     </span><span class="kw">pub enum </span>DecOrHex&lt;<span class="lifetime">&#39;a</span>, T&gt; {
         Dec(T),
-        Hex(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str),
+        MaybeHex(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str),
     }
 
     <span class="kw">impl </span>TryInto&lt;u32&gt; <span class="kw">for </span>DecOrHex&lt;<span class="lifetime">&#39;_</span>, u32&gt; {
-        <span class="kw">type </span>Error = <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str;
+        <span class="kw">type </span>Error = String;
         <span class="kw">fn </span>try_into(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;u32, <span class="self">Self</span>::Error&gt; {
-            <span class="prelude-val">Ok</span>(<span class="kw">match </span><span class="self">self </span>{
-                DecOrHex::Dec(x) =&gt; x,
-                DecOrHex::Hex(s) =&gt; {
+            <span class="kw">match </span><span class="self">self </span>{
+                DecOrHex::Dec(x) =&gt; <span class="prelude-val">Ok</span>(x),
+                DecOrHex::MaybeHex(s) =&gt; {
+                    <span class="comment">// HACK(eddyb) some decimal numbers are kept as strings.
+                    </span><span class="kw">if let </span><span class="prelude-val">Ok</span>(x) = s.parse() {
+                        <span class="kw">return </span><span class="prelude-val">Ok</span>(x);
+                    }
+
                     s.strip_prefix(<span class="string">&quot;0x&quot;</span>)
-                        .ok_or(<span class="string">&quot;DecOrHex string form doesn&#39;t start with 0x&quot;</span>)<span class="question-mark">?
+                        .ok_or_else(|| {
+                            <span class="macro">format!</span>(<span class="string">&quot;DecOrHex string form doesn&#39;t start with 0x: {s:?}&quot;</span>)
+                        })<span class="question-mark">?
                         </span>.chars()
                         .try_fold(<span class="number">0u32</span>, |r, c| {
                             <span class="comment">// HACK(eddyb) this uses `checked_mul` because `checked_shl`
@@ -2260,9 +2719,9 @@
                             </span><span class="prelude-val">Ok</span>(r.checked_mul(<span class="number">16</span>).ok_or(<span class="string">&quot;DecOrHex hex overflow into u32&quot;</span>)<span class="question-mark">?
                                 </span>+ c.to_digit(<span class="number">16</span>)
                                     .ok_or(<span class="string">&quot;DecOrHex hex has non-hex-nibble character&quot;</span>)<span class="question-mark">?</span>)
-                        })<span class="question-mark">?
-                </span>}
-            })
+                        })
+                }
+            }
         }
     }
 }
@@ -2348,9 +2807,8 @@
             };
             <span class="kw">let </span>next_block = block.map_or(<span class="number">0</span>, |b| b + <span class="number">1</span>);
 
-            <span class="kw">let </span>seg_start = block.map_or(<span class="prelude-val">Some</span>(<span class="number">0</span>), |b| {
-                <span class="self">self</span>.block_starts.get(b).copied().map(usize::from)
-            })<span class="question-mark">?</span>;
+            <span class="kw">let </span>seg_start =
+                block.map_or(<span class="prelude-val">Some</span>(<span class="number">0</span>), |b| <span class="self">self</span>.block_starts.get(b).copied().map(usize::from))<span class="question-mark">?</span>;
             <span class="kw">let </span>seg_end = <span class="self">self
                 </span>.block_starts
                 .get(next_block)
@@ -2442,11 +2900,7 @@
             <span class="kw">let </span>(seg_range, intra_seg_idx) =
                 storage.idx_to_segmented(idx.to_usize().try_into().ok()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
 
-            storage
-                .flattened
-                .get(seg_range)<span class="question-mark">?
-                </span>.get(intra_seg_idx)<span class="question-mark">?
-                </span>.as_ref()
+            storage.flattened.get(seg_range)<span class="question-mark">?</span>.get(intra_seg_idx)<span class="question-mark">?</span>.as_ref()
         }
     }
 

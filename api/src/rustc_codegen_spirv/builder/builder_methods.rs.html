@@ -2911,6 +2911,19 @@
 <a href="#2911" id="2911">2911</a>
 <a href="#2912" id="2912">2912</a>
 <a href="#2913" id="2913">2913</a>
+<a href="#2914" id="2914">2914</a>
+<a href="#2915" id="2915">2915</a>
+<a href="#2916" id="2916">2916</a>
+<a href="#2917" id="2917">2917</a>
+<a href="#2918" id="2918">2918</a>
+<a href="#2919" id="2919">2919</a>
+<a href="#2920" id="2920">2920</a>
+<a href="#2921" id="2921">2921</a>
+<a href="#2922" id="2922">2922</a>
+<a href="#2923" id="2923">2923</a>
+<a href="#2924" id="2924">2924</a>
+<a href="#2925" id="2925">2925</a>
+<a href="#2926" id="2926">2926</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::Builder;
 <span class="kw">use </span><span class="kw">crate</span>::abi::ConvSpirvType;
 <span class="kw">use </span><span class="kw">crate</span>::builder_spirv::{BuilderCursor, SpirvConst, SpirvValue, SpirvValueExt, SpirvValueKind};
@@ -3620,6 +3633,23 @@
                         col_end: Operand::IdRef(<span class="self">self</span>.const_u32(col_end).def(<span class="self">self</span>)),
                     },
                 );
+            }
+
+            <span class="comment">// HACK(eddyb) remove the previous instruction if made irrelevant.
+            </span><span class="kw">let </span><span class="kw-2">mut </span>builder = <span class="self">self</span>.emit();
+            <span class="kw">if let </span>(<span class="prelude-val">Some</span>(func_idx), <span class="prelude-val">Some</span>(block_idx)) =
+                (builder.selected_function(), builder.selected_block())
+            {
+                <span class="kw">let </span>block = <span class="kw-2">&amp;mut </span>builder.module_mut().functions[func_idx].blocks[block_idx];
+                <span class="kw">match </span><span class="kw-2">&amp;</span>block.instructions[..] {
+                    [.., a, b]
+                        <span class="kw">if </span>a.class.opcode == b.class.opcode
+                            &amp;&amp; a.operands[..<span class="number">2</span>] == b.operands[..<span class="number">2</span>] =&gt;
+                    {
+                        block.instructions.remove(block.instructions.len() - <span class="number">2</span>);
+                    }
+                    <span class="kw">_ </span>=&gt; {}
+                }
             }
         } <span class="kw">else </span>{
             <span class="comment">// We may not always have valid spans.
@@ -5791,11 +5821,7 @@
 
             <span class="comment">// HACK(eddyb) redirect any possible panic call to an abort, to avoid
             // needing to materialize `&amp;core::panic::Location` or `format_args!`.
-            </span><span class="self">self</span>.abort_with_message_and_debug_printf_args(
-                <span class="comment">// HACK(eddyb) `|` is an ad-hoc convention of `linker::spirt_passes::controlflow`.
-                </span><span class="macro">format!</span>(<span class="string">&quot;panicked|{message}&quot;</span>),
-                debug_printf_args,
-            );
+            </span><span class="self">self</span>.abort_with_kind_and_message_debug_printf(<span class="string">&quot;panic&quot;</span>, message, debug_printf_args);
             <span class="self">self</span>.undef(result_type)
         } <span class="kw">else if let </span><span class="prelude-val">Some</span>(mode) = buffer_load_intrinsic {
             <span class="self">self</span>.codegen_buffer_load_intrinsic(result_type, args, mode)

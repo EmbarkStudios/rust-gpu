@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spirt-0.2.0/src/qptr/lift.rs`."><title>lift.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-f3501f0f5ae15dfb.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="spirt" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.0-nightly (1a5f8bce7 2023-05-26)" data-search-js="search-4926e5fc22a5646a.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../static.files/source-script-11255107d0a65077.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-f0540c1d82cde29b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../spirt/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/git/checkouts/spirt-9c237dd53f05c2cc/82daf25/src/qptr/lift.rs`."><title>lift.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-f3501f0f5ae15dfb.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="spirt" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.0-nightly (1a5f8bce7 2023-05-26)" data-search-js="search-4926e5fc22a5646a.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../static.files/source-script-11255107d0a65077.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-f0540c1d82cde29b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../spirt/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1202,24 +1202,6 @@
 <a href="#1202" id="1202">1202</a>
 <a href="#1203" id="1203">1203</a>
 <a href="#1204" id="1204">1204</a>
-<a href="#1205" id="1205">1205</a>
-<a href="#1206" id="1206">1206</a>
-<a href="#1207" id="1207">1207</a>
-<a href="#1208" id="1208">1208</a>
-<a href="#1209" id="1209">1209</a>
-<a href="#1210" id="1210">1210</a>
-<a href="#1211" id="1211">1211</a>
-<a href="#1212" id="1212">1212</a>
-<a href="#1213" id="1213">1213</a>
-<a href="#1214" id="1214">1214</a>
-<a href="#1215" id="1215">1215</a>
-<a href="#1216" id="1216">1216</a>
-<a href="#1217" id="1217">1217</a>
-<a href="#1218" id="1218">1218</a>
-<a href="#1219" id="1219">1219</a>
-<a href="#1220" id="1220">1220</a>
-<a href="#1221" id="1221">1221</a>
-<a href="#1222" id="1222">1222</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! [`QPtr`](crate::TypeCtor::QPtr) lifting (e.g. to SPIR-V).
 
 </span><span class="comment">// HACK(eddyb) sharing layout code with other modules.
@@ -1230,9 +1212,9 @@
 <span class="kw">use </span><span class="kw">crate</span>::transform::{InnerInPlaceTransform, InnerTransform, Transformed, Transformer};
 <span class="kw">use crate</span>::{
     spv, AddrSpace, Attr, AttrSet, AttrSetDef, Const, ConstCtor, ConstDef, Context, ControlNode,
-    ControlNodeKind, DataInst, DataInstDef, DataInstKind, DeclDef, Diag, DiagLevel, EntityDefs,
-    EntityOrientedDenseMap, Func, FuncDecl, FxIndexMap, GlobalVar, GlobalVarDecl, Module, Type,
-    TypeCtor, TypeCtorArg, TypeDef, Value,
+    ControlNodeKind, DataInst, DataInstDef, DataInstFormDef, DataInstKind, DeclDef, Diag,
+    DiagLevel, EntityDefs, EntityOrientedDenseMap, Func, FuncDecl, FxIndexMap, GlobalVar,
+    GlobalVarDecl, Module, Type, TypeCtor, TypeCtorArg, TypeDef, Value,
 };
 <span class="kw">use </span>smallvec::SmallVec;
 <span class="kw">use </span>std::cell::Cell;
@@ -1325,17 +1307,10 @@
 
         <span class="kw">let </span>qptr_usage = <span class="self">self</span>.find_qptr_usage_attr(global_var_decl.attrs)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>shape = global_var_decl
-            .shape
-            .ok_or_else(|| LiftError(Diag::bug([<span class="string">&quot;missing shape&quot;</span>.into()])))<span class="question-mark">?</span>;
+        <span class="kw">let </span>shape =
+            global_var_decl.shape.ok_or_else(|| LiftError(Diag::bug([<span class="string">&quot;missing shape&quot;</span>.into()])))<span class="question-mark">?</span>;
         <span class="kw">let </span>(storage_class, pointee_type) = <span class="kw">match </span>(global_var_decl.addr_space, shape) {
-            (
-                AddrSpace::Handles,
-                shapes::GlobalVarShape::Handles {
-                    handle,
-                    fixed_count,
-                },
-            ) =&gt; {
+            (AddrSpace::Handles, shapes::GlobalVarShape::Handles { handle, fixed_count }) =&gt; {
                 <span class="kw">let </span>(storage_class, handle_type) = <span class="kw">match </span>handle {
                     shapes::Handle::Opaque(ty) =&gt; {
                         <span class="kw">if </span><span class="self">self</span>.pointee_type_for_usage(qptr_usage)<span class="question-mark">? </span>!= ty {
@@ -1381,9 +1356,7 @@
                 shapes::GlobalVarShape::UntypedData(<span class="kw">_</span>) | shapes::GlobalVarShape::TypedInterface(<span class="kw">_</span>),
             )
             | (AddrSpace::SpvStorageClass(<span class="kw">_</span>), shapes::GlobalVarShape::Handles { .. }) =&gt; {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(LiftError(Diag::bug([
-                    <span class="string">&quot;mismatched `addr_space` and `shape`&quot;</span>.into(),
-                ])));
+                <span class="kw">return </span><span class="prelude-val">Err</span>(LiftError(Diag::bug([<span class="string">&quot;mismatched `addr_space` and `shape`&quot;</span>.into()])));
             }
         };
         <span class="kw">let </span>addr_space = AddrSpace::SpvStorageClass(storage_class);
@@ -1422,9 +1395,7 @@
             attrs: AttrSet::default(),
             ctor: TypeCtor::SpvInst(spv::Inst {
                 opcode: wk.OpTypePointer,
-                imms: [spv::Imm::Short(wk.StorageClass, storage_class)]
-                    .into_iter()
-                    .collect(),
+                imms: [spv::Imm::Short(wk.StorageClass, storage_class)].into_iter().collect(),
             }),
             ctor_args: [TypeCtorArg::Type(pointee_type)].into_iter().collect(),
         })
@@ -1438,9 +1409,7 @@
             QPtrUsage::Handles(shapes::Handle::Buffer(<span class="kw">_</span>, data_usage)) =&gt; {
                 <span class="kw">let </span>attr_spv_decorate_block = Attr::SpvAnnotation(spv::Inst {
                     opcode: wk.OpDecorate,
-                    imms: [spv::Imm::Short(wk.Decoration, wk.Block)]
-                        .into_iter()
-                        .collect(),
+                    imms: [spv::Imm::Short(wk.Decoration, wk.Block)].into_iter().collect(),
                 });
                 <span class="kw">match </span><span class="kw-2">&amp;</span>data_usage.kind {
                     QPtrMemUsageKind::Unused =&gt; {
@@ -1518,11 +1487,7 @@
             })
         });
 
-        <span class="kw">let </span>spv_opcode = <span class="kw">if </span>fixed_len.is_some() {
-            wk.OpTypeArray
-        } <span class="kw">else </span>{
-            wk.OpTypeRuntimeArray
-        };
+        <span class="kw">let </span>spv_opcode = <span class="kw">if </span>fixed_len.is_some() { wk.OpTypeArray } <span class="kw">else </span>{ wk.OpTypeRuntimeArray };
 
         <span class="prelude-val">Ok</span>(<span class="self">self</span>.cx.intern(TypeDef {
             attrs: stride_attrs.unwrap_or_default(),
@@ -1597,9 +1562,7 @@
             ty: <span class="self">self</span>.u32_type(),
             ctor: ConstCtor::SpvInst(spv::Inst {
                 opcode: wk.OpConstant,
-                imms: [spv::Imm::Short(wk.LiteralContextDependentNumber, x)]
-                    .into_iter()
-                    .collect(),
+                imms: [spv::Imm::Short(wk.LiteralContextDependentNumber, x)].into_iter().collect(),
             }),
             ctor_args: [].into_iter().collect(),
         })
@@ -1607,9 +1570,7 @@
 
     <span class="doccomment">/// Attempt to compute a `TypeLayout` for a given (SPIR-V) `Type`.
     </span><span class="kw">fn </span>layout_of(<span class="kw-2">&amp;</span><span class="self">self</span>, ty: Type) -&gt; <span class="prelude-ty">Result</span>&lt;TypeLayout, LiftError&gt; {
-        <span class="self">self</span>.layout_cache
-            .layout_of(ty)
-            .map_err(|LayoutError(err)| LiftError(err))
+        <span class="self">self</span>.layout_cache.layout_of(ty).map_err(|LayoutError(err)| LiftError(err))
     }
 }
 
@@ -1661,6 +1622,7 @@
         <span class="kw">let </span>func_at_data_inst_frozen = func_at_data_inst.reborrow().freeze();
         <span class="kw">let </span>data_inst = func_at_data_inst_frozen.position;
         <span class="kw">let </span>data_inst_def = func_at_data_inst_frozen.def();
+        <span class="kw">let </span>data_inst_form_def = <span class="kw-2">&amp;</span>cx[data_inst_def.form];
         <span class="kw">let </span>func = func_at_data_inst_frozen.at(());
         <span class="kw">let </span>type_of_val = |v: Value| func.at(v).type_of(cx);
         <span class="comment">// FIXME(eddyb) maybe all this data should be packaged up together in a
@@ -1682,7 +1644,7 @@
 
             <span class="prelude-val">Ok</span>((addr_space, <span class="self">self</span>.lifter.layout_of(pointee_type)<span class="question-mark">?</span>))
         };
-        <span class="kw">let </span>replacement_data_inst_def = <span class="kw">match </span><span class="kw-2">&amp;</span>data_inst_def.kind {
+        <span class="kw">let </span>replacement_data_inst_def = <span class="kw">match </span><span class="kw-2">&amp;</span>data_inst_form_def.kind {
             <span class="kw-2">&amp;</span>DataInstKind::FuncCall(_callee) =&gt; {
                 <span class="kw">for </span><span class="kw-2">&amp;</span>v <span class="kw">in </span><span class="kw-2">&amp;</span>data_inst_def.inputs {
                     <span class="kw">if </span><span class="self">self</span>.lifter.as_spv_ptr_type(type_of_val(v)).is_some() {
@@ -1701,16 +1663,20 @@
                 </span><span class="kw">let </span>pointee_type = <span class="self">self</span>.lifter.pointee_type_for_usage(qptr_usage)<span class="question-mark">?</span>;
                 DataInstDef {
                     attrs: <span class="self">self</span>.lifter.strip_qptr_usage_attr(data_inst_def.attrs),
-                    kind: DataInstKind::SpvInst(spv::Inst {
-                        opcode: wk.OpVariable,
-                        imms: [spv::Imm::Short(wk.StorageClass, wk.Function)]
-                            .into_iter()
-                            .collect(),
+                    form: cx.intern(DataInstFormDef {
+                        kind: DataInstKind::SpvInst(spv::Inst {
+                            opcode: wk.OpVariable,
+                            imms: [spv::Imm::Short(wk.StorageClass, wk.Function)]
+                                .into_iter()
+                                .collect(),
+                        }),
+                        output_type: <span class="prelude-val">Some</span>(
+                            <span class="self">self</span>.lifter.spv_ptr_type(
+                                AddrSpace::SpvStorageClass(wk.Function),
+                                pointee_type,
+                            ),
+                        ),
                     }),
-                    output_type: <span class="prelude-val">Some</span>(
-                        <span class="self">self</span>.lifter
-                            .spv_ptr_type(AddrSpace::SpvStorageClass(wk.Function), pointee_type),
-                    ),
                     inputs: data_inst_def.inputs.clone(),
                 }
             }
@@ -1724,9 +1690,9 @@
                         <span class="kw">return </span><span class="prelude-val">Err</span>(LiftError(Diag::bug([<span class="string">&quot;cannot index single Handle&quot;</span>.into()])));
                     }
                     TypeLayout::Concrete(<span class="kw">_</span>) =&gt; {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(LiftError(Diag::bug([
-                            <span class="string">&quot;cannot index memory as handles&quot;</span>.into()
-                        ])));
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(LiftError(Diag::bug(
+                            [<span class="string">&quot;cannot index memory as handles&quot;</span>.into()],
+                        )));
                     }
                 };
                 <span class="kw">let </span>handle_type = <span class="kw">match </span>handle {
@@ -1735,8 +1701,10 @@
                 };
                 DataInstDef {
                     attrs: data_inst_def.attrs,
-                    kind: DataInstKind::SpvInst(wk.OpAccessChain.into()),
-                    output_type: <span class="prelude-val">Some</span>(<span class="self">self</span>.lifter.spv_ptr_type(addr_space, handle_type)),
+                    form: cx.intern(DataInstFormDef {
+                        kind: DataInstKind::SpvInst(wk.OpAccessChain.into()),
+                        output_type: <span class="prelude-val">Some</span>(<span class="self">self</span>.lifter.spv_ptr_type(addr_space, handle_type)),
+                    }),
                     inputs: data_inst_def.inputs.clone(),
                 }
             }
@@ -1760,16 +1728,17 @@
                 );
 
                 DataInstDef {
-                    <span class="comment">// FIXME(eddyb) avoid the repeated call to `type_of_val`,
+                    <span class="comment">// FIXME(eddyb) avoid the repeated call to `type_of_val`
+                    // (and the interning of a temporary `DataInstFormDef`),
                     // maybe don&#39;t even replace the `QPtrOp::Buffer` instruction?
-                    </span>output_type: <span class="prelude-val">Some</span>(type_of_val(buf_ptr)),
+                    </span>form: cx.intern(DataInstFormDef {
+                        kind: QPtrOp::BufferData.into(),
+                        output_type: <span class="prelude-val">Some</span>(type_of_val(buf_ptr)),
+                    }),
                     ..data_inst_def.clone()
                 }
             }
-            <span class="kw-2">&amp;</span>DataInstKind::QPtr(QPtrOp::BufferDynLen {
-                fixed_base_size,
-                dyn_unit_stride,
-            }) =&gt; {
+            <span class="kw-2">&amp;</span>DataInstKind::QPtr(QPtrOp::BufferDynLen { fixed_base_size, dyn_unit_stride }) =&gt; {
                 <span class="kw">let </span>buf_ptr = data_inst_def.inputs[<span class="number">0</span>];
                 <span class="kw">let </span>(<span class="kw">_</span>, buf_layout) = type_of_val_as_spv_ptr_with_layout(buf_ptr)<span class="question-mark">?</span>;
 
@@ -1787,10 +1756,7 @@
                                         == <span class="prelude-val">Some</span>(dyn_unit_stride)
                                     &amp;&amp; <span class="macro">matches!</span>(
                                         last_field.components,
-                                        Components::Elements {
-                                            fixed_len: <span class="prelude-val">None</span>,
-                                            ..
-                                        }
+                                        Components::Elements { fixed_len: <span class="prelude-val">None</span>, .. }
                                     )
                             }) =&gt;
                     {
@@ -1805,11 +1771,14 @@
                 };
 
                 DataInstDef {
-                    kind: DataInstKind::SpvInst(spv::Inst {
-                        opcode: wk.OpArrayLength,
-                        imms: [spv::Imm::Short(wk.LiteralInteger, field_idx)]
-                            .into_iter()
-                            .collect(),
+                    form: cx.intern(DataInstFormDef {
+                        kind: DataInstKind::SpvInst(spv::Inst {
+                            opcode: wk.OpArrayLength,
+                            imms: [spv::Imm::Short(wk.LiteralInteger, field_idx)]
+                                .into_iter()
+                                .collect(),
+                        }),
+                        output_type: data_inst_form_def.output_type,
                     }),
                     ..data_inst_def.clone()
                 }
@@ -1867,10 +1836,9 @@
                     };
 
                     <span class="kw">let </span>idx_as_i32 = i32::try_from(idx).ok().ok_or_else(|| {
-                        LiftError(Diag::bug([<span class="macro">format!</span>(
-                            <span class="string">&quot;{idx} not representable as a positive s32&quot;
-                        </span>)
-                        .into()]))
+                        LiftError(Diag::bug([
+                            <span class="macro">format!</span>(<span class="string">&quot;{idx} not representable as a positive s32&quot;</span>).into()
+                        ]))
                     })<span class="question-mark">?</span>;
                     access_chain_inputs
                         .push(Value::Const(<span class="self">self</span>.lifter.const_u32(idx_as_i32 <span class="kw">as </span>u32)));
@@ -1899,26 +1867,29 @@
                         },
                     );
                     DataInstDef {
-                        <span class="comment">// FIXME(eddyb) avoid the repeated call to `type_of_val`,
+                        <span class="comment">// FIXME(eddyb) avoid the repeated call to `type_of_val`
+                        // (and the interning of a temporary `DataInstFormDef`),
                         // maybe don&#39;t even replace the `QPtrOp::Offset` instruction?
-                        </span>output_type: <span class="prelude-val">Some</span>(type_of_val(base_ptr)),
+                        </span>form: cx.intern(DataInstFormDef {
+                            kind: QPtrOp::Offset(<span class="number">0</span>).into(),
+                            output_type: <span class="prelude-val">Some</span>(type_of_val(base_ptr)),
+                        }),
                         ..data_inst_def.clone()
                     }
                 } <span class="kw">else </span>{
                     DataInstDef {
                         attrs: data_inst_def.attrs,
-                        kind: DataInstKind::SpvInst(wk.OpAccessChain.into()),
-                        output_type: <span class="prelude-val">Some</span>(
-                            <span class="self">self</span>.lifter.spv_ptr_type(addr_space, layout.original_type),
-                        ),
+                        form: cx.intern(DataInstFormDef {
+                            kind: DataInstKind::SpvInst(wk.OpAccessChain.into()),
+                            output_type: <span class="prelude-val">Some</span>(
+                                <span class="self">self</span>.lifter.spv_ptr_type(addr_space, layout.original_type),
+                            ),
+                        }),
                         inputs: access_chain_inputs,
                     }
                 }
             }
-            DataInstKind::QPtr(QPtrOp::DynOffset {
-                stride,
-                index_bounds,
-            }) =&gt; {
+            DataInstKind::QPtr(QPtrOp::DynOffset { stride, index_bounds }) =&gt; {
                 <span class="kw">let </span>base_ptr = data_inst_def.inputs[<span class="number">0</span>];
                 <span class="kw">let </span>(addr_space, layout) = type_of_val_as_spv_ptr_with_layout(base_ptr)<span class="question-mark">?</span>;
                 <span class="kw">let </span><span class="kw-2">mut </span>layout = <span class="kw">match </span>layout {
@@ -1930,11 +1901,8 @@
 
                 <span class="kw">let </span><span class="kw-2">mut </span>access_chain_inputs: SmallVec&lt;<span class="kw">_</span>&gt; = [base_ptr].into_iter().collect();
                 <span class="kw">loop </span>{
-                    <span class="kw">if let </span>Components::Elements {
-                        stride: layout_stride,
-                        elem,
-                        fixed_len,
-                    } = <span class="kw-2">&amp;</span>layout.components
+                    <span class="kw">if let </span>Components::Elements { stride: layout_stride, elem, fixed_len } =
+                        <span class="kw-2">&amp;</span>layout.components
                     {
                         <span class="kw">if </span>layout_stride == stride
                             &amp;&amp; <span class="prelude-val">Ok</span>(index_bounds.clone())
@@ -1981,10 +1949,9 @@
                     };
 
                     <span class="kw">let </span>idx_as_i32 = i32::try_from(idx).ok().ok_or_else(|| {
-                        LiftError(Diag::bug([<span class="macro">format!</span>(
-                            <span class="string">&quot;{idx} not representable as a positive s32&quot;
-                        </span>)
-                        .into()]))
+                        LiftError(Diag::bug([
+                            <span class="macro">format!</span>(<span class="string">&quot;{idx} not representable as a positive s32&quot;</span>).into()
+                        ]))
                     })<span class="question-mark">?</span>;
                     access_chain_inputs
                         .push(Value::Const(<span class="self">self</span>.lifter.const_u32(idx_as_i32 <span class="kw">as </span>u32)));
@@ -1997,14 +1964,18 @@
                 }
                 DataInstDef {
                     attrs: data_inst_def.attrs,
-                    kind: DataInstKind::SpvInst(wk.OpAccessChain.into()),
-                    output_type: <span class="prelude-val">Some</span>(<span class="self">self</span>.lifter.spv_ptr_type(addr_space, layout.original_type)),
+                    form: cx.intern(DataInstFormDef {
+                        kind: DataInstKind::SpvInst(wk.OpAccessChain.into()),
+                        output_type: <span class="prelude-val">Some</span>(
+                            <span class="self">self</span>.lifter.spv_ptr_type(addr_space, layout.original_type),
+                        ),
+                    }),
                     inputs: access_chain_inputs,
                 }
             }
             DataInstKind::QPtr(op @ (QPtrOp::Load | QPtrOp::Store)) =&gt; {
                 <span class="kw">let </span>(spv_opcode, access_type) = <span class="kw">match </span>op {
-                    QPtrOp::Load =&gt; (wk.OpLoad, data_inst_def.output_type.unwrap()),
+                    QPtrOp::Load =&gt; (wk.OpLoad, data_inst_form_def.output_type.unwrap()),
                     QPtrOp::Store =&gt; (wk.OpStore, type_of_val(data_inst_def.inputs[<span class="number">1</span>])),
                     <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
                 };
@@ -2025,7 +1996,10 @@
                 };
 
                 <span class="kw">let </span><span class="kw-2">mut </span>new_data_inst_def = DataInstDef {
-                    kind: DataInstKind::SpvInst(spv_opcode.into()),
+                    form: cx.intern(DataInstFormDef {
+                        kind: DataInstKind::SpvInst(spv_opcode.into()),
+                        output_type: data_inst_form_def.output_type,
+                    }),
                     ..data_inst_def.clone()
                 };
 
@@ -2090,10 +2064,7 @@
                                     .push((input_idx, access_chain_data_inst_def));
                             }
                         }
-                        Attr::QPtr(QPtrAttr::FromSpvPtrOutput {
-                            addr_space,
-                            pointee,
-                        }) =&gt; {
+                        Attr::QPtr(QPtrAttr::FromSpvPtrOutput { addr_space, pointee }) =&gt; {
                             <span class="macro">assert!</span>(from_spv_ptr_output.is_none());
                             from_spv_ptr_output = <span class="prelude-val">Some</span>((addr_space.<span class="number">0</span>, pointee.<span class="number">0</span>));
                         }
@@ -2138,8 +2109,10 @@
                 }
 
                 <span class="kw">if let </span><span class="prelude-val">Some</span>((addr_space, pointee_type)) = from_spv_ptr_output {
-                    new_data_inst_def.output_type =
-                        <span class="prelude-val">Some</span>(<span class="self">self</span>.lifter.spv_ptr_type(addr_space, pointee_type));
+                    new_data_inst_def.form = cx.intern(DataInstFormDef {
+                        output_type: <span class="prelude-val">Some</span>(<span class="self">self</span>.lifter.spv_ptr_type(addr_space, pointee_type)),
+                        ..cx[new_data_inst_def.form].clone()
+                    });
                 }
 
                 new_data_inst_def
@@ -2180,9 +2153,7 @@
                 <span class="kw">return </span><span class="prelude-val">Err</span>(LiftError(Diag::bug([<span class="string">&quot;cannot access whole Buffer&quot;</span>.into()])));
             }
             (<span class="kw">_</span>, TypeLayout::HandleArray(..)) =&gt; {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(LiftError(Diag::bug([
-                    <span class="string">&quot;cannot access whole HandleArray&quot;</span>.into()
-                ])));
+                <span class="kw">return </span><span class="prelude-val">Err</span>(LiftError(Diag::bug([<span class="string">&quot;cannot access whole HandleArray&quot;</span>.into()])));
             }
             (<span class="kw">_</span>, TypeLayout::Concrete(access_layout))
                 <span class="kw">if </span>access_layout.mem_layout.dyn_unit_stride.is_some() =&gt;
@@ -2193,14 +2164,10 @@
                 <span class="kw">return </span><span class="prelude-val">Err</span>(LiftError(Diag::bug([<span class="string">&quot;cannot access into Buffer&quot;</span>.into()])));
             }
             (TypeLayout::Handle(<span class="kw">_</span>), TypeLayout::Concrete(<span class="kw">_</span>)) =&gt; {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(LiftError(Diag::bug([
-                    <span class="string">&quot;cannot access Handle as memory&quot;</span>.into()
-                ])));
+                <span class="kw">return </span><span class="prelude-val">Err</span>(LiftError(Diag::bug([<span class="string">&quot;cannot access Handle as memory&quot;</span>.into()])));
             }
             (TypeLayout::Concrete(<span class="kw">_</span>), TypeLayout::Handle(<span class="kw">_</span>)) =&gt; {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(LiftError(Diag::bug([
-                    <span class="string">&quot;cannot access memory as Handle&quot;</span>.into()
-                ])));
+                <span class="kw">return </span><span class="prelude-val">Err</span>(LiftError(Diag::bug([<span class="string">&quot;cannot access memory as Handle&quot;</span>.into()])));
             }
 
             (
@@ -2219,9 +2186,8 @@
                 </span><span class="kw">while </span>pointee_layout.original_type != access_layout.original_type {
                     <span class="kw">let </span>idx = {
                         <span class="kw">let </span>offset_range = <span class="number">0</span>..access_layout.mem_layout.fixed_base.size;
-                        <span class="kw">let </span><span class="kw-2">mut </span>component_indices = pointee_layout
-                            .components
-                            .find_components_containing(offset_range);
+                        <span class="kw">let </span><span class="kw-2">mut </span>component_indices =
+                            pointee_layout.components.find_components_containing(offset_range);
                         <span class="kw">match </span>(component_indices.next(), component_indices.next()) {
                             (<span class="prelude-val">None</span>, <span class="kw">_</span>) =&gt; {
                                 <span class="kw">return </span><span class="prelude-val">Err</span>(LiftError(Diag::bug([
@@ -2241,10 +2207,9 @@
                     };
 
                     <span class="kw">let </span>idx_as_i32 = i32::try_from(idx).ok().ok_or_else(|| {
-                        LiftError(Diag::bug([<span class="macro">format!</span>(
-                            <span class="string">&quot;{idx} not representable as a positive s32&quot;
-                        </span>)
-                        .into()]))
+                        LiftError(Diag::bug([
+                            <span class="macro">format!</span>(<span class="string">&quot;{idx} not representable as a positive s32&quot;</span>).into()
+                        ]))
                     })<span class="question-mark">?</span>;
                     access_chain_inputs
                         .push(Value::Const(<span class="self">self</span>.lifter.const_u32(idx_as_i32 <span class="kw">as </span>u32)));
@@ -2261,8 +2226,10 @@
         <span class="prelude-val">Ok</span>(<span class="kw">if </span>access_chain_inputs.len() &gt; <span class="number">1 </span>{
             <span class="prelude-val">Some</span>(DataInstDef {
                 attrs: Default::default(),
-                kind: DataInstKind::SpvInst(wk.OpAccessChain.into()),
-                output_type: <span class="prelude-val">Some</span>(<span class="self">self</span>.lifter.spv_ptr_type(addr_space, access_type)),
+                form: <span class="self">self</span>.lifter.cx.intern(DataInstFormDef {
+                    kind: DataInstKind::SpvInst(wk.OpAccessChain.into()),
+                    output_type: <span class="prelude-val">Some</span>(<span class="self">self</span>.lifter.spv_ptr_type(addr_space, access_type)),
+                }),
                 inputs: access_chain_inputs,
             })
         } <span class="kw">else </span>{
@@ -2348,9 +2315,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         <span class="kw-2">mut </span>func_at_control_node: FuncAtMut&lt;<span class="lifetime">&#39;_</span>, ControlNode&gt;,
     ) {
-        func_at_control_node
-            .reborrow()
-            .inner_in_place_transform_with(<span class="self">self</span>);
+        func_at_control_node.reborrow().inner_in_place_transform_with(<span class="self">self</span>);
 
         <span class="kw">let </span>control_node = func_at_control_node.position;
         <span class="kw">if let </span>ControlNodeKind::Block { insts } = func_at_control_node.reborrow().def().kind {
@@ -2359,11 +2324,11 @@
                 <span class="kw">let </span><span class="kw-2">mut </span>lifted = <span class="self">self</span>.try_lift_data_inst_def(func_at_inst.reborrow(), control_node);
                 <span class="kw">if let </span><span class="prelude-val">Ok</span>(Transformed::Unchanged) = lifted {
                     <span class="kw">let </span>data_inst_def = func_at_inst.reborrow().def();
-                    <span class="kw">if let </span>DataInstKind::QPtr(<span class="kw">_</span>) = data_inst_def.kind {
-                        lifted = <span class="prelude-val">Err</span>(LiftError(Diag::bug([
-                            <span class="string">&quot;unimplemented qptr instruction&quot;</span>.into()
-                        ])));
-                    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(ty) = data_inst_def.output_type {
+                    <span class="kw">let </span>data_inst_form_def = <span class="kw-2">&amp;</span><span class="self">self</span>.lifter.cx[data_inst_def.form];
+                    <span class="kw">if let </span>DataInstKind::QPtr(<span class="kw">_</span>) = data_inst_form_def.kind {
+                        lifted =
+                            <span class="prelude-val">Err</span>(LiftError(Diag::bug([<span class="string">&quot;unimplemented qptr instruction&quot;</span>.into()])));
+                    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(ty) = data_inst_form_def.output_type {
                         <span class="kw">if </span><span class="macro">matches!</span>(<span class="self">self</span>.lifter.cx[ty].ctor, TypeCtor::QPtr) {
                             lifted = <span class="prelude-val">Err</span>(LiftError(Diag::bug([
                                 <span class="string">&quot;unimplemented qptr-producing instruction&quot;</span>.into(),
@@ -2388,10 +2353,8 @@
                         <span class="comment">// HACK(eddyb) do not add redundant errors to `qptr::analyze` bugs.
                         </span><span class="self">self</span>.func_has_qptr_analysis_bug_diags = <span class="self">self
                             </span>.func_has_qptr_analysis_bug_diags
-                            || <span class="self">self</span>.lifter.cx[data_inst_def.attrs]
-                                .attrs
-                                .iter()
-                                .any(|attr| <span class="kw">match </span>attr {
+                            || <span class="self">self</span>.lifter.cx[data_inst_def.attrs].attrs.iter().any(|attr| {
+                                <span class="kw">match </span>attr {
                                     Attr::Diagnostics(diags) =&gt; {
                                         diags.<span class="number">0</span>.iter().any(|diag| <span class="kw">match </span>diag.level {
                                             DiagLevel::Bug(loc) =&gt; {
@@ -2402,7 +2365,8 @@
                                         })
                                     }
                                     <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
-                                });
+                                }
+                            });
 
                         <span class="kw">if </span>!<span class="self">self</span>.func_has_qptr_analysis_bug_diags {
                             data_inst_def.attrs.push_diag(<span class="kw-2">&amp;</span><span class="self">self</span>.lifter.cx, e);

@@ -401,14 +401,39 @@
 <a href="#401" id="401">401</a>
 <a href="#402" id="402">402</a>
 <a href="#403" id="403">403</a>
+<a href="#404" id="404">404</a>
+<a href="#405" id="405">405</a>
+<a href="#406" id="406">406</a>
+<a href="#407" id="407">407</a>
+<a href="#408" id="408">408</a>
+<a href="#409" id="409">409</a>
+<a href="#410" id="410">410</a>
+<a href="#411" id="411">411</a>
+<a href="#412" id="412">412</a>
+<a href="#413" id="413">413</a>
+<a href="#414" id="414">414</a>
+<a href="#415" id="415">415</a>
+<a href="#416" id="416">416</a>
+<a href="#417" id="417">417</a>
+<a href="#418" id="418">418</a>
+<a href="#419" id="419">419</a>
+<a href="#420" id="420">420</a>
+<a href="#421" id="421">421</a>
+<a href="#422" id="422">422</a>
+<a href="#423" id="423">423</a>
+<a href="#424" id="424">424</a>
+<a href="#425" id="425">425</a>
+<a href="#426" id="426">426</a>
+<a href="#427" id="427">427</a>
+<a href="#428" id="428">428</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! SPIR-T passes related to control-flow.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::custom_insts::{<span class="self">self</span>, CustomInst, CustomOp};
 <span class="kw">use </span>smallvec::SmallVec;
 <span class="kw">use </span>spirt::func_at::FuncAt;
 <span class="kw">use </span>spirt::{
-    cfg, spv, Attr, AttrSet, ConstCtor, ConstDef, ControlNodeKind, DataInstKind, DeclDef,
-    EntityDefs, ExportKey, Exportee, Module, Type, TypeCtor, TypeCtorArg, TypeDef, Value,
+    cfg, spv, Attr, AttrSet, ConstCtor, ConstDef, ControlNodeKind, DataInstFormDef, DataInstKind,
+    DeclDef, EntityDefs, ExportKey, Exportee, Module, Type, TypeCtor, TypeCtorArg, TypeDef, Value,
 };
 <span class="kw">use </span>std::fmt::Write <span class="kw">as _</span>;
 
@@ -511,14 +536,15 @@
                 .into_iter()
                 .filter_map(|func_at_inst| {
                     <span class="kw">let </span>data_inst_def = func_at_inst.def();
-                    <span class="kw">if let </span>DataInstKind::SpvInst(spv_inst) = <span class="kw-2">&amp;</span>data_inst_def.kind {
+                    <span class="kw">let </span>data_inst_form_def = <span class="kw-2">&amp;</span>cx[data_inst_def.form];
+                    <span class="kw">if let </span>DataInstKind::SpvInst(spv_inst) = <span class="kw-2">&amp;</span>data_inst_form_def.kind {
                         <span class="kw">if </span>spv_inst.opcode == wk.OpLoad {
                             <span class="kw">if let </span>Value::Const(ct) = data_inst_def.inputs[<span class="number">0</span>] {
                                 <span class="kw">if let </span>ConstCtor::PtrToGlobalVar(gv) = cx[ct].ctor {
                                     <span class="kw">if </span>interface_global_vars.contains(<span class="kw-2">&amp;</span>gv) {
                                         <span class="kw">return </span><span class="prelude-val">Some</span>((
                                             gv,
-                                            data_inst_def.output_type.unwrap(),
+                                            data_inst_form_def.output_type.unwrap(),
                                             Value::DataInstOutput(func_at_inst.position),
                                         ));
                                     }
@@ -626,7 +652,7 @@
                 <span class="kw">let </span>data_inst_def = func_at_inst.def();
                 (
                     func_at_inst,
-                    <span class="kw">match </span>data_inst_def.kind {
+                    <span class="kw">match </span>cx[data_inst_def.form].kind {
                         DataInstKind::SpvExtInst { ext_set, inst }
                             <span class="kw">if </span>ext_set == custom_ext_inst_set =&gt;
                         {
@@ -646,8 +672,8 @@
             <span class="kw">if let </span><span class="prelude-val">Some</span>((
                 func_at_abort_inst,
                 CustomInst::Abort {
-                    message,
-                    debug_printf_args: message_debug_printf_args,
+                    kind: abort_kind,
+                    message_debug_printf,
                 },
             )) = custom_terminator_inst
             {
@@ -737,26 +763,47 @@
 
                         <span class="kw">let </span><span class="kw-2">mut </span>fmt = String::new();
 
+                        <span class="kw">let </span>(message_debug_printf_fmt_str, message_debug_printf_args) =
+                            message_debug_printf
+                                .split_first()
+                                .map(|(<span class="kw-2">&amp;</span>fmt_str, args)| (<span class="kw-2">&amp;</span>cx[const_str(fmt_str)], args))
+                                .unwrap_or_default();
+
+                        <span class="kw">let </span>fmt_dbg_src_loc = |(file, line, col)| {
+                            <span class="comment">// FIXME(eddyb) figure out what is going on with
+                            // these column number conventions, below is a
+                            // related comment from `spirt::print`:
+                            // &gt; // HACK(eddyb) Rust-GPU&#39;s column numbers seem
+                            // &gt; // off-by-one wrt what e.g. VSCode expects
+                            // &gt; // for `:line:col` syntax, but it&#39;s hard to
+                            // &gt; // tell from the spec and `glslang` doesn&#39;t
+                            // &gt; // even emit column numbers at all!
+                            </span><span class="kw">let </span>col = col + <span class="number">1</span>;
+                            <span class="macro">format!</span>(<span class="string">&quot;{file}:{line}:{col}&quot;</span>).replace(<span class="string">&#39;%&#39;</span>, <span class="string">&quot;%%&quot;</span>)
+                        };
+
                         <span class="comment">// HACK(eddyb) this improves readability w/ very verbose Vulkan loggers.
                         </span>fmt += <span class="string">&quot;\n&quot;</span>;
 
-                        fmt += <span class="string">&quot;[&quot;</span>;
+                        fmt += <span class="string">&quot;[Rust &quot;</span>;
 
-                        <span class="comment">// NB: `message` has its own `message_debug_printf_args`
-                        // it formats, and as such any escaping is already done.
-                        </span><span class="kw">let </span>message = <span class="kw-2">&amp;</span>cx[const_str(message)];
-                        <span class="kw">let </span>(message_kind, message) =
-                            message.split_once(<span class="string">&#39;|&#39;</span>).unwrap_or((<span class="string">&quot;&quot;</span>, message));
+                        <span class="comment">// HACK(eddyb) turn &quot;panic&quot; into &quot;panicked&quot;, while the
+                        // general case looks like &quot;abort&quot; -&gt; &quot;aborted&quot;.
+                        </span><span class="kw">match </span><span class="kw-2">&amp;</span>cx[const_str(abort_kind)] {
+                            <span class="string">&quot;panic&quot; </span>=&gt; fmt += <span class="string">&quot;panicked&quot;</span>,
+                            verb =&gt; {
+                                fmt += verb;
+                                fmt += <span class="string">&quot;en&quot;</span>;
+                            }
+                        };
 
-                        <span class="kw">if let </span><span class="prelude-val">Some</span>((file, line, col)) = current_debug_src_loc.take() {
-                            fmt += <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Rust {message_kind} at {file}:{line}:{col}&quot;</span>)
-                                .replace(<span class="string">&#39;%&#39;</span>, <span class="string">&quot;%%&quot;</span>);
-                        } <span class="kw">else </span>{
-                            fmt += message_kind;
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(loc) = current_debug_src_loc.take() {
+                            fmt += <span class="string">&quot; at &quot;</span>;
+                            fmt += <span class="kw-2">&amp;</span>fmt_dbg_src_loc(loc);
                         }
 
                         fmt += <span class="string">&quot;]\n &quot;</span>;
-                        fmt += <span class="kw-2">&amp;</span>message.replace(<span class="string">&#39;\n&#39;</span>, <span class="string">&quot;\n &quot;</span>);
+                        fmt += <span class="kw-2">&amp;</span>message_debug_printf_fmt_str.replace(<span class="string">&#39;\n&#39;</span>, <span class="string">&quot;\n &quot;</span>);
 
                         <span class="kw">let </span><span class="kw-2">mut </span>innermost = <span class="bool-val">true</span>;
                         <span class="kw">let </span><span class="kw-2">mut </span>append_call = |callsite_debug_src_loc, callee: <span class="kw-2">&amp;</span>str| {
@@ -770,9 +817,9 @@
                                 </span>fmt += <span class="string">&quot;\n      called by &quot;</span>;
                             }
                             fmt += callee;
-                            <span class="kw">if let </span><span class="prelude-val">Some</span>((file, line, col)) = callsite_debug_src_loc {
-                                fmt += <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;\n        called at {file}:{line}:{col}&quot;</span>)
-                                    .replace(<span class="string">&#39;%&#39;</span>, <span class="string">&quot;%%&quot;</span>);
+                            <span class="kw">if let </span><span class="prelude-val">Some</span>(loc) = callsite_debug_src_loc {
+                                fmt += <span class="string">&quot;\n        called at &quot;</span>;
+                                fmt += <span class="kw-2">&amp;</span>fmt_dbg_src_loc(loc);
                             }
                             current_debug_src_loc = callsite_debug_src_loc;
                         };
@@ -784,13 +831,16 @@
                         fmt += <span class="string">&quot;\n&quot;</span>;
 
                         <span class="kw">let </span>abort_inst_def = <span class="kw-2">&amp;mut </span>func_def_body.data_insts[abort_inst];
-                        abort_inst_def.kind = DataInstKind::SpvExtInst {
-                            ext_set: cx.intern(<span class="string">&quot;NonSemantic.DebugPrintf&quot;</span>),
-                            inst: <span class="number">1</span>,
-                        };
+                        abort_inst_def.form = cx.intern(DataInstFormDef {
+                            kind: DataInstKind::SpvExtInst {
+                                ext_set: cx.intern(<span class="string">&quot;NonSemantic.DebugPrintf&quot;</span>),
+                                inst: <span class="number">1</span>,
+                            },
+                            output_type: cx[abort_inst_def.form].output_type,
+                        });
                         abort_inst_def.inputs = [Value::Const(mk_const_str(cx.intern(fmt)))]
                             .into_iter()
-                            .chain(message_debug_printf_args)
+                            .chain(message_debug_printf_args.iter().copied())
                             .chain(debug_printf_context_inputs.iter().copied())
                             .collect();
 

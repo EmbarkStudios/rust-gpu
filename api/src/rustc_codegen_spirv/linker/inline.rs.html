@@ -1084,6 +1084,18 @@
 <a href="#1084" id="1084">1084</a>
 <a href="#1085" id="1085">1085</a>
 <a href="#1086" id="1086">1086</a>
+<a href="#1087" id="1087">1087</a>
+<a href="#1088" id="1088">1088</a>
+<a href="#1089" id="1089">1089</a>
+<a href="#1090" id="1090">1090</a>
+<a href="#1091" id="1091">1091</a>
+<a href="#1092" id="1092">1092</a>
+<a href="#1093" id="1093">1093</a>
+<a href="#1094" id="1094">1094</a>
+<a href="#1095" id="1095">1095</a>
+<a href="#1096" id="1096">1096</a>
+<a href="#1097" id="1097">1097</a>
+<a href="#1098" id="1098">1098</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! This algorithm is not intended to be an optimization, it is rather for legalization.
 //! Specifically, spir-v disallows things like a `StorageClass::Function` pointer to a
 //! `StorageClass::Input` pointer. Our frontend definitely allows it, though, this is like taking a
@@ -2005,55 +2017,67 @@
 
         <span class="kw">let </span><span class="kw-2">mut </span>blocks = callee.blocks.clone();
         <span class="kw">for </span>block <span class="kw">in </span><span class="kw-2">&amp;mut </span>blocks {
-            <span class="kw">let </span>last = block.instructions.last().unwrap();
-            <span class="kw">if let </span>Op::Return | Op::ReturnValue = last.class.opcode {
-                <span class="kw">if </span>Op::ReturnValue == last.class.opcode {
-                    <span class="kw">let </span>return_value = last.operands[<span class="number">0</span>].id_ref_any().unwrap();
-                    block.instructions.insert(
-                        block.instructions.len() - <span class="number">1</span>,
-                        Instruction::new(
-                            Op::Store,
-                            <span class="prelude-val">None</span>,
-                            <span class="prelude-val">None</span>,
-                            <span class="macro">vec!</span>[
-                                Operand::IdRef(return_variable.unwrap()),
-                                Operand::IdRef(return_value),
-                            ],
-                        ),
-                    );
+            <span class="kw">let </span><span class="kw-2">mut </span>terminator = block.instructions.pop().unwrap();
+
+            <span class="comment">// HACK(eddyb) strip trailing debuginfo (as it can&#39;t impact terminators).
+            </span><span class="kw">while let </span><span class="prelude-val">Some</span>(last) = block.instructions.last() {
+                <span class="kw">let </span>can_remove = <span class="kw">match </span>last.class.opcode {
+                    Op::Line | Op::NoLine =&gt; <span class="bool-val">true</span>,
+                    Op::ExtInst =&gt; {
+                        last.operands[<span class="number">0</span>].unwrap_id_ref() == custom_ext_inst_set_import
+                            &amp;&amp; <span class="macro">matches!</span>(
+                                CustomOp::decode_from_ext_inst(last),
+                                CustomOp::SetDebugSrcLoc | CustomOp::ClearDebugSrcLoc
+                            )
+                    }
+                    <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
+                };
+                <span class="kw">if </span>can_remove {
+                    block.instructions.pop();
+                } <span class="kw">else </span>{
+                    <span class="kw">break</span>;
+                }
+            }
+
+            <span class="kw">if let </span>Op::Return | Op::ReturnValue = terminator.class.opcode {
+                <span class="kw">if </span>Op::ReturnValue == terminator.class.opcode {
+                    <span class="kw">let </span>return_value = terminator.operands[<span class="number">0</span>].id_ref_any().unwrap();
+                    block.instructions.push(Instruction::new(
+                        Op::Store,
+                        <span class="prelude-val">None</span>,
+                        <span class="prelude-val">None</span>,
+                        <span class="macro">vec!</span>[
+                            Operand::IdRef(return_variable.unwrap()),
+                            Operand::IdRef(return_value),
+                        ],
+                    ));
                 } <span class="kw">else </span>{
                     <span class="macro">assert!</span>(return_variable.is_none());
                 }
-                <span class="kw-2">*</span>block.instructions.last_mut().unwrap() =
+                terminator =
                     Instruction::new(Op::Branch, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="macro">vec!</span>[Operand::IdRef(return_jump)]);
             }
 
-            <span class="kw">let </span>(debuginfo_prefix, debuginfo_suffix) = mk_debuginfo_prefix_and_suffix(<span class="bool-val">true</span>);
-            block.instructions.splice(
+            <span class="kw">let </span>num_phis = block
+                .instructions
+                .iter()
+                .take_while(|inst| inst.class.opcode == Op::Phi)
+                .count();
+
+            <span class="comment">// HACK(eddyb) avoid adding debuginfo to otherwise-empty blocks.
+            </span><span class="kw">if </span>block.instructions.len() &gt; num_phis {
+                <span class="kw">let </span>(debuginfo_prefix, debuginfo_suffix) = mk_debuginfo_prefix_and_suffix(<span class="bool-val">true</span>);
                 <span class="comment">// Insert the prefix debuginfo instructions after `OpPhi`s,
                 // which sadly can&#39;t be covered by them.
-                </span>{
-                    <span class="kw">let </span>i = block
-                        .instructions
-                        .iter()
-                        .position(|inst| inst.class.opcode != Op::Phi)
-                        .unwrap();
-                    i..i
-                },
-                debuginfo_prefix,
-            );
-            block.instructions.splice(
+                </span>block
+                    .instructions
+                    .splice(num_phis..num_phis, debuginfo_prefix);
                 <span class="comment">// Insert the suffix debuginfo instructions before the terminator,
                 // which sadly can&#39;t be covered by them.
-                </span>{
-                    <span class="kw">let </span>last_non_terminator = block.instructions.iter().rposition(|inst| {
-                        !rspirv::grammar::reflect::is_block_terminator(inst.class.opcode)
-                    });
-                    <span class="kw">let </span>i = last_non_terminator.map_or(<span class="number">0</span>, |x| x + <span class="number">1</span>);
-                    i..i
-                },
-                debuginfo_suffix,
-            );
+                </span>block.instructions.extend(debuginfo_suffix);
+            }
+
+            block.instructions.push(terminator);
         }
 
         <span class="kw">let </span>(caller_restore_debuginfo_after_call, calleer_reset_debuginfo_before_call) =

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spirt-0.2.0/src/print/multiversion.rs`."><title>multiversion.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-f3501f0f5ae15dfb.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="spirt" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.0-nightly (1a5f8bce7 2023-05-26)" data-search-js="search-4926e5fc22a5646a.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../static.files/source-script-11255107d0a65077.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-f0540c1d82cde29b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../spirt/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/git/checkouts/spirt-9c237dd53f05c2cc/82daf25/src/print/multiversion.rs`."><title>multiversion.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-f3501f0f5ae15dfb.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="spirt" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.0-nightly (1a5f8bce7 2023-05-26)" data-search-js="search-4926e5fc22a5646a.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../static.files/source-script-11255107d0a65077.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-f0540c1d82cde29b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../spirt/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -567,25 +567,6 @@
 <a href="#567" id="567">567</a>
 <a href="#568" id="568">568</a>
 <a href="#569" id="569">569</a>
-<a href="#570" id="570">570</a>
-<a href="#571" id="571">571</a>
-<a href="#572" id="572">572</a>
-<a href="#573" id="573">573</a>
-<a href="#574" id="574">574</a>
-<a href="#575" id="575">575</a>
-<a href="#576" id="576">576</a>
-<a href="#577" id="577">577</a>
-<a href="#578" id="578">578</a>
-<a href="#579" id="579">579</a>
-<a href="#580" id="580">580</a>
-<a href="#581" id="581">581</a>
-<a href="#582" id="582">582</a>
-<a href="#583" id="583">583</a>
-<a href="#584" id="584">584</a>
-<a href="#585" id="585">585</a>
-<a href="#586" id="586">586</a>
-<a href="#587" id="587">587</a>
-<a href="#588" id="588">588</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Multi-version pretty-printing support (e.g. for comparing the IR between passes).
 
 </span><span class="kw">use </span><span class="kw">crate</span>::print::pretty::{<span class="self">self</span>, TextOp};
@@ -625,10 +606,7 @@
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
         <span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::Single(fragment) =&gt; fragment.fmt(f),
-            <span class="self">Self</span>::Multiple {
-                version_names,
-                per_row_versions_with_repeat_count,
-            } =&gt; {
+            <span class="self">Self</span>::Multiple { version_names, per_row_versions_with_repeat_count } =&gt; {
                 <span class="kw">let </span><span class="kw-2">mut </span>first = <span class="bool-val">true</span>;
 
                 <span class="comment">// HACK(eddyb) this is not the nicest output, but multi-version
@@ -683,10 +661,7 @@
     </span><span class="kw">pub fn </span>render_to_html(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; pretty::HtmlSnippet {
         <span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::Single(fragment) =&gt; fragment.render_to_html(),
-            <span class="self">Self</span>::Multiple {
-                version_names,
-                per_row_versions_with_repeat_count,
-            } =&gt; {
+            <span class="self">Self</span>::Multiple { version_names, per_row_versions_with_repeat_count } =&gt; {
                 <span class="comment">// HACK(eddyb) using an UUID as a class name in lieu of &quot;scoped &lt;style&gt;&quot;.
                 </span><span class="kw">const </span>TABLE_CLASS_NAME: <span class="kw-2">&amp;</span>str = <span class="string">&quot;spirt-table-90c2056d-5b38-4644-824a-b4be1c82f14d&quot;</span>;
 
@@ -702,14 +677,26 @@
     }
     SCOPE&gt;tbody&gt;tr&gt;th {
         /* HACK(eddyb) these are relative to `pretty`&#39;s own HTML styles. */
-        font-size: 17px;
+        font-size: 19px;
         font-weight: 700;
 
         font-style: italic;
     }
     SCOPE&gt;tbody&gt;tr&gt;td {
         vertical-align: top;
+    }
+    SCOPE&gt;tbody&gt;tr&gt;td&gt;pre {
         max-width: MAX_LINE_WIDTHch;
+
+        overflow-x: auto;
+
+        /* HACK(eddyb) this shouldn&#39;t be needed but `visible` will turn into
+           `auto` because `overflow-x` is `auto` (for cursed browser reasons),
+           and some table cells are always assumed to need vertical scroll,
+           e.g. because they have `&lt;sub&gt;` elements on the last line (which don&#39;t
+           contribute to the surrounding bounding box, due to `line-height: 0`)
+         */
+        overflow-y: hidden;
     }
 &lt;/style&gt;
         &quot;
@@ -819,8 +806,8 @@
                                             // which can go before indents.
                                             </span><span class="kw">while let </span>[TextOp::Text(pretty::INDENT), rest @ ..]
                                             | [
-                                                TextOp::PushStyles(<span class="kw">_</span>),
-                                                TextOp::PopStyles(<span class="kw">_</span>),
+                                                TextOp::PushAnchor { .. },
+                                                TextOp::PopAnchor { .. },
                                                 rest @ ..,
                                             ] = line
                                             {
@@ -876,21 +863,20 @@
     <span class="kw">pub fn </span>map_pretty_fragments&lt;PF2&gt;(<span class="self">self</span>, f: <span class="kw">impl </span>Fn(PF) -&gt; PF2) -&gt; Versions&lt;PF2&gt; {
         <span class="kw">match </span><span class="self">self </span>{
             Versions::Single(fragment) =&gt; Versions::Single(f(fragment)),
-            Versions::Multiple {
-                version_names,
-                per_row_versions_with_repeat_count,
-            } =&gt; Versions::Multiple {
-                version_names,
-                per_row_versions_with_repeat_count: per_row_versions_with_repeat_count
-                    .into_iter()
-                    .map(|versions_with_repeat_count| {
-                        versions_with_repeat_count
-                            .into_iter()
-                            .map(|(fragment, repeat_count)| (f(fragment), repeat_count))
-                            .collect()
-                    })
-                    .collect(),
-            },
+            Versions::Multiple { version_names, per_row_versions_with_repeat_count } =&gt; {
+                Versions::Multiple {
+                    version_names,
+                    per_row_versions_with_repeat_count: per_row_versions_with_repeat_count
+                        .into_iter()
+                        .map(|versions_with_repeat_count| {
+                            versions_with_repeat_count
+                                .into_iter()
+                                .map(|(fragment, repeat_count)| (f(fragment), repeat_count))
+                                .collect()
+                        })
+                        .collect(),
+                }
+            }
         }
     }
 }
@@ -905,7 +891,7 @@
     /// into `merged_lines`), which the next column will align to.
     </span><span class="comment">//
     // FIXME(eddyb) does this need additional interning?
-    </span>anchor_def_to_merged_line_idx: FxIndexMap&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>String, usize&gt;,
+    </span>anchor_def_to_merged_line_idx: FxIndexMap&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str, usize&gt;,
 
     <span class="comment">// FIXME(eddyb) fine-tune this inline size.
     // FIXME(eddyb) maybe don&#39;t keep most of this data around anyway?
@@ -951,10 +937,7 @@
     </span><span class="kw">where
         </span>T: IntoInternalIterator&lt;Item = TextOp&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
     {
-        <span class="kw">let </span><span class="kw-2">mut </span>column = AAColumn {
-            text_ops: <span class="macro">vec!</span>[],
-            line_lengths: <span class="macro">vec!</span>[<span class="number">0</span>],
-        };
+        <span class="kw">let </span><span class="kw-2">mut </span>column = AAColumn { text_ops: <span class="macro">vec!</span>[], line_lengths: <span class="macro">vec!</span>[<span class="number">0</span>] };
         text_ops.into_internal_iter().for_each(|op| {
             <span class="kw">if let </span>TextOp::Text(<span class="string">&quot;\n&quot;</span>) = op {
                 column.line_lengths.push(<span class="number">0</span>);
@@ -983,10 +966,8 @@
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>&gt; AAMergedColumn&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>&gt; {
     <span class="kw">fn </span>lines(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;b </span>[TextOp&lt;<span class="lifetime">&#39;a</span>&gt;]&gt; + <span class="lifetime">&#39;_ </span>{
         <span class="kw">let </span>column_idx = <span class="self">self</span>.column_idx;
-        <span class="kw">let </span>line_lengths = <span class="self">self
-            </span>.merged_lines
-            .iter()
-            .map(<span class="kw">move </span>|line| line.per_column_line_lengths[column_idx]);
+        <span class="kw">let </span>line_lengths =
+            <span class="self">self</span>.merged_lines.iter().map(<span class="kw">move </span>|line| line.per_column_line_lengths[column_idx]);
         <span class="self">self</span>.original_column.lines(line_lengths)
     }
 }
@@ -994,26 +975,19 @@
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; AnchorAligner&lt;<span class="lifetime">&#39;a</span>&gt; {
     <span class="doccomment">/// Flatten all columns to `TextOp`s (including line separators).
     </span><span class="kw">fn </span>merged_columns(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = AAMergedColumn&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;_</span>&gt;&gt; {
-        <span class="self">self</span>.original_columns
-            .iter()
-            .enumerate()
-            .map(|(column_idx, original_column)| {
-                <span class="kw">let </span><span class="kw-2">mut </span>merged_lines = <span class="kw-2">&amp;</span><span class="self">self</span>.merged_lines[..];
+        <span class="self">self</span>.original_columns.iter().enumerate().map(|(column_idx, original_column)| {
+            <span class="kw">let </span><span class="kw-2">mut </span>merged_lines = <span class="kw-2">&amp;</span><span class="self">self</span>.merged_lines[..];
 
-                <span class="comment">// Trim all trailing lines that are empty in this column.
-                </span><span class="kw">while let </span><span class="prelude-val">Some</span>((last, before_last)) = merged_lines.split_last() {
-                    <span class="kw">if </span>last.per_column_line_lengths[column_idx] &gt; <span class="number">0 </span>{
-                        <span class="kw">break</span>;
-                    }
-                    merged_lines = before_last;
+            <span class="comment">// Trim all trailing lines that are empty in this column.
+            </span><span class="kw">while let </span><span class="prelude-val">Some</span>((last, before_last)) = merged_lines.split_last() {
+                <span class="kw">if </span>last.per_column_line_lengths[column_idx] &gt; <span class="number">0 </span>{
+                    <span class="kw">break</span>;
                 }
+                merged_lines = before_last;
+            }
 
-                AAMergedColumn {
-                    original_column,
-                    column_idx,
-                    merged_lines,
-                }
-            })
+            AAMergedColumn { original_column, column_idx, merged_lines }
+        })
     }
 
     <span class="doccomment">/// Merge `new_column` into the current set of columns, aligning as many
@@ -1027,19 +1001,12 @@
 
         <span class="comment">// Index all the anchor definitions in the new column.
         </span><span class="kw">let </span><span class="kw-2">mut </span>new_anchor_def_to_line_idx = FxIndexMap::default();
-        <span class="kw">for </span>(new_line_idx, new_line_text_ops) <span class="kw">in </span>new_column
-            .lines(new_column.line_lengths.iter().copied())
-            .enumerate()
+        <span class="kw">for </span>(new_line_idx, new_line_text_ops) <span class="kw">in
+            </span>new_column.lines(new_column.line_lengths.iter().copied()).enumerate()
         {
             <span class="kw">for </span>op <span class="kw">in </span>new_line_text_ops {
-                <span class="kw">if let </span>TextOp::PushStyles(styles) = op {
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(anchor) = <span class="kw-2">&amp;</span>styles.anchor {
-                        <span class="kw">if </span>styles.anchor_is_def {
-                            new_anchor_def_to_line_idx
-                                .entry(anchor)
-                                .or_insert(new_line_idx);
-                        }
-                    }
+                <span class="kw">if let </span>TextOp::PushAnchor { is_def: <span class="bool-val">true</span>, anchor } = <span class="kw-2">*</span>op {
+                    new_anchor_def_to_line_idx.entry(anchor).or_insert(new_line_idx);
                 }
             }
         }
@@ -1087,12 +1054,7 @@
         <span class="comment">// Build the merged lines using (partially) lockstep iteration to pull
         // the relevant data out of either side, and update &quot;new&quot; line indices.
         </span><span class="kw">let </span><span class="kw-2">mut </span>old_lines = old_lines.into_iter().enumerate().peekable();
-        <span class="kw">let </span><span class="kw-2">mut </span>new_lines = new_column
-            .line_lengths
-            .iter()
-            .copied()
-            .enumerate()
-            .peekable();
+        <span class="kw">let </span><span class="kw-2">mut </span>new_lines = new_column.line_lengths.iter().copied().enumerate().peekable();
         <span class="kw">let </span><span class="kw-2">mut </span>monotonic_common_anchors = monotonic_common_anchors.into_iter().peekable();
         <span class="kw">let </span><span class="kw-2">mut </span>fixup_new_to_merged = new_anchor_def_to_line_idx.values_mut().peekable();
         <span class="kw">while </span>old_lines.len() &gt; <span class="number">0 </span>|| new_lines.len() &gt; <span class="number">0 </span>{

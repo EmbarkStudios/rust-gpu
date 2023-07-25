@@ -6,6 +6,8 @@ var sourcesIndex = JSON.parse('{\
 "bytemuck":["",[],["anybitpattern.rs","checked.rs","contiguous.rs","internal.rs","lib.rs","no_uninit.rs","offset_of.rs","pod.rs","pod_in_option.rs","transparent.rs","zeroable.rs","zeroable_in_option.rs"]],\
 "byteorder":["",[],["io.rs","lib.rs"]],\
 "cfg_if":["",[],["lib.rs"]],\
+"convert_case":["",[],["case.rs","lib.rs","words.rs"]],\
+"derive_more":["",[],["add_assign_like.rs","add_helpers.rs","add_like.rs","as_mut.rs","as_ref.rs","constructor.rs","deref.rs","deref_mut.rs","display.rs","error.rs","from.rs","from_str.rs","index.rs","index_mut.rs","into.rs","into_iterator.rs","is_variant.rs","lib.rs","mul_assign_like.rs","mul_helpers.rs","mul_like.rs","not_like.rs","parsing.rs","sum_like.rs","try_into.rs","unwrap.rs","utils.rs"]],\
 "either":["",[],["lib.rs"]],\
 "elsa":["",[],["index_map.rs","index_set.rs","lib.rs","map.rs","sync.rs","vec.rs"]],\
 "errno":["",[],["lib.rs","unix.rs"]],\

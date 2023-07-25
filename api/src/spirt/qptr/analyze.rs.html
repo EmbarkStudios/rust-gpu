@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spirt-0.2.0/src/qptr/analyze.rs`."><title>analyze.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-f3501f0f5ae15dfb.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="spirt" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.0-nightly (1a5f8bce7 2023-05-26)" data-search-js="search-4926e5fc22a5646a.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../static.files/source-script-11255107d0a65077.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-f0540c1d82cde29b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../spirt/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/git/checkouts/spirt-9c237dd53f05c2cc/82daf25/src/qptr/analyze.rs`."><title>analyze.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-f3501f0f5ae15dfb.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="spirt" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.0-nightly (1a5f8bce7 2023-05-26)" data-search-js="search-4926e5fc22a5646a.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../static.files/source-script-11255107d0a65077.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-f0540c1d82cde29b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../spirt/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1262,56 +1262,6 @@
 <a href="#1262" id="1262">1262</a>
 <a href="#1263" id="1263">1263</a>
 <a href="#1264" id="1264">1264</a>
-<a href="#1265" id="1265">1265</a>
-<a href="#1266" id="1266">1266</a>
-<a href="#1267" id="1267">1267</a>
-<a href="#1268" id="1268">1268</a>
-<a href="#1269" id="1269">1269</a>
-<a href="#1270" id="1270">1270</a>
-<a href="#1271" id="1271">1271</a>
-<a href="#1272" id="1272">1272</a>
-<a href="#1273" id="1273">1273</a>
-<a href="#1274" id="1274">1274</a>
-<a href="#1275" id="1275">1275</a>
-<a href="#1276" id="1276">1276</a>
-<a href="#1277" id="1277">1277</a>
-<a href="#1278" id="1278">1278</a>
-<a href="#1279" id="1279">1279</a>
-<a href="#1280" id="1280">1280</a>
-<a href="#1281" id="1281">1281</a>
-<a href="#1282" id="1282">1282</a>
-<a href="#1283" id="1283">1283</a>
-<a href="#1284" id="1284">1284</a>
-<a href="#1285" id="1285">1285</a>
-<a href="#1286" id="1286">1286</a>
-<a href="#1287" id="1287">1287</a>
-<a href="#1288" id="1288">1288</a>
-<a href="#1289" id="1289">1289</a>
-<a href="#1290" id="1290">1290</a>
-<a href="#1291" id="1291">1291</a>
-<a href="#1292" id="1292">1292</a>
-<a href="#1293" id="1293">1293</a>
-<a href="#1294" id="1294">1294</a>
-<a href="#1295" id="1295">1295</a>
-<a href="#1296" id="1296">1296</a>
-<a href="#1297" id="1297">1297</a>
-<a href="#1298" id="1298">1298</a>
-<a href="#1299" id="1299">1299</a>
-<a href="#1300" id="1300">1300</a>
-<a href="#1301" id="1301">1301</a>
-<a href="#1302" id="1302">1302</a>
-<a href="#1303" id="1303">1303</a>
-<a href="#1304" id="1304">1304</a>
-<a href="#1305" id="1305">1305</a>
-<a href="#1306" id="1306">1306</a>
-<a href="#1307" id="1307">1307</a>
-<a href="#1308" id="1308">1308</a>
-<a href="#1309" id="1309">1309</a>
-<a href="#1310" id="1310">1310</a>
-<a href="#1311" id="1311">1311</a>
-<a href="#1312" id="1312">1312</a>
-<a href="#1313" id="1313">1313</a>
-<a href="#1314" id="1314">1314</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! [`QPtr`](crate::TypeCtor::QPtr) usage analysis (for legalizing/lifting).
 
 </span><span class="comment">// HACK(eddyb) sharing layout code with other modules.
@@ -1322,8 +1272,8 @@
 <span class="kw">use </span><span class="kw">crate</span>::visit::{InnerVisit, Visitor};
 <span class="kw">use crate</span>::{
     AddrSpace, Attr, AttrSet, AttrSetDef, Const, ConstCtor, Context, ControlNode, ControlNodeKind,
-    DataInst, DataInstKind, DeclDef, Diag, EntityList, ExportKey, Exportee, Func, FxIndexMap,
-    GlobalVar, Module, OrdAssertEq, Type, TypeCtor, Value,
+    DataInst, DataInstForm, DataInstKind, DeclDef, Diag, EntityList, ExportKey, Exportee, Func,
+    FxIndexMap, GlobalVar, Module, OrdAssertEq, Type, TypeCtor, Value,
 };
 <span class="kw">use </span>itertools::Either;
 <span class="kw">use </span>rustc_hash::FxHashMap;
@@ -1349,10 +1299,7 @@
 
 <span class="kw">impl</span>&lt;T&gt; MergeResult&lt;T&gt; {
     <span class="kw">fn </span>ok(merged: T) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            merged,
-            error: <span class="prelude-val">None</span>,
-        }
+        <span class="self">Self </span>{ merged, error: <span class="prelude-val">None </span>}
     }
 
     <span class="kw">fn </span>into_result(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;T, AnalysisError&gt; {
@@ -1508,10 +1455,7 @@
                 <span class="kw">let </span><span class="kw-2">mut </span>ab = a;
                 <span class="kw">let </span><span class="kw-2">mut </span>all_errors = <span class="prelude-val">None</span>;
                 <span class="kw">for </span>(b_offset, b_sub_usage) <span class="kw">in </span>b_entries {
-                    <span class="kw">let </span>MergeResult {
-                        merged,
-                        error: new_error,
-                    } = <span class="self">self</span>.merge_mem_at(
+                    <span class="kw">let </span>MergeResult { merged, error: new_error } = <span class="self">self</span>.merge_mem_at(
                         ab,
                         b_offset.checked_add(b_offset_in_a).unwrap(),
                         b_sub_usage,
@@ -1520,10 +1464,8 @@
 
                     <span class="comment">// FIXME(eddyb) move some of this into `MergeResult`!
                     </span><span class="kw">if let </span><span class="prelude-val">Some</span>(AnalysisError(e)) = new_error {
-                        <span class="kw">let </span>all_errors = <span class="kw-2">&amp;mut </span>all_errors
-                            .get_or_insert(AnalysisError(Diag::bug([])))
-                            .<span class="number">0
-                            </span>.message;
+                        <span class="kw">let </span>all_errors =
+                            <span class="kw-2">&amp;mut </span>all_errors.get_or_insert(AnalysisError(Diag::bug([]))).<span class="number">0</span>.message;
                         <span class="comment">// FIXME(eddyb) should this mean `MergeResult` should
                         // use `errors: Vec&lt;AnalysisError&gt;` instead of `Option`?
                         </span><span class="kw">if </span>!all_errors.is_empty() {
@@ -1594,10 +1536,9 @@
                         };
                         <span class="kw">match </span>supports_usage {
                             <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>) =&gt; <span class="prelude-val">None</span>,
-                            <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>) | <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Some</span>(MergeResult {
-                                merged: ty,
-                                error: supports_usage.err(),
-                            }),
+                            <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>) | <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; {
+                                <span class="prelude-val">Some</span>(MergeResult { merged: ty, error: supports_usage.err() })
+                            }
                         }
                     };
 
@@ -1638,10 +1579,7 @@
                 }
             }
 
-            QPtrMemUsageKind::DynOffsetBase {
-                element: <span class="kw-2">mut </span>a_element,
-                stride: a_stride,
-            } =&gt; {
+            QPtrMemUsageKind::DynOffsetBase { element: <span class="kw-2">mut </span>a_element, stride: a_stride } =&gt; {
                 <span class="kw">let </span>b_offset_in_a_element = b_offset_in_a % a_stride;
 
                 <span class="comment">// Array-like dynamic offsetting needs to always merge any usage that
@@ -1735,9 +1673,8 @@
 
                 <span class="comment">// FIXME(eddyb) this is a bit inefficient but we don&#39;t have
                 // cursors, so we have to buffer the `BTreeMap` keys here.
-                </span><span class="kw">let </span>overlapping_offsets: SmallVec&lt;[u32; <span class="number">16</span>]&gt; = overlapping_entries
-                    .map(|(<span class="kw-2">&amp;</span>a_sub_offset, <span class="kw">_</span>)| a_sub_offset)
-                    .collect();
+                </span><span class="kw">let </span>overlapping_offsets: SmallVec&lt;[u32; <span class="number">16</span>]&gt; =
+                    overlapping_entries.map(|(<span class="kw-2">&amp;</span>a_sub_offset, <span class="kw">_</span>)| a_sub_offset).collect();
                 <span class="kw">let </span>a_entries_mut = Rc::make_mut(<span class="kw-2">&amp;mut </span>a_entries);
                 <span class="kw">let </span><span class="kw-2">mut </span>all_errors = <span class="prelude-val">None</span>;
                 <span class="kw">let </span>(<span class="kw-2">mut </span>b_offset_in_a, <span class="kw-2">mut </span>b) = (b_offset_in_a, b);
@@ -1750,9 +1687,7 @@
                     // enough that we can do this for now.
                     </span><span class="kw">let </span>is_illegal = a_sub_offset != b_offset_in_a &amp;&amp; {
                         <span class="kw">let </span>(a_sub_total_max_size, b_total_max_size) = (
-                            a_sub_usage
-                                .max_size
-                                .map(|a| a.checked_add(a_sub_offset).unwrap()),
+                            a_sub_usage.max_size.map(|a| a.checked_add(a_sub_offset).unwrap()),
                             b.max_size.map(|b| b.checked_add(b_offset_in_a).unwrap()),
                         );
                         <span class="kw">let </span>total_max_size_merged = <span class="kw">match </span>(a_sub_total_max_size, b_total_max_size) {
@@ -1792,35 +1727,28 @@
                     }
 
                     <span class="kw">let </span>new_error;
-                    (
-                        b_offset_in_a,
-                        MergeResult {
-                            merged: b,
-                            error: new_error,
-                        },
-                    ) = <span class="kw">if </span>a_sub_offset &lt; b_offset_in_a {
-                        (
-                            a_sub_offset,
-                            <span class="self">self</span>.merge_mem_at(a_sub_usage, b_offset_in_a - a_sub_offset, b),
-                        )
-                    } <span class="kw">else </span>{
-                        <span class="comment">// FIXME(eddyb) remove this silliness by making `merge_mem_at` do symmetrical sorting.
-                        </span><span class="kw">if </span>a_sub_offset - b_offset_in_a == <span class="number">0 </span>{
-                            (b_offset_in_a, <span class="self">self</span>.merge_mem(b, a_sub_usage))
-                        } <span class="kw">else </span>{
+                    (b_offset_in_a, MergeResult { merged: b, error: new_error }) =
+                        <span class="kw">if </span>a_sub_offset &lt; b_offset_in_a {
                             (
-                                b_offset_in_a,
-                                <span class="self">self</span>.merge_mem_at(b, a_sub_offset - b_offset_in_a, a_sub_usage),
+                                a_sub_offset,
+                                <span class="self">self</span>.merge_mem_at(a_sub_usage, b_offset_in_a - a_sub_offset, b),
                             )
-                        }
-                    };
+                        } <span class="kw">else </span>{
+                            <span class="comment">// FIXME(eddyb) remove this silliness by making `merge_mem_at` do symmetrical sorting.
+                            </span><span class="kw">if </span>a_sub_offset - b_offset_in_a == <span class="number">0 </span>{
+                                (b_offset_in_a, <span class="self">self</span>.merge_mem(b, a_sub_usage))
+                            } <span class="kw">else </span>{
+                                (
+                                    b_offset_in_a,
+                                    <span class="self">self</span>.merge_mem_at(b, a_sub_offset - b_offset_in_a, a_sub_usage),
+                                )
+                            }
+                        };
 
                     <span class="comment">// FIXME(eddyb) move some of this into `MergeResult`!
                     </span><span class="kw">if let </span><span class="prelude-val">Some</span>(AnalysisError(e)) = new_error {
-                        <span class="kw">let </span>all_errors = <span class="kw-2">&amp;mut </span>all_errors
-                            .get_or_insert(AnalysisError(Diag::bug([])))
-                            .<span class="number">0
-                            </span>.message;
+                        <span class="kw">let </span>all_errors =
+                            <span class="kw-2">&amp;mut </span>all_errors.get_or_insert(AnalysisError(Diag::bug([]))).<span class="number">0</span>.message;
                         <span class="comment">// FIXME(eddyb) should this mean `MergeResult` should
                         // use `errors: Vec&lt;AnalysisError&gt;` instead of `Option`?
                         </span><span class="kw">if </span>!all_errors.is_empty() {
@@ -1849,9 +1777,7 @@
 
     <span class="doccomment">/// Attempt to compute a `TypeLayout` for a given (SPIR-V) `Type`.
     </span><span class="kw">fn </span>layout_of(<span class="kw-2">&amp;</span><span class="self">self</span>, ty: Type) -&gt; <span class="prelude-ty">Result</span>&lt;TypeLayout, AnalysisError&gt; {
-        <span class="self">self</span>.layout_cache
-            .layout_of(ty)
-            .map_err(|LayoutError(err)| AnalysisError(err))
+        <span class="self">self</span>.layout_cache.layout_of(ty).map_err(|LayoutError(err)| AnalysisError(err))
     }
 }
 
@@ -1900,17 +1826,17 @@
 
             <span class="comment">// FIXME(eddyb) `find_components_containing` is linear today but
             // could be made logarithmic (via binary search).
-            </span><span class="self">self</span>.components
-                .find_components_containing(min_usage_offset_range)
-                .any(|idx| <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.components {
+            </span><span class="self">self</span>.components.find_components_containing(min_usage_offset_range).any(
+                |idx| <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.components {
                     Components::Scalar =&gt; <span class="macro">unreachable!</span>(),
                     Components::Elements { stride, elem, .. } =&gt; {
                         elem.supports_usage_at_offset(usage_offset % stride.get(), usage)
                     }
-                    Components::Fields {
-                        offsets, layouts, ..
-                    } =&gt; layouts[idx].supports_usage_at_offset(usage_offset - offsets[idx], usage),
-                })
+                    Components::Fields { offsets, layouts, .. } =&gt; {
+                        layouts[idx].supports_usage_at_offset(usage_offset - offsets[idx], usage)
+                    }
+                },
+            )
         };
         <span class="kw">match </span><span class="kw-2">&amp;</span>usage.kind {
             <span class="kw">_ if </span>any_component_supports(usage_offset, usage) =&gt; <span class="bool-val">true</span>,
@@ -1923,31 +1849,26 @@
                 entries.iter().all(|(<span class="kw-2">&amp;</span>sub_offset, sub_usage)| {
                     <span class="comment">// FIXME(eddyb) maybe this overflow should be propagated up,
                     // as a sign that `usage` is malformed?
-                    </span>usage_offset
-                        .checked_add(sub_offset)
-                        .map_or(<span class="bool-val">false</span>, |combined_offset| {
-                            <span class="comment">// NOTE(eddyb) the reason this is only applicable to
-                            // offset `0` is that *in all other cases*, every
-                            // individual `OffsetBase` requires its own type, to
-                            // allow performing offsets *in steps* (even if the
-                            // offsets could easily be constant-folded, they&#39;d
-                            // *have to* be constant-folded *before* analysis,
-                            // to ensure there is no need for the intermediaries).
-                            </span><span class="kw">if </span>combined_offset == <span class="number">0 </span>{
-                                <span class="self">self</span>.supports_usage_at_offset(<span class="number">0</span>, sub_usage)
-                            } <span class="kw">else </span>{
-                                any_component_supports(combined_offset, sub_usage)
-                            }
-                        })
+                    </span>usage_offset.checked_add(sub_offset).map_or(<span class="bool-val">false</span>, |combined_offset| {
+                        <span class="comment">// NOTE(eddyb) the reason this is only applicable to
+                        // offset `0` is that *in all other cases*, every
+                        // individual `OffsetBase` requires its own type, to
+                        // allow performing offsets *in steps* (even if the
+                        // offsets could easily be constant-folded, they&#39;d
+                        // *have to* be constant-folded *before* analysis,
+                        // to ensure there is no need for the intermediaries).
+                        </span><span class="kw">if </span>combined_offset == <span class="number">0 </span>{
+                            <span class="self">self</span>.supports_usage_at_offset(<span class="number">0</span>, sub_usage)
+                        } <span class="kw">else </span>{
+                            any_component_supports(combined_offset, sub_usage)
+                        }
+                    })
                 })
             }
 
             <span class="comment">// Finding an array entirely nested in a component was handled above,
             // so here `layout` can only be a matching array (same stride and length).
-            </span>QPtrMemUsageKind::DynOffsetBase {
-                element: usage_elem,
-                stride: usage_stride,
-            } =&gt; {
+            </span>QPtrMemUsageKind::DynOffsetBase { element: usage_elem, stride: usage_stride } =&gt; {
                 <span class="kw">let </span>usage_fixed_len = usage
                     .max_size
                     .map(|size| {
@@ -2044,10 +1965,7 @@
             <span class="comment">// Ensure even unused interface variables get their `qptr.usage`.
             </span><span class="kw">match </span>export_key {
                 ExportKey::LinkName(<span class="kw">_</span>) =&gt; {}
-                ExportKey::SpvEntryPoint {
-                    imms: <span class="kw">_</span>,
-                    interface_global_vars,
-                } =&gt; {
+                ExportKey::SpvEntryPoint { imms: <span class="kw">_</span>, interface_global_vars } =&gt; {
                     <span class="kw">for </span><span class="kw-2">&amp;</span>gv <span class="kw">in </span>interface_global_vars {
                         <span class="self">self</span>.global_var_usages.entry(gv).or_insert_with(|| {
                             <span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(<span class="kw">match </span>module.global_vars[gv].shape {
@@ -2094,10 +2012,8 @@
             <span class="kw">match </span>state {
                 FuncInferUsageState::InProgress =&gt; <span class="macro">unreachable!</span>(),
                 FuncInferUsageState::Complete(func_results) =&gt; {
-                    <span class="kw">let </span>FuncInferUsageResults {
-                        param_usages,
-                        usage_or_err_attrs_to_attach,
-                    } = Rc::try_unwrap(func_results).ok().unwrap();
+                    <span class="kw">let </span>FuncInferUsageResults { param_usages, usage_or_err_attrs_to_attach } =
+                        Rc::try_unwrap(func_results).ok().unwrap();
 
                     <span class="kw">let </span>func_decl = <span class="kw-2">&amp;mut </span>module.funcs[func];
                     <span class="kw">for </span>(param_decl, usage) <span class="kw">in </span>func_decl.params.iter_mut().zip(param_usages) {
@@ -2135,10 +2051,7 @@
                                 <span class="kw-2">&amp;mut </span>func_def_body.at_mut(region).def().inputs[input_idx <span class="kw">as </span>usize]
                                     .attrs
                             }
-                            Value::ControlNodeOutput {
-                                control_node,
-                                output_idx,
-                            } =&gt; {
+                            Value::ControlNodeOutput { control_node, output_idx } =&gt; {
                                 <span class="kw-2">&amp;mut </span>func_def_body.at_mut(control_node).def().outputs
                                     [output_idx <span class="kw">as </span>usize]
                                     .attrs
@@ -2175,8 +2088,7 @@
             <span class="kw">return </span>cached;
         }
 
-        <span class="self">self</span>.func_states
-            .insert(func, FuncInferUsageState::InProgress);
+        <span class="self">self</span>.func_states.insert(func, FuncInferUsageState::InProgress);
 
         <span class="kw">let </span>completed_state =
             FuncInferUsageState::Complete(Rc::new(<span class="self">self</span>.infer_usage_in_func_uncached(module, func)));
@@ -2207,10 +2119,7 @@
                         ]))));
                     }
                 }
-                <span class="kw">return </span>FuncInferUsageResults {
-                    param_usages,
-                    usage_or_err_attrs_to_attach,
-                };
+                <span class="kw">return </span>FuncInferUsageResults { param_usages, usage_or_err_attrs_to_attach };
             }
         };
 
@@ -2222,6 +2131,7 @@
             <span class="kw">for </span>func_at_inst <span class="kw">in </span>func_def_body.at(insts).into_iter().rev() {
                 <span class="kw">let </span>data_inst = func_at_inst.position;
                 <span class="kw">let </span>data_inst_def = func_at_inst.def();
+                <span class="kw">let </span>data_inst_form_def = <span class="kw-2">&amp;</span>cx[data_inst_def.form];
                 <span class="kw">let </span>output_usage = data_inst_output_usages.remove(<span class="kw-2">&amp;</span>data_inst).flatten();
 
                 <span class="kw">let </span><span class="kw-2">mut </span>generate_usage = |this: <span class="kw-2">&amp;mut </span><span class="self">Self</span>, ptr: Value, new_usage| {
@@ -2252,23 +2162,19 @@
                     };
                     <span class="kw-2">*</span>slot = <span class="prelude-val">Some</span>(<span class="kw">match </span>slot.take() {
                         <span class="prelude-val">Some</span>(old) =&gt; old.and_then(|old| {
-                            UsageMerger {
-                                layout_cache: <span class="kw-2">&amp;</span>this.layout_cache,
-                            }
-                            .merge(old, new_usage<span class="question-mark">?</span>)
-                            .into_result()
+                            UsageMerger { layout_cache: <span class="kw-2">&amp;</span>this.layout_cache }
+                                .merge(old, new_usage<span class="question-mark">?</span>)
+                                .into_result()
                         }),
                         <span class="prelude-val">None </span>=&gt; new_usage,
                     });
                 };
-                <span class="kw">match </span><span class="kw-2">&amp;</span>data_inst_def.kind {
+                <span class="kw">match </span><span class="kw-2">&amp;</span>data_inst_form_def.kind {
                     <span class="kw-2">&amp;</span>DataInstKind::FuncCall(callee) =&gt; {
                         <span class="kw">match </span><span class="self">self</span>.infer_usage_in_func(module, callee) {
                             FuncInferUsageState::Complete(callee_results) =&gt; {
-                                <span class="kw">for </span>(<span class="kw-2">&amp;</span>arg, param_usage) <span class="kw">in </span>data_inst_def
-                                    .inputs
-                                    .iter()
-                                    .zip(<span class="kw-2">&amp;</span>callee_results.param_usages)
+                                <span class="kw">for </span>(<span class="kw-2">&amp;</span>arg, param_usage) <span class="kw">in
+                                    </span>data_inst_def.inputs.iter().zip(<span class="kw-2">&amp;</span>callee_results.param_usages)
                                 {
                                     <span class="kw">if let </span><span class="prelude-val">Some</span>(param_usage) = param_usage {
                                         generate_usage(<span class="self">self</span>, arg, param_usage.clone());
@@ -2284,7 +2190,7 @@
                                 ));
                             }
                         };
-                        <span class="kw">if </span>data_inst_def.output_type.map_or(<span class="bool-val">false</span>, is_qptr) {
+                        <span class="kw">if </span>data_inst_form_def.output_type.map_or(<span class="bool-val">false</span>, is_qptr) {
                             <span class="kw">if let </span><span class="prelude-val">Some</span>(usage) = output_usage {
                                 usage_or_err_attrs_to_attach
                                     .push((Value::DataInstOutput(data_inst), usage));
@@ -2410,10 +2316,7 @@
                                 }),
                         );
                     }
-                    DataInstKind::QPtr(QPtrOp::DynOffset {
-                        stride,
-                        index_bounds,
-                    }) =&gt; {
+                    DataInstKind::QPtr(QPtrOp::DynOffset { stride, index_bounds }) =&gt; {
                         generate_usage(
                             <span class="self">self</span>,
                             data_inst_def.inputs[<span class="number">0</span>],
@@ -2470,11 +2373,10 @@
                     }
                     DataInstKind::QPtr(op @ (QPtrOp::Load | QPtrOp::Store)) =&gt; {
                         <span class="kw">let </span>(op_name, access_type) = <span class="kw">match </span>op {
-                            QPtrOp::Load =&gt; (<span class="string">&quot;Load&quot;</span>, data_inst_def.output_type.unwrap()),
-                            QPtrOp::Store =&gt; (
-                                <span class="string">&quot;Store&quot;</span>,
-                                func_at_inst.at(data_inst_def.inputs[<span class="number">1</span>]).type_of(<span class="kw-2">&amp;</span>cx),
-                            ),
+                            QPtrOp::Load =&gt; (<span class="string">&quot;Load&quot;</span>, data_inst_form_def.output_type.unwrap()),
+                            QPtrOp::Store =&gt; {
+                                (<span class="string">&quot;Store&quot;</span>, func_at_inst.at(data_inst_def.inputs[<span class="number">1</span>]).type_of(<span class="kw-2">&amp;</span>cx))
+                            }
                             <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
                         };
                         generate_usage(
@@ -2599,10 +2501,7 @@
             }
         }
 
-        FuncInferUsageResults {
-            param_usages,
-            usage_or_err_attrs_to_attach,
-        }
+        FuncInferUsageResults { param_usages, usage_or_err_attrs_to_attach }
     }
 }
 
@@ -2616,6 +2515,7 @@
     </span><span class="kw">fn </span>visit_attr_set_use(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: AttrSet) {}
     <span class="kw">fn </span>visit_type_use(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: Type) {}
     <span class="kw">fn </span>visit_const_use(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: Const) {}
+    <span class="kw">fn </span>visit_data_inst_form_use(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: DataInstForm) {}
     <span class="kw">fn </span>visit_global_var_use(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: GlobalVar) {}
     <span class="kw">fn </span>visit_func_use(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: Func) {}
 

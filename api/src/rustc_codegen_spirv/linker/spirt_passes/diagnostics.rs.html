@@ -716,17 +716,28 @@
 <span class="kw">use </span>spirt::visit::{InnerVisit, Visitor};
 <span class="kw">use </span>spirt::{
     spv, Attr, AttrSet, AttrSetDef, Const, ConstCtor, Context, ControlNode, ControlNodeKind,
-    DataInstDef, DataInstKind, Diag, DiagLevel, ExportKey, Exportee, Func, FuncDecl, GlobalVar,
-    InternedStr, Module, Type, Value,
+    DataInstDef, DataInstForm, DataInstKind, Diag, DiagLevel, ExportKey, Exportee, Func, FuncDecl,
+    GlobalVar, InternedStr, Module, Type, Value,
 };
 <span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">use </span>std::{mem, str};
+
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ReportedDiagnostics {
+    <span class="kw">pub </span>rustc_errors_guarantee: rustc_errors::ErrorGuaranteed,
+    <span class="kw">pub </span>any_errors_were_spirt_bugs: bool,
+}
+
+<span class="kw">impl </span>From&lt;ReportedDiagnostics&gt; <span class="kw">for </span>rustc_errors::ErrorGuaranteed {
+    <span class="kw">fn </span>from(r: ReportedDiagnostics) -&gt; <span class="self">Self </span>{
+        r.rustc_errors_guarantee
+    }
+}
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>report_diagnostics(
     sess: <span class="kw-2">&amp;</span>Session,
     linker_options: <span class="kw-2">&amp;</span><span class="kw">crate</span>::linker::Options,
     module: <span class="kw-2">&amp;</span>Module,
-) -&gt; <span class="kw">crate</span>::linker::Result&lt;()&gt; {
+) -&gt; <span class="prelude-ty">Result</span>&lt;(), ReportedDiagnostics&gt; {
     <span class="kw">let </span>cx = <span class="kw-2">&amp;</span>module.cx();
 
     <span class="kw">let </span><span class="kw-2">mut </span>reporter = DiagnosticReporter {
@@ -773,28 +784,12 @@
         exportee.inner_visit_with(<span class="kw-2">&amp;mut </span>reporter);
     }
 
-    <span class="kw">if </span>reporter.any_spirt_bugs {
-        <span class="kw">let </span><span class="kw-2">mut </span>note = sess.struct_note_without_error(<span class="string">&quot;SPIR-T bugs were reported&quot;</span>);
-        <span class="kw">match </span><span class="kw-2">&amp;</span>linker_options.dump_spirt_passes {
-            <span class="prelude-val">Some</span>(dump_dir) =&gt; {
-                note.help(<span class="macro">format!</span>(
-                    <span class="string">&quot;pretty-printed SPIR-T will be saved to `{}`, as `.spirt.html` files&quot;</span>,
-                    dump_dir.display()
-                ));
-            }
-            <span class="prelude-val">None </span>=&gt; {
-                <span class="comment">// FIXME(eddyb) maybe just always generate the files in a tmpdir?
-                </span>note.help(
-                    <span class="string">&quot;re-run with `RUSTGPU_CODEGEN_ARGS=\&quot;--dump-spirt-passes=$PWD\&quot;` to \
-                     get pretty-printed SPIR-T (`.spirt.html`)&quot;</span>,
-                );
-            }
-        }
-        note.note(<span class="string">&quot;pretty-printed SPIR-T is preferred when reporting Rust-GPU issues&quot;</span>)
-            .emit();
-    }
-
-    reporter.overall_result
+    reporter
+        .overall_result
+        .map_err(|rustc_errors_guarantee| ReportedDiagnostics {
+            rustc_errors_guarantee,
+            any_errors_were_spirt_bugs: reporter.any_spirt_bugs,
+        })
 }
 
 <span class="comment">// HACK(eddyb) version of `decorations::LazilyDecoded` that works for SPIR-T.
@@ -961,7 +956,7 @@
                     <span class="kw">let </span>wk = <span class="kw-2">&amp;</span><span class="kw">super</span>::SpvSpecWithExtras::get().well_known;
 
                     <span class="comment">// FIXME(eddyb) deduplicate with `spirt_passes::diagnostics`.
-                    </span><span class="kw">let </span>custom_op = <span class="kw">match </span>debug_inst_def.kind {
+                    </span><span class="kw">let </span>custom_op = <span class="kw">match </span>cx[debug_inst_def.form].kind {
                         DataInstKind::SpvExtInst {
                             ext_set,
                             inst: ext_inst,
@@ -1228,6 +1223,11 @@
             }
         }
     }
+    <span class="kw">fn </span>visit_data_inst_form_use(<span class="kw-2">&amp;mut </span><span class="self">self</span>, data_inst_form: DataInstForm) {
+        <span class="comment">// NOTE(eddyb) this contains no deduplication because each `DataInstDef`
+        // will have any diagnostics reported separately.
+        </span><span class="self">self</span>.visit_data_inst_form_def(<span class="kw-2">&amp;</span><span class="self">self</span>.cx[data_inst_form]);
+    }
 
     <span class="kw">fn </span>visit_global_var_use(<span class="kw-2">&amp;mut </span><span class="self">self</span>, gv: GlobalVar) {
         <span class="kw">if </span><span class="self">self</span>.seen_global_vars.insert(gv) {
@@ -1327,7 +1327,7 @@
                 </span><span class="kw">if let </span>DataInstKind::SpvExtInst {
                     ext_set,
                     inst: ext_inst,
-                } = data_inst_def.kind
+                } = <span class="self">self</span>.cx[data_inst_def.form].kind
                 {
                     <span class="kw">if </span>ext_set == <span class="self">self</span>.custom_ext_inst_set {
                         <span class="kw">match </span>CustomOp::decode(ext_inst) {
@@ -1397,7 +1397,7 @@
             <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
         }
 
-        <span class="kw">if let </span>DataInstKind::FuncCall(func) = data_inst_def.kind {
+        <span class="kw">if let </span>DataInstKind::FuncCall(func) = <span class="self">self</span>.cx[data_inst_def.form].kind {
             <span class="comment">// HACK(eddyb) visit `func` early, to control its `use_stack`, with
             // the later visit from `inner_visit_with` ignored as a duplicate.
             </span><span class="kw">let </span>old_origin = replace_origin(<span class="self">self</span>, IntraFuncUseOrigin::CallCallee);

@@ -166,6 +166,7 @@
 <a href="#166" id="166">166</a>
 <a href="#167" id="167">167</a>
 <a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! SPIR-T passes related to debuginfo.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::custom_insts::{<span class="self">self</span>, CustomInst, CustomOp};
@@ -193,6 +194,7 @@
 
             seen_types: FxIndexSet::default(),
             seen_consts: FxIndexSet::default(),
+            seen_data_inst_forms: FxIndexSet::default(),
             seen_global_vars: FxIndexSet::default(),
             seen_funcs: FxIndexSet::default(),
         };
@@ -250,7 +252,7 @@
                 </span><span class="kw">if let </span>DataInstKind::SpvExtInst {
                     ext_set,
                     inst: ext_inst,
-                } = data_inst_def.kind
+                } = <span class="self">self</span>.cx[data_inst_def.form].kind
                 {
                     <span class="kw">if </span>ext_set == <span class="self">self</span>.custom_ext_inst_set {
                         <span class="kw">let </span>custom_op = CustomOp::decode(ext_inst);
