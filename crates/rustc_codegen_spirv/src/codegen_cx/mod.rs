@@ -15,8 +15,7 @@ use rspirv::spirv::{Decoration, LinkageType, Op, Word};
 use rustc_ast::ast::{InlineAsmOptions, InlineAsmTemplatePiece};
 use rustc_codegen_ssa::mir::debuginfo::{FunctionDebugContext, VariableKind};
 use rustc_codegen_ssa::traits::{
-    AsmMethods, BackendTypes, CoverageInfoMethods, DebugInfoMethods, GlobalAsmOperandRef,
-    MiscMethods,
+    AsmMethods, BackendTypes, DebugInfoMethods, GlobalAsmOperandRef, MiscMethods,
 };
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use rustc_middle::mir::mono::CodegenUnit;
@@ -24,7 +23,6 @@ use rustc_middle::mir::Body;
 use rustc_middle::ty::layout::{HasParamEnv, HasTyCtxt};
 use rustc_middle::ty::{Instance, ParamEnv, PolyExistentialTraitRef, Ty, TyCtxt};
 use rustc_session::Session;
-use rustc_span::def_id::DefId;
 use rustc_span::symbol::Symbol;
 use rustc_span::{SourceFile, Span, DUMMY_SP};
 use rustc_target::abi::call::{FnAbi, PassMode};
@@ -881,18 +879,6 @@ impl<'tcx> DebugInfoMethods<'tcx> for CodegenCx<'tcx> {
         _variable_kind: VariableKind,
         _span: Span,
     ) -> Self::DIVariable {
-        todo!()
-    }
-}
-
-impl<'tcx> CoverageInfoMethods<'tcx> for CodegenCx<'tcx> {
-    fn coverageinfo_finalize(&self) {
-        todo!()
-    }
-    fn get_pgo_func_name_var(&self, _: Instance<'tcx>) -> SpirvValue {
-        todo!()
-    }
-    fn define_unused_fn(&self, _: DefId) {
         todo!()
     }
 }

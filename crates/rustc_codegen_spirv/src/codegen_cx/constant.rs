@@ -1,18 +1,17 @@
 use super::CodegenCx;
 use crate::abi::ConvSpirvType;
-use crate::builder_spirv::{SpirvConst, SpirvValue, SpirvValueExt};
+use crate::builder_spirv::{SpirvConst, SpirvValue, SpirvValueExt, SpirvValueKind};
 use crate::spirv_type::SpirvType;
 use rspirv::spirv::Word;
-use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{BaseTypeMethods, ConstMethods, MiscMethods, StaticMethods};
 use rustc_middle::bug;
 use rustc_middle::mir::interpret::{alloc_range, ConstAllocation, GlobalAlloc, Scalar};
-use rustc_middle::ty::layout::{LayoutOf, TyAndLayout};
+use rustc_middle::ty::layout::LayoutOf;
 use rustc_span::{Span, DUMMY_SP};
 use rustc_target::abi::{self, AddressSpace, HasDataLayout, Integer, Primitive, Size};
 
 impl<'tcx> CodegenCx<'tcx> {
-    pub fn def_constant(&self, ty: Word, val: SpirvConst<'_>) -> SpirvValue {
+    pub fn def_constant(&self, ty: Word, val: SpirvConst<'_, 'tcx>) -> SpirvValue {
         self.builder.def_constant_cx(ty, val, self)
     }
 
@@ -137,8 +136,22 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
     fn const_uint(&self, t: Self::Type, i: u64) -> Self::Value {
         self.constant_int(t, i)
     }
-    fn const_uint_big(&self, t: Self::Type, u: u128) -> Self::Value {
-        self.constant_int(t, u as u64)
+    // FIXME(eddyb) support `u128`.
+    fn const_uint_big(&self, t: Self::Type, i: u128) -> Self::Value {
+        let i_as_u64 = i as u64;
+        let c = self.constant_int(t, i_as_u64);
+        match self.lookup_type(t) {
+            SpirvType::Integer(width, _) if width > 64 => {
+                if u128::from(i_as_u64) != i {
+                    self.zombie_no_span(
+                        c.def_cx(self),
+                        "const_uint_big truncated a 128-bit constant to 64 bits",
+                    );
+                }
+            }
+            _ => {}
+        }
+        c
     }
     fn const_bool(&self, val: bool) -> Self::Value {
         self.constant_bool(DUMMY_SP, val)
@@ -154,6 +167,10 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
     }
     fn const_u64(&self, i: u64) -> Self::Value {
         self.constant_u64(DUMMY_SP, i)
+    }
+    fn const_u128(&self, i: u128) -> Self::Value {
+        let ty = SpirvType::Integer(128, false).def(DUMMY_SP, self);
+        self.const_uint_big(ty, i)
     }
     fn const_usize(&self, i: u64) -> Self::Value {
         let ptr_size = self.tcx.data_layout.pointer_size.bits() as u32;
@@ -335,33 +352,61 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
         }
     }
 
-    // FIXME(eddyb) this shouldn't exist, and is only used by vtable creation,
-    // see https://github.com/rust-lang/rust/pull/86475#discussion_r680792727.
-    fn const_data_from_alloc(&self, _alloc: ConstAllocation<'tcx>) -> Self::Value {
-        let undef = self.undef(SpirvType::Void.def(DUMMY_SP, self));
-        self.zombie_no_span(undef.def_cx(self), "const_data_from_alloc");
-        undef
-    }
-    fn from_const_alloc(
-        &self,
-        layout: TyAndLayout<'tcx>,
-        alloc: ConstAllocation<'tcx>,
-        offset: Size,
-    ) -> PlaceRef<'tcx, Self::Value> {
-        assert_eq!(offset, Size::ZERO);
-        let ty = layout.spirv_type(DUMMY_SP, self);
-        let init = self.create_const_alloc(alloc, ty);
-        let result = self.static_addr_of(init, alloc.inner().align, None);
-        PlaceRef::new_sized(result, layout)
+    // HACK(eddyb) this uses a symbolic `ConstDataFromAlloc`, to allow deferring
+    // the actual value generation until after a pointer to this value is cast
+    // to its final type (e.g. that will be loaded as).
+    // FIXME(eddyb) replace this with `qptr` handling of constant data.
+    fn const_data_from_alloc(&self, alloc: ConstAllocation<'tcx>) -> Self::Value {
+        let void_type = SpirvType::Void.def(DUMMY_SP, self);
+        self.def_constant(void_type, SpirvConst::ConstDataFromAlloc(alloc))
     }
 
+    // FIXME(eddyb) is this just redundant with `const_bitcast`?!
     fn const_ptrcast(&self, val: Self::Value, ty: Self::Type) -> Self::Value {
         if val.ty == ty {
             val
         } else {
-            // constant ptrcast is not supported in spir-v
+            // FIXME(eddyb) implement via `OpSpecConstantOp`.
+            // FIXME(eddyb) this zombies the original value without creating a new one.
             let result = val.def_cx(self).with_type(ty);
             self.zombie_no_span(result.def_cx(self), "const_ptrcast");
+            result
+        }
+    }
+    fn const_bitcast(&self, val: Self::Value, ty: Self::Type) -> Self::Value {
+        // HACK(eddyb) special-case `const_data_from_alloc` + `static_addr_of`
+        // as the old `from_const_alloc` (now `OperandRef::from_const_alloc`).
+        if let SpirvValueKind::IllegalConst(_) = val.kind {
+            if let Some(SpirvConst::PtrTo { pointee }) = self.builder.lookup_const(val) {
+                if let Some(SpirvConst::ConstDataFromAlloc(alloc)) =
+                    self.builder.lookup_const_by_id(pointee)
+                {
+                    if let SpirvType::Pointer { pointee } = self.lookup_type(ty) {
+                        let init = self.create_const_alloc(alloc, pointee);
+                        return self.static_addr_of(init, alloc.inner().align, None);
+                    }
+                }
+            }
+        }
+
+        if val.ty == ty {
+            val
+        } else {
+            // FIXME(eddyb) implement via `OpSpecConstantOp`.
+            // FIXME(eddyb) this zombies the original value without creating a new one.
+            let result = val.def_cx(self).with_type(ty);
+            self.zombie_no_span(result.def_cx(self), "const_bitcast");
+            result
+        }
+    }
+    fn const_ptr_byte_offset(&self, val: Self::Value, offset: Size) -> Self::Value {
+        if offset == Size::ZERO {
+            val
+        } else {
+            // FIXME(eddyb) implement via `OpSpecConstantOp`.
+            // FIXME(eddyb) this zombies the original value without creating a new one.
+            let result = val;
+            self.zombie_no_span(result.def_cx(self), "const_ptr_byte_offset");
             result
         }
     }
