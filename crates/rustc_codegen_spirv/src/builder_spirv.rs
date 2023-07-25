@@ -619,35 +619,40 @@ impl<'tcx> BuilderSpirv<'tcx> {
                 Ok(())
             }
 
-            SpirvConst::Composite(v) => v.iter().fold(Ok(()), |composite_legal, field| {
-                let field_entry = &self.id_to_const.borrow()[field];
-                let field_legal_in_composite = field_entry.legal.and(
-                    // `field` is itself some legal `SpirvConst`, but can we have
-                    // it as part of an `OpConstantComposite`?
-                    match field_entry.val {
-                        SpirvConst::PtrTo { .. } => Err(IllegalConst::Shallow(
-                            LeafIllegalConst::CompositeContainsPtrTo,
-                        )),
-                        _ => Ok(()),
-                    },
-                );
+            SpirvConst::Composite(v) => v
+                .iter()
+                .map(|field| {
+                    let field_entry = &self.id_to_const.borrow()[field];
+                    field_entry.legal.and(
+                        // `field` is itself some legal `SpirvConst`, but can we have
+                        // it as part of an `OpConstantComposite`?
+                        match field_entry.val {
+                            SpirvConst::PtrTo { .. } => Err(IllegalConst::Shallow(
+                                LeafIllegalConst::CompositeContainsPtrTo,
+                            )),
+                            _ => Ok(()),
+                        },
+                    )
+                })
+                .reduce(|a, b| {
+                    match (a, b) {
+                        (Ok(()), Ok(())) => Ok(()),
+                        (Err(illegal), Ok(())) | (Ok(()), Err(illegal)) => Err(illegal),
 
-                match (composite_legal, field_legal_in_composite) {
-                    (Ok(()), Ok(())) => Ok(()),
-                    (Err(illegal), Ok(())) | (Ok(()), Err(illegal)) => Err(illegal),
-
-                    // Combining two causes of an illegal `SpirvConst` has to
-                    // take into account which is "worse", i.e. which imposes
-                    // more restrictions on how the resulting value can be used.
-                    // `Indirect` is worse than `Shallow` because it cannot be
-                    // materialized at runtime in the same way `Shallow` can be.
-                    (Err(illegal @ IllegalConst::Indirect(_)), Err(_))
-                    | (Err(_), Err(illegal @ IllegalConst::Indirect(_)))
-                    | (Err(illegal @ IllegalConst::Shallow(_)), Err(IllegalConst::Shallow(_))) => {
-                        Err(illegal)
+                        // Combining two causes of an illegal `SpirvConst` has to
+                        // take into account which is "worse", i.e. which imposes
+                        // more restrictions on how the resulting value can be used.
+                        // `Indirect` is worse than `Shallow` because it cannot be
+                        // materialized at runtime in the same way `Shallow` can be.
+                        (Err(illegal @ IllegalConst::Indirect(_)), Err(_))
+                        | (Err(_), Err(illegal @ IllegalConst::Indirect(_)))
+                        | (
+                            Err(illegal @ IllegalConst::Shallow(_)),
+                            Err(IllegalConst::Shallow(_)),
+                        ) => Err(illegal),
                     }
-                }
-            }),
+                })
+                .unwrap_or(Ok(())),
 
             SpirvConst::PtrTo { pointee } => match self.id_to_const.borrow()[&pointee].legal {
                 Ok(()) => Ok(()),
