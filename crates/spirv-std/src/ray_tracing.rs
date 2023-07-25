@@ -1,4 +1,8 @@
 //! Ray-tracing data types
+
+// NOTE(eddyb) "&-masking with zero", likely due to `NONE = 0` in `bitflags!`.
+#![allow(clippy::bad_bit_mask)]
+
 use crate::vector::Vector;
 #[cfg(target_arch = "spirv")]
 use core::arch::asm;

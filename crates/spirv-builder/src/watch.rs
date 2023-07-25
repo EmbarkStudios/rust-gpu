@@ -105,7 +105,7 @@ impl SpirvBuilder {
                 }
             }
         });
-        std::mem::forget(thread);
+        std::mem::drop(thread);
         Ok(first_result)
     }
 }

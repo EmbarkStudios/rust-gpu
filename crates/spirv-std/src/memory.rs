@@ -1,5 +1,8 @@
 //! Types for handling memory ordering constraints for concurrent memory access.
 
+// NOTE(eddyb) "&-masking with zero", likely due to `NONE = 0` in `bitflags!`.
+#![allow(clippy::bad_bit_mask)]
+
 /// Specification for how large of a scope some instructions should operate on - used when calling
 /// functions that take a configurable scope.
 #[derive(Debug, PartialEq, Eq)]
