@@ -22,12 +22,6 @@ pub(crate) struct ReportedDiagnostics {
     pub any_errors_were_spirt_bugs: bool,
 }
 
-impl From<ReportedDiagnostics> for rustc_errors::ErrorGuaranteed {
-    fn from(r: ReportedDiagnostics) -> Self {
-        r.rustc_errors_guarantee
-    }
-}
-
 pub(crate) fn report_diagnostics(
     sess: &Session,
     linker_options: &crate::linker::Options,
