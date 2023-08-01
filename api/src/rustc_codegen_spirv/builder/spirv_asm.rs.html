@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/builder/spirv_asm.rs`."><title>spirv_asm.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-f3501f0f5ae15dfb.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rustc_codegen_spirv" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.0-nightly (1a5f8bce7 2023-05-26)" data-search-js="search-4926e5fc22a5646a.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../static.files/source-script-11255107d0a65077.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-f0540c1d82cde29b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/builder/spirv_asm.rs`."><title>spirv_asm.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9bb858ba049f1f21.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rustc_codegen_spirv" data-themes="" data-resource-suffix="" data-rustdoc-version="1.72.0-nightly (cb80ff132 2023-07-07)" data-channel="nightly" data-search-js="search-f6292fe389d70017.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ><script src="../../../static.files/storage-59fd9b8ccb335783.js"></script><script defer src="../../../static.files/source-script-106908c7a7964ba4.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1611,7 +1611,7 @@
         <span class="kw">const </span>SUPPORTED_OPTIONS: InlineAsmOptions = InlineAsmOptions::NORETURN;
         <span class="kw">let </span>unsupported_options = options &amp; !SUPPORTED_OPTIONS;
         <span class="kw">if </span>!unsupported_options.is_empty() {
-            <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;asm flags not supported: {unsupported_options:?}&quot;</span>));
+            <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;asm flags not supported: {unsupported_options:?}&quot;</span>));
         }
         <span class="comment">// vec of lines, and each line is vec of tokens
         </span><span class="kw">let </span><span class="kw-2">mut </span>tokens = <span class="macro">vec!</span>[<span class="macro">vec!</span>[]];
@@ -1709,14 +1709,14 @@
             }
             (<span class="bool-val">false</span>, AsmBlock::Open) =&gt; (),
             (<span class="bool-val">false</span>, AsmBlock::End(terminator)) =&gt; {
-                <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+                <span class="self">self</span>.err(<span class="macro">format!</span>(
                     <span class="string">&quot;trailing terminator `Op{terminator:?}` requires `options(noreturn)`&quot;
                 </span>));
             }
         }
         <span class="kw">for </span>(id, num) <span class="kw">in </span>id_map {
             <span class="kw">if </span>!defined_ids.contains(<span class="kw-2">&amp;</span>num) {
-                <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;%{id} is used but not defined&quot;</span>));
+                <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;%{id} is used but not defined&quot;</span>));
             }
         }
     }
@@ -1779,7 +1779,7 @@
                                     <span class="prelude-val">Some</span>(<span class="string">&#39;\&#39;&#39;</span>) =&gt; <span class="string">&#39;\&#39;&#39;</span>,
                                     <span class="prelude-val">Some</span>(<span class="string">&#39;&quot;&#39;</span>) =&gt; <span class="string">&#39;&quot;&#39;</span>,
                                     <span class="prelude-val">Some</span>(escape) =&gt; {
-                                        <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;invalid escape &#39;\\{escape}&#39;&quot;</span>));
+                                        <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;invalid escape &#39;\\{escape}&#39;&quot;</span>));
                                         <span class="kw">return </span><span class="prelude-val">None</span>;
                                     }
                                 };
@@ -1906,7 +1906,7 @@
                 <span class="comment">// NOTE(eddyb) allowing the instruction to be added below avoids
                 // spurious &quot;`noreturn` requires a terminator at the end&quot; errors.
                 </span><span class="kw">if let </span>Op::Return | Op::ReturnValue = op {
-                    <span class="self">self</span>.struct_err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+                    <span class="self">self</span>.struct_err(<span class="macro">format!</span>(
                         <span class="string">&quot;using `Op{op:?}` to return from within `asm!` is disallowed&quot;
                     </span>))
                     .note(
@@ -1930,7 +1930,7 @@
                     }
                     AsmBlock::End(terminator) =&gt; {
                         <span class="kw">if </span>op != Op::Label {
-                            <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+                            <span class="self">self</span>.err(<span class="macro">format!</span>(
                                 <span class="string">&quot;expected `OpLabel` after terminator `Op{terminator:?}`&quot;
                             </span>));
                         }
@@ -2013,7 +2013,7 @@
         <span class="kw">let </span>inst_class = <span class="kw">if let </span><span class="prelude-val">Some</span>(inst) = inst_class {
             inst
         } <span class="kw">else </span>{
-            <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;unknown spirv instruction {inst_name}&quot;</span>));
+            <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;unknown spirv instruction {inst_name}&quot;</span>));
             <span class="kw">return</span>;
         };
         <span class="kw">let </span>result_id = <span class="kw">match </span>out_register {
@@ -2068,7 +2068,7 @@
             <span class="kw">if </span>kind == OperandKind::IdResult {
                 <span class="macro">assert_eq!</span>(quantifier, OperandQuantifier::One);
                 <span class="kw">if </span>instruction.result_id.is_none() {
-                    <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+                    <span class="self">self</span>.err(<span class="macro">format!</span>(
                         <span class="string">&quot;instruction {} expects a result id&quot;</span>,
                         instruction.class.opname
                     ));
@@ -2086,7 +2086,7 @@
                         instruction.result_type = <span class="prelude-val">Some</span>(id);
                     }
                 } <span class="kw">else </span>{
-                    <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+                    <span class="self">self</span>.err(<span class="macro">format!</span>(
                         <span class="string">&quot;instruction {} expects a result type&quot;</span>,
                         instruction.class.opname
                     ));
@@ -2099,7 +2099,7 @@
             <span class="kw">match </span>quantifier {
                 OperandQuantifier::One =&gt; {
                     <span class="kw">if </span>!<span class="self">self</span>.parse_one_operand(id_map, instruction, kind, <span class="kw-2">&amp;mut </span>tokens) {
-                        <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+                        <span class="self">self</span>.err(<span class="macro">format!</span>(
                             <span class="string">&quot;expected operand after instruction: {}&quot;</span>,
                             instruction.class.opname
                         ));
@@ -2123,7 +2123,7 @@
         }
 
         <span class="kw">if </span>!saw_id_result &amp;&amp; instruction.result_id.is_some() {
-            <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+            <span class="self">self</span>.err(<span class="macro">format!</span>(
                 <span class="string">&quot;instruction {} does not expect a result id&quot;</span>,
                 instruction.class.opname
             ));
@@ -2140,7 +2140,7 @@
 
             <span class="kw">match </span><span class="self">self</span>.infer_result_type(id_to_type_map, instruction) {
                 <span class="prelude-val">Some</span>(result_type) =&gt; instruction.result_type = <span class="prelude-val">Some</span>(result_type),
-                <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+                <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(
                     <span class="string">&quot;instruction {} cannot have its result type inferred&quot;</span>,
                     instruction.class.opname
                 )),
@@ -2363,7 +2363,7 @@
                     <span class="prelude-val">Some</span>(OutRegister::Regular({
                         <span class="kw">let </span>num = <span class="kw-2">*</span>id_map.entry(id).or_insert_with(|| <span class="self">self</span>.emit().id());
                         <span class="kw">if </span>!defined_ids.insert(num) {
-                            <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;%{id} is defined more than once&quot;</span>));
+                            <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;%{id} is defined more than once&quot;</span>));
                         }
                         num
                     }))
@@ -2625,7 +2625,7 @@
 
             (OperandKind::LiteralInteger, <span class="prelude-val">Some</span>(word)) =&gt; <span class="kw">match </span>word.parse() {
                 <span class="prelude-val">Ok</span>(v) =&gt; inst.operands.push(dr::Operand::LiteralInt32(v)),
-                <span class="prelude-val">Err</span>(e) =&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;invalid integer: {e}&quot;</span>)),
+                <span class="prelude-val">Err</span>(e) =&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;invalid integer: {e}&quot;</span>)),
             },
             (OperandKind::LiteralString, <span class="kw">_</span>) =&gt; {
                 <span class="kw">if let </span>Token::String(value) = token {
@@ -2675,12 +2675,12 @@
                 }
                 <span class="kw">match </span>parse(<span class="self">self</span>.lookup_type(ty), word) {
                     <span class="prelude-val">Ok</span>(op) =&gt; inst.operands.push(op),
-                    <span class="prelude-val">Err</span>(err) =&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span>err),
+                    <span class="prelude-val">Err</span>(err) =&gt; <span class="self">self</span>.err(err),
                 }
             }
             (OperandKind::LiteralExtInstInteger, <span class="prelude-val">Some</span>(word)) =&gt; <span class="kw">match </span>word.parse() {
                 <span class="prelude-val">Ok</span>(v) =&gt; inst.operands.push(dr::Operand::LiteralExtInstInteger(v)),
-                <span class="prelude-val">Err</span>(e) =&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;invalid integer: {e}&quot;</span>)),
+                <span class="prelude-val">Err</span>(e) =&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;invalid integer: {e}&quot;</span>)),
             },
             (OperandKind::LiteralSpecConstantOpInteger, <span class="prelude-val">Some</span>(word)) =&gt; {
                 <span class="kw">match </span><span class="self">self</span>.instruction_table.table.get(word) {
@@ -2701,11 +2701,11 @@
                         <span class="prelude-val">Some</span>(Token::Word(word)) =&gt; <span class="kw">match </span>word.parse() {
                             <span class="prelude-val">Ok</span>(v) =&gt; inst.operands.push(dr::Operand::LiteralInt32(v)),
                             <span class="prelude-val">Err</span>(e) =&gt; {
-                                <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;invalid integer: {e}&quot;</span>));
+                                <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;invalid integer: {e}&quot;</span>));
                             }
                         },
                         <span class="prelude-val">Some</span>(Token::String(<span class="kw">_</span>)) =&gt; {
-                            <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;expected a literal, not a string for a {kind:?}&quot;</span>));
+                            <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;expected a literal, not a string for a {kind:?}&quot;</span>));
                         }
                         <span class="prelude-val">Some</span>(Token::Placeholder(<span class="kw">_</span>, span)) =&gt; {
                             <span class="self">self</span>.tcx.sess.span_err(
@@ -2742,172 +2742,172 @@
             (OperandKind::ImageOperands, <span class="prelude-val">Some</span>(word)) =&gt; {
                 <span class="kw">match </span>parse_bitflags_operand(IMAGE_OPERANDS, word) {
                     <span class="prelude-val">Some</span>(x) =&gt; inst.operands.push(dr::Operand::ImageOperands(x)),
-                    <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Unknown ImageOperands {word}&quot;</span>)),
+                    <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;Unknown ImageOperands {word}&quot;</span>)),
                 }
             }
             (OperandKind::FPFastMathMode, <span class="prelude-val">Some</span>(word)) =&gt; {
                 <span class="kw">match </span>parse_bitflags_operand(FP_FAST_MATH_MODE, word) {
                     <span class="prelude-val">Some</span>(x) =&gt; inst.operands.push(dr::Operand::FPFastMathMode(x)),
-                    <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Unknown FPFastMathMode {word}&quot;</span>)),
+                    <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;Unknown FPFastMathMode {word}&quot;</span>)),
                 }
             }
             (OperandKind::SelectionControl, <span class="prelude-val">Some</span>(word)) =&gt; {
                 <span class="kw">match </span>parse_bitflags_operand(SELECTION_CONTROL, word) {
                     <span class="prelude-val">Some</span>(x) =&gt; inst.operands.push(dr::Operand::SelectionControl(x)),
-                    <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Unknown SelectionControl {word}&quot;</span>)),
+                    <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;Unknown SelectionControl {word}&quot;</span>)),
                 }
             }
             (OperandKind::LoopControl, <span class="prelude-val">Some</span>(word)) =&gt; {
                 <span class="kw">match </span>parse_bitflags_operand(LOOP_CONTROL, word) {
                     <span class="prelude-val">Some</span>(x) =&gt; inst.operands.push(dr::Operand::LoopControl(x)),
-                    <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Unknown LoopControl {word}&quot;</span>)),
+                    <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;Unknown LoopControl {word}&quot;</span>)),
                 }
             }
             (OperandKind::FunctionControl, <span class="prelude-val">Some</span>(word)) =&gt; {
                 <span class="kw">match </span>parse_bitflags_operand(FUNCTION_CONTROL, word) {
                     <span class="prelude-val">Some</span>(x) =&gt; inst.operands.push(dr::Operand::FunctionControl(x)),
-                    <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Unknown FunctionControl {word}&quot;</span>)),
+                    <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;Unknown FunctionControl {word}&quot;</span>)),
                 }
             }
             (OperandKind::MemorySemantics, <span class="prelude-val">Some</span>(word)) =&gt; {
                 <span class="kw">match </span>parse_bitflags_operand(MEMORY_SEMANTICS, word) {
                     <span class="prelude-val">Some</span>(x) =&gt; inst.operands.push(dr::Operand::MemorySemantics(x)),
-                    <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Unknown MemorySemantics {word}&quot;</span>)),
+                    <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;Unknown MemorySemantics {word}&quot;</span>)),
                 }
             }
             (OperandKind::MemoryAccess, <span class="prelude-val">Some</span>(word)) =&gt; {
                 <span class="kw">match </span>parse_bitflags_operand(MEMORY_ACCESS, word) {
                     <span class="prelude-val">Some</span>(x) =&gt; inst.operands.push(dr::Operand::MemoryAccess(x)),
-                    <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Unknown MemoryAccess {word}&quot;</span>)),
+                    <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;Unknown MemoryAccess {word}&quot;</span>)),
                 }
             }
             (OperandKind::KernelProfilingInfo, <span class="prelude-val">Some</span>(word)) =&gt; {
                 <span class="kw">match </span>parse_bitflags_operand(KERNEL_PROFILING_INFO, word) {
                     <span class="prelude-val">Some</span>(x) =&gt; inst.operands.push(dr::Operand::KernelProfilingInfo(x)),
-                    <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Unknown KernelProfilingInfo {word}&quot;</span>)),
+                    <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;Unknown KernelProfilingInfo {word}&quot;</span>)),
                 }
             }
             (OperandKind::RayFlags, <span class="prelude-val">Some</span>(word)) =&gt; <span class="kw">match </span>parse_bitflags_operand(RAY_FLAGS, word) {
                 <span class="prelude-val">Some</span>(x) =&gt; inst.operands.push(dr::Operand::RayFlags(x)),
-                <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Unknown RayFlags {word}&quot;</span>)),
+                <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;Unknown RayFlags {word}&quot;</span>)),
             },
             (OperandKind::FragmentShadingRate, <span class="prelude-val">Some</span>(word)) =&gt; {
                 <span class="kw">match </span>parse_bitflags_operand(FRAGMENT_SHADING_RATE, word) {
                     <span class="prelude-val">Some</span>(x) =&gt; inst.operands.push(dr::Operand::FragmentShadingRate(x)),
-                    <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Unknown FragmentShadingRate {word}&quot;</span>)),
+                    <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;Unknown FragmentShadingRate {word}&quot;</span>)),
                 }
             }
 
             (OperandKind::SourceLanguage, <span class="prelude-val">Some</span>(word)) =&gt; <span class="kw">match </span>word.parse() {
                 <span class="prelude-val">Ok</span>(x) =&gt; inst.operands.push(dr::Operand::SourceLanguage(x)),
-                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Unknown SourceLanguage {word}&quot;</span>)),
+                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;Unknown SourceLanguage {word}&quot;</span>)),
             },
             (OperandKind::ExecutionModel, <span class="prelude-val">Some</span>(word)) =&gt; <span class="kw">match </span>word.parse() {
                 <span class="prelude-val">Ok</span>(x) =&gt; inst.operands.push(dr::Operand::ExecutionModel(x)),
-                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;unknown ExecutionModel {word}&quot;</span>)),
+                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;unknown ExecutionModel {word}&quot;</span>)),
             },
             (OperandKind::AddressingModel, <span class="prelude-val">Some</span>(word)) =&gt; <span class="kw">match </span>word.parse() {
                 <span class="prelude-val">Ok</span>(x) =&gt; inst.operands.push(dr::Operand::AddressingModel(x)),
-                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;unknown AddressingModel {word}&quot;</span>)),
+                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;unknown AddressingModel {word}&quot;</span>)),
             },
             (OperandKind::MemoryModel, <span class="prelude-val">Some</span>(word)) =&gt; <span class="kw">match </span>word.parse() {
                 <span class="prelude-val">Ok</span>(x) =&gt; inst.operands.push(dr::Operand::MemoryModel(x)),
-                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;unknown MemoryModel {word}&quot;</span>)),
+                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;unknown MemoryModel {word}&quot;</span>)),
             },
             (OperandKind::ExecutionMode, <span class="prelude-val">Some</span>(word)) =&gt; <span class="kw">match </span>word.parse() {
                 <span class="prelude-val">Ok</span>(x) =&gt; inst.operands.push(dr::Operand::ExecutionMode(x)),
-                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;unknown ExecutionMode {word}&quot;</span>)),
+                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;unknown ExecutionMode {word}&quot;</span>)),
             },
             (OperandKind::StorageClass, <span class="prelude-val">Some</span>(word)) =&gt; <span class="kw">match </span>word.parse() {
                 <span class="prelude-val">Ok</span>(x) =&gt; inst.operands.push(dr::Operand::StorageClass(x)),
-                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;unknown StorageClass {word}&quot;</span>)),
+                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;unknown StorageClass {word}&quot;</span>)),
             },
             (OperandKind::Dim, <span class="prelude-val">Some</span>(word)) =&gt; <span class="kw">match </span>word.parse() {
                 <span class="prelude-val">Ok</span>(x) =&gt; inst.operands.push(dr::Operand::Dim(x)),
-                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;unknown Dim {word}&quot;</span>)),
+                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;unknown Dim {word}&quot;</span>)),
             },
             (OperandKind::SamplerAddressingMode, <span class="prelude-val">Some</span>(word)) =&gt; <span class="kw">match </span>word.parse() {
                 <span class="prelude-val">Ok</span>(x) =&gt; inst.operands.push(dr::Operand::SamplerAddressingMode(x)),
-                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;unknown SamplerAddressingMode {word}&quot;</span>)),
+                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;unknown SamplerAddressingMode {word}&quot;</span>)),
             },
             (OperandKind::SamplerFilterMode, <span class="prelude-val">Some</span>(word)) =&gt; <span class="kw">match </span>word.parse() {
                 <span class="prelude-val">Ok</span>(x) =&gt; inst.operands.push(dr::Operand::SamplerFilterMode(x)),
-                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;unknown SamplerFilterMode {word}&quot;</span>)),
+                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;unknown SamplerFilterMode {word}&quot;</span>)),
             },
             (OperandKind::ImageFormat, <span class="prelude-val">Some</span>(word)) =&gt; <span class="kw">match </span>word.parse() {
                 <span class="prelude-val">Ok</span>(x) =&gt; inst.operands.push(dr::Operand::ImageFormat(x)),
-                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;unknown ImageFormat {word}&quot;</span>)),
+                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;unknown ImageFormat {word}&quot;</span>)),
             },
             (OperandKind::ImageChannelOrder, <span class="prelude-val">Some</span>(word)) =&gt; <span class="kw">match </span>word.parse() {
                 <span class="prelude-val">Ok</span>(x) =&gt; inst.operands.push(dr::Operand::ImageChannelOrder(x)),
-                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;unknown ImageChannelOrder {word}&quot;</span>)),
+                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;unknown ImageChannelOrder {word}&quot;</span>)),
             },
             (OperandKind::ImageChannelDataType, <span class="prelude-val">Some</span>(word)) =&gt; <span class="kw">match </span>word.parse() {
                 <span class="prelude-val">Ok</span>(x) =&gt; inst.operands.push(dr::Operand::ImageChannelDataType(x)),
-                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;unknown ImageChannelDataType {word}&quot;</span>)),
+                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;unknown ImageChannelDataType {word}&quot;</span>)),
             },
             (OperandKind::FPRoundingMode, <span class="prelude-val">Some</span>(word)) =&gt; <span class="kw">match </span>word.parse() {
                 <span class="prelude-val">Ok</span>(x) =&gt; inst.operands.push(dr::Operand::FPRoundingMode(x)),
-                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;unknown FPRoundingMode {word}&quot;</span>)),
+                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;unknown FPRoundingMode {word}&quot;</span>)),
             },
             (OperandKind::LinkageType, <span class="prelude-val">Some</span>(word)) =&gt; <span class="kw">match </span>word.parse() {
                 <span class="prelude-val">Ok</span>(x) =&gt; inst.operands.push(dr::Operand::LinkageType(x)),
-                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;unknown LinkageType {word}&quot;</span>)),
+                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;unknown LinkageType {word}&quot;</span>)),
             },
             (OperandKind::AccessQualifier, <span class="prelude-val">Some</span>(word)) =&gt; <span class="kw">match </span>word.parse() {
                 <span class="prelude-val">Ok</span>(x) =&gt; inst.operands.push(dr::Operand::AccessQualifier(x)),
-                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;unknown AccessQualifier {word}&quot;</span>)),
+                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;unknown AccessQualifier {word}&quot;</span>)),
             },
             (OperandKind::FunctionParameterAttribute, <span class="prelude-val">Some</span>(word)) =&gt; <span class="kw">match </span>word.parse() {
                 <span class="prelude-val">Ok</span>(x) =&gt; inst
                     .operands
                     .push(dr::Operand::FunctionParameterAttribute(x)),
-                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;unknown FunctionParameterAttribute {word}&quot;</span>)),
+                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;unknown FunctionParameterAttribute {word}&quot;</span>)),
             },
             (OperandKind::Decoration, <span class="prelude-val">Some</span>(word)) =&gt; <span class="kw">match </span>word.parse() {
                 <span class="prelude-val">Ok</span>(x) =&gt; inst.operands.push(dr::Operand::Decoration(x)),
-                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;unknown Decoration {word}&quot;</span>)),
+                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;unknown Decoration {word}&quot;</span>)),
             },
             (OperandKind::BuiltIn, <span class="prelude-val">Some</span>(word)) =&gt; <span class="kw">match </span>word.parse() {
                 <span class="prelude-val">Ok</span>(x) =&gt; inst.operands.push(dr::Operand::BuiltIn(x)),
-                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;unknown BuiltIn {word}&quot;</span>)),
+                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;unknown BuiltIn {word}&quot;</span>)),
             },
             (OperandKind::Scope, <span class="prelude-val">Some</span>(word)) =&gt; <span class="kw">match </span>word.parse() {
                 <span class="prelude-val">Ok</span>(x) =&gt; inst.operands.push(dr::Operand::Scope(x)),
-                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;unknown Scope {word}&quot;</span>)),
+                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;unknown Scope {word}&quot;</span>)),
             },
             (OperandKind::GroupOperation, <span class="prelude-val">Some</span>(word)) =&gt; <span class="kw">match </span>word.parse() {
                 <span class="prelude-val">Ok</span>(x) =&gt; inst.operands.push(dr::Operand::GroupOperation(x)),
-                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;unknown GroupOperation {word}&quot;</span>)),
+                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;unknown GroupOperation {word}&quot;</span>)),
             },
             (OperandKind::KernelEnqueueFlags, <span class="prelude-val">Some</span>(word)) =&gt; <span class="kw">match </span>word.parse() {
                 <span class="prelude-val">Ok</span>(x) =&gt; inst.operands.push(dr::Operand::KernelEnqueueFlags(x)),
-                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;unknown KernelEnqueueFlags {word}&quot;</span>)),
+                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;unknown KernelEnqueueFlags {word}&quot;</span>)),
             },
             (OperandKind::Capability, <span class="prelude-val">Some</span>(word)) =&gt; <span class="kw">match </span>word.parse() {
                 <span class="prelude-val">Ok</span>(x) =&gt; inst.operands.push(dr::Operand::Capability(x)),
-                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;unknown Capability {word}&quot;</span>)),
+                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;unknown Capability {word}&quot;</span>)),
             },
             (OperandKind::RayQueryIntersection, <span class="prelude-val">Some</span>(word)) =&gt; <span class="kw">match </span>word.parse() {
                 <span class="prelude-val">Ok</span>(x) =&gt; inst.operands.push(dr::Operand::RayQueryIntersection(x)),
-                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;unknown RayQueryIntersection {word}&quot;</span>)),
+                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;unknown RayQueryIntersection {word}&quot;</span>)),
             },
             (OperandKind::RayQueryCommittedIntersectionType, <span class="prelude-val">Some</span>(word)) =&gt; <span class="kw">match </span>word.parse() {
                 <span class="prelude-val">Ok</span>(x) =&gt; inst
                     .operands
                     .push(dr::Operand::RayQueryCommittedIntersectionType(x)),
-                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;unknown RayQueryCommittedIntersectionType {word}&quot;</span>)),
+                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;unknown RayQueryCommittedIntersectionType {word}&quot;</span>)),
             },
             (OperandKind::RayQueryCandidateIntersectionType, <span class="prelude-val">Some</span>(word)) =&gt; <span class="kw">match </span>word.parse() {
                 <span class="prelude-val">Ok</span>(x) =&gt; inst
                     .operands
                     .push(dr::Operand::RayQueryCandidateIntersectionType(x)),
-                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;unknown RayQueryCandidateIntersectionType {word}&quot;</span>)),
+                <span class="prelude-val">Err</span>(()) =&gt; <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;unknown RayQueryCandidateIntersectionType {word}&quot;</span>)),
             },
             (kind, <span class="prelude-val">None</span>) =&gt; <span class="kw">match </span>token {
                 Token::Word(<span class="kw">_</span>) =&gt; <span class="macro">bug!</span>(),
                 Token::String(<span class="kw">_</span>) =&gt; {
-                    <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;expected a literal, not a string for a {kind:?}&quot;</span>));
+                    <span class="self">self</span>.err(<span class="macro">format!</span>(<span class="string">&quot;expected a literal, not a string for a {kind:?}&quot;</span>));
                 }
                 Token::Placeholder(<span class="kw">_</span>, span) =&gt; {
                     <span class="self">self</span>.tcx.sess.span_err(
