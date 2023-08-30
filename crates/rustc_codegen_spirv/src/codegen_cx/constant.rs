@@ -3,7 +3,7 @@ use crate::abi::ConvSpirvType;
 use crate::builder_spirv::{SpirvConst, SpirvValue, SpirvValueExt, SpirvValueKind};
 use crate::spirv_type::SpirvType;
 use rspirv::spirv::Word;
-use rustc_codegen_ssa::traits::{BaseTypeMethods, ConstMethods, MiscMethods, StaticMethods};
+use rustc_codegen_ssa::traits::{ConstMethods, MiscMethods, StaticMethods};
 use rustc_middle::bug;
 use rustc_middle::mir::interpret::{alloc_range, ConstAllocation, GlobalAlloc, Scalar};
 use rustc_middle::ty::layout::LayoutOf;
@@ -361,18 +361,6 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
         self.def_constant(void_type, SpirvConst::ConstDataFromAlloc(alloc))
     }
 
-    // FIXME(eddyb) is this just redundant with `const_bitcast`?!
-    fn const_ptrcast(&self, val: Self::Value, ty: Self::Type) -> Self::Value {
-        if val.ty == ty {
-            val
-        } else {
-            // FIXME(eddyb) implement via `OpSpecConstantOp`.
-            // FIXME(eddyb) this zombies the original value without creating a new one.
-            let result = val.def_cx(self).with_type(ty);
-            self.zombie_no_span(result.def_cx(self), "const_ptrcast");
-            result
-        }
-    }
     fn const_bitcast(&self, val: Self::Value, ty: Self::Type) -> Self::Value {
         // HACK(eddyb) special-case `const_data_from_alloc` + `static_addr_of`
         // as the old `from_const_alloc` (now `OperandRef::from_const_alloc`).

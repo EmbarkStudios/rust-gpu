@@ -26,7 +26,7 @@ use rustc_session::Session;
 use rustc_span::symbol::Symbol;
 use rustc_span::{SourceFile, Span, DUMMY_SP};
 use rustc_target::abi::call::{FnAbi, PassMode};
-use rustc_target::abi::{HasDataLayout, TargetDataLayout};
+use rustc_target::abi::{AddressSpace, HasDataLayout, TargetDataLayout};
 use rustc_target::spec::{HasTargetSpec, Target};
 use std::cell::RefCell;
 use std::collections::BTreeSet;
@@ -160,6 +160,14 @@ impl<'tcx> CodegenCx<'tcx> {
 
     pub fn debug_type(&self, ty: Word) -> SpirvTypePrinter<'_, 'tcx> {
         self.lookup_type(ty).debug(ty, self)
+    }
+
+    pub fn type_ptr_to(&self, ty: Word) -> Word {
+        SpirvType::Pointer { pointee: ty }.def(DUMMY_SP, self)
+    }
+
+    pub fn type_ptr_to_ext(&self, ty: Word, _address_space: AddressSpace) -> Word {
+        SpirvType::Pointer { pointee: ty }.def(DUMMY_SP, self)
     }
 
     /// Zombie system:

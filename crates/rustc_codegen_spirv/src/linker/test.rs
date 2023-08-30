@@ -1,11 +1,12 @@
 use super::{link, LinkResult};
-use pipe::pipe;
 use rspirv::dr::{Loader, Module};
-use rustc_errors::{registry::Registry, TerminalUrl};
+use rustc_errors::registry::Registry;
 use rustc_session::config::{Input, OutputFilenames, OutputTypes};
 use rustc_session::CompilerIO;
 use rustc_span::FileName;
-use std::io::Read;
+use std::io::Write;
+use std::sync::{Arc, Mutex};
+use termcolor::{ColorSpec, WriteColor};
 
 // https://github.com/colin-kiegel/rust-pretty-assertions/issues/24
 #[derive(PartialEq, Eq)]
@@ -75,20 +76,40 @@ fn link_with_linker_opts(
 ) -> Result<Module, PrettyString> {
     let modules = binaries.iter().cloned().map(load).collect::<Vec<_>>();
 
-    // FIXME(eddyb) this seems ridiculous, we should be able to write to
-    // some kind of `Arc<Mutex<Vec<u8>>>` without a separate thread.
-    //
-    // need pipe here because the writer must be 'static.
-    let (mut read_diags, write_diags) = pipe();
-    let read_diags_thread = std::thread::spawn(move || {
-        // must spawn thread because pipe crate is synchronous
-        let mut diags = String::new();
-        read_diags.read_to_string(&mut diags).unwrap();
-        if let Some(diags_without_trailing_newlines) = diags.strip_suffix("\n\n") {
-            diags.truncate(diags_without_trailing_newlines.len());
+    // A threadsafe buffer for writing.
+    #[derive(Default, Clone)]
+    struct BufWriter(Arc<Mutex<Vec<u8>>>);
+
+    impl BufWriter {
+        fn to_string(self) -> String {
+            let x = self.0.into_inner().expect("diagnostics unlocked");
+            String::from_utf8(x).expect("conversion to string")
         }
-        diags
-    });
+    }
+
+    impl Write for BufWriter {
+        fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+            self.0.lock().unwrap().write(buf)
+        }
+        fn flush(&mut self) -> std::io::Result<()> {
+            self.0.lock().unwrap().flush()
+        }
+    }
+    impl WriteColor for BufWriter {
+        fn supports_color(&self) -> bool {
+            false
+        }
+
+        fn set_color(&mut self, _spec: &ColorSpec) -> std::io::Result<()> {
+            Ok(())
+        }
+
+        fn reset(&mut self) -> std::io::Result<()> {
+            Ok(())
+        }
+    }
+    let buf = BufWriter::default();
+    let output = buf.clone();
 
     // NOTE(eddyb) without `catch_fatal_errors`, you'd get the really strange
     // effect of test failures with no output (because the `FatalError` "panic"
@@ -126,6 +147,7 @@ fn link_with_linker_opts(
                 None,
                 None,
                 rustc_interface::util::rustc_version_str().unwrap_or("unknown"),
+                None,
             );
 
             // HACK(eddyb) inject `write_diags` into `sess`, to work around
@@ -138,24 +160,12 @@ fn link_with_linker_opts(
                         sess.opts.unstable_opts.translate_directionality_markers,
                     )
                 };
-                let emitter = rustc_errors::emitter::EmitterWriter::new(
-                    Box::new(write_diags),
-                    Some(sess.parse_sess.clone_source_map()),
-                    None,
-                    fallback_bundle,
-                    false,
-                    false,
-                    false,
-                    None,
-                    false,
-                    false,
-                    TerminalUrl::No,
-                );
+                let emitter =
+                    rustc_errors::emitter::EmitterWriter::new(Box::new(buf), fallback_bundle)
+                        .sm(Some(sess.parse_sess.clone_source_map()));
 
-                rustc_errors::Handler::with_emitter_and_flags(
-                    Box::new(emitter),
-                    sess.opts.unstable_opts.diagnostic_handler_flags(true),
-                )
+                rustc_errors::Handler::with_emitter(Box::new(emitter))
+                    .with_flags(sess.opts.unstable_opts.diagnostic_handler_flags(true))
             };
 
             let res = link(
@@ -180,7 +190,7 @@ fn link_with_linker_opts(
         })
     })
     .flatten()
-    .map_err(|_e| read_diags_thread.join().unwrap())
+    .map_err(|_e| buf.to_string())
     .map_err(PrettyString)
 }
 
