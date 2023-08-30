@@ -74,8 +74,8 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
     ) {
         let callee_ty = instance.ty(self.tcx, ParamEnv::reveal_all());
 
-        let (def_id, substs) = match *callee_ty.kind() {
-            FnDef(def_id, substs) => (def_id, substs),
+        let (def_id, fn_args) = match *callee_ty.kind() {
+            FnDef(def_id, fn_args) => (def_id, fn_args),
             _ => bug!("expected fn item type, found {}", callee_ty),
         };
 
@@ -103,7 +103,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
 
             sym::volatile_load | sym::unaligned_volatile_load => {
                 let ptr = args[0].immediate();
-                let layout = self.layout_of(substs.type_at(0));
+                let layout = self.layout_of(fn_args.type_at(0));
                 let load = self.volatile_load(layout.spirv_type(self.span(), self), ptr);
                 self.to_immediate(load, layout)
             }

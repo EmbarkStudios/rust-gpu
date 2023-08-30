@@ -194,7 +194,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
             align,
             size,
             field_types: els,
-            field_offsets: &field_offsets,
+            field_offsets: &field_offsets.as_slice(),
             field_names: None,
         }
         .def(DUMMY_SP, self)
@@ -230,11 +230,11 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
                 => TypeKind::Token,
         }
     }
-    fn type_ptr_to(&self, ty: Self::Type) -> Self::Type {
-        SpirvType::Pointer { pointee: ty }.def(DUMMY_SP, self)
+    fn type_ptr(&self) -> Self::Type {
+        self.type_ptr_to(SpirvType::Void.def(DUMMY_SP, self))
     }
-    fn type_ptr_to_ext(&self, ty: Self::Type, _address_space: AddressSpace) -> Self::Type {
-        SpirvType::Pointer { pointee: ty }.def(DUMMY_SP, self)
+    fn type_ptr_ext(&self, address_space: AddressSpace) -> Self::Type {
+        self.type_ptr_to_ext(SpirvType::Void.def(DUMMY_SP, self), address_space)
     }
     fn element_type(&self, ty: Self::Type) -> Self::Type {
         match self.lookup_type(ty) {

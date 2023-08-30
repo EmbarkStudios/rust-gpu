@@ -10,9 +10,9 @@ use rustc_errors::ErrorGuaranteed;
 use rustc_index::Idx;
 use rustc_middle::query::{ExternProviders, Providers};
 use rustc_middle::ty::layout::{FnAbiOf, LayoutOf, TyAndLayout};
-use rustc_middle::ty::subst::SubstsRef;
+use rustc_middle::ty::GenericArgsRef;
 use rustc_middle::ty::{
-    self, Const, FloatTy, GeneratorSubsts, IntTy, ParamEnv, PolyFnSig, Ty, TyCtxt, TyKind,
+    self, Const, FloatTy, GeneratorArgs, IntTy, ParamEnv, PolyFnSig, Ty, TyCtxt, TyKind,
     TypeAndMut, UintTy,
 };
 use rustc_middle::{bug, span_bug};
@@ -104,6 +104,8 @@ pub(crate) fn provide(providers: &mut Providers) {
             largest_niche,
             align,
             size,
+            max_repr_align,
+            unadjusted_abi_align,
         } = *layout;
         LayoutS {
             fields: match *fields {
@@ -147,6 +149,8 @@ pub(crate) fn provide(providers: &mut Providers) {
             largest_niche,
             align,
             size,
+            max_repr_align,
+            unadjusted_abi_align,
         }
     }
     providers.layout_of = |tcx, key| {
@@ -343,7 +347,7 @@ impl<'tcx> ConvSpirvType<'tcx> for FnAbi<'tcx, Ty<'tcx>> {
 
 impl<'tcx> ConvSpirvType<'tcx> for TyAndLayout<'tcx> {
     fn spirv_type(&self, mut span: Span, cx: &CodegenCx<'tcx>) -> Word {
-        if let TyKind::Adt(adt, substs) = *self.ty.kind() {
+        if let TyKind::Adt(adt, args) = *self.ty.kind() {
             if span == DUMMY_SP {
                 span = cx.tcx.def_span(adt.did());
             }
@@ -352,7 +356,7 @@ impl<'tcx> ConvSpirvType<'tcx> for TyAndLayout<'tcx> {
 
             if let Some(intrinsic_type_attr) = attrs.intrinsic_type.map(|attr| attr.value) {
                 if let Ok(spirv_type) =
-                    trans_intrinsic_type(cx, span, *self, substs, intrinsic_type_attr)
+                    trans_intrinsic_type(cx, span, *self, args, intrinsic_type_attr)
                 {
                     return spirv_type;
                 }
@@ -782,7 +786,7 @@ impl fmt::Display for TyLayoutNameKey<'_> {
             }
         }
         if let (TyKind::Generator(_, _, _), Some(index)) = (self.ty.kind(), self.variant) {
-            write!(f, "::{}", GeneratorSubsts::variant_name(index))?;
+            write!(f, "::{}", GeneratorArgs::variant_name(index))?;
         }
         Ok(())
     }
@@ -792,7 +796,7 @@ fn trans_intrinsic_type<'tcx>(
     cx: &CodegenCx<'tcx>,
     span: Span,
     ty: TyAndLayout<'tcx>,
-    substs: SubstsRef<'tcx>,
+    args: GenericArgsRef<'tcx>,
     intrinsic_type_attr: IntrinsicType,
 ) -> Result<Word, ErrorGuaranteed> {
     match intrinsic_type_attr {
@@ -817,7 +821,7 @@ fn trans_intrinsic_type<'tcx>(
             //     <_>::from_u64(value).unwrap()
             // }
 
-            let sampled_type = match substs.type_at(0).kind() {
+            let sampled_type = match args.type_at(0).kind() {
                 TyKind::Int(int) => match int {
                     IntTy::Isize => {
                         SpirvType::Integer(cx.tcx.data_layout.pointer_size.bits() as u32, true)
@@ -850,13 +854,13 @@ fn trans_intrinsic_type<'tcx>(
                 }
             };
 
-            // let dim: spirv::Dim = type_from_variant_discriminant(cx, substs.const_at(1));
-            // let depth: u32 = type_from_variant_discriminant(cx, substs.const_at(2));
-            // let arrayed: u32 = type_from_variant_discriminant(cx, substs.const_at(3));
-            // let multisampled: u32 = type_from_variant_discriminant(cx, substs.const_at(4));
-            // let sampled: u32 = type_from_variant_discriminant(cx, substs.const_at(5));
+            // let dim: spirv::Dim = type_from_variant_discriminant(cx, args.const_at(1));
+            // let depth: u32 = type_from_variant_discriminant(cx, args.const_at(2));
+            // let arrayed: u32 = type_from_variant_discriminant(cx, args.const_at(3));
+            // let multisampled: u32 = type_from_variant_discriminant(cx, args.const_at(4));
+            // let sampled: u32 = type_from_variant_discriminant(cx, args.const_at(5));
             // let image_format: spirv::ImageFormat =
-            //     type_from_variant_discriminant(cx, substs.const_at(6));
+            //     type_from_variant_discriminant(cx, args.const_at(6));
 
             fn const_int_value<'tcx, P: FromPrimitive>(
                 cx: &CodegenCx<'tcx>,
@@ -873,12 +877,12 @@ fn trans_intrinsic_type<'tcx>(
                 }
             }
 
-            let dim = const_int_value(cx, substs.const_at(1))?;
-            let depth = const_int_value(cx, substs.const_at(2))?;
-            let arrayed = const_int_value(cx, substs.const_at(3))?;
-            let multisampled = const_int_value(cx, substs.const_at(4))?;
-            let sampled = const_int_value(cx, substs.const_at(5))?;
-            let image_format = const_int_value(cx, substs.const_at(6))?;
+            let dim = const_int_value(cx, args.const_at(1))?;
+            let depth = const_int_value(cx, args.const_at(2))?;
+            let arrayed = const_int_value(cx, args.const_at(3))?;
+            let multisampled = const_int_value(cx, args.const_at(4))?;
+            let sampled = const_int_value(cx, args.const_at(5))?;
+            let image_format = const_int_value(cx, args.const_at(6))?;
 
             let ty = SpirvType::Image {
                 sampled_type,
@@ -913,7 +917,7 @@ fn trans_intrinsic_type<'tcx>(
 
             // We use a generic to indicate the underlying image type of the sampled image.
             // The spirv type of it will be generated by querying the type of the first generic.
-            if let Some(image_ty) = substs.types().next() {
+            if let Some(image_ty) = args.types().next() {
                 // TODO: enforce that the generic param is an image type?
                 let image_type = cx.layout_of(image_ty).spirv_type(span, cx);
                 Ok(SpirvType::SampledImage { image_type }.def(span, cx))
@@ -934,7 +938,7 @@ fn trans_intrinsic_type<'tcx>(
 
             // We use a generic to indicate the underlying element type.
             // The spirv type of it will be generated by querying the type of the first generic.
-            if let Some(elem_ty) = substs.types().next() {
+            if let Some(elem_ty) = args.types().next() {
                 let element = cx.layout_of(elem_ty).spirv_type(span, cx);
                 Ok(SpirvType::RuntimeArray { element }.def(span, cx))
             } else {

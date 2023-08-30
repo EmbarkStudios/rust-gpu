@@ -2,7 +2,7 @@ use super::Builder;
 use crate::builder_spirv::{SpirvValue, SpirvValueExt, SpirvValueKind};
 use crate::spirv_type::SpirvType;
 use rspirv::spirv::Word;
-use rustc_codegen_ssa::traits::{BaseTypeMethods, BuilderMethods};
+use rustc_codegen_ssa::traits::BuilderMethods;
 use rustc_errors::ErrorGuaranteed;
 use rustc_span::DUMMY_SP;
 use rustc_target::abi::call::PassMode;

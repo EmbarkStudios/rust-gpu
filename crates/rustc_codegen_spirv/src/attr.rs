@@ -7,7 +7,7 @@ use crate::symbols::Symbols;
 use rspirv::spirv::{BuiltIn, ExecutionMode, ExecutionModel, StorageClass};
 use rustc_ast::Attribute;
 use rustc_hir as hir;
-use rustc_hir::def_id::LocalDefId;
+use rustc_hir::def_id::LocalModDefId;
 use rustc_hir::intravisit::{self, Visitor};
 use rustc_hir::{HirId, MethodKind, Target, CRATE_HIR_ID};
 use rustc_middle::hir::nested_filter;
@@ -484,7 +484,7 @@ impl<'tcx> Visitor<'tcx> for CheckSpirvAttrVisitor<'tcx> {
 }
 
 // FIXME(eddyb) DRY this somehow and make it reusable from somewhere in `rustc`.
-fn check_mod_attrs(tcx: TyCtxt<'_>, module_def_id: LocalDefId) {
+fn check_mod_attrs(tcx: TyCtxt<'_>, module_def_id: LocalModDefId) {
     let check_spirv_attr_visitor = &mut CheckSpirvAttrVisitor {
         tcx,
         sym: Symbols::get(),
@@ -498,10 +498,10 @@ fn check_mod_attrs(tcx: TyCtxt<'_>, module_def_id: LocalDefId) {
 
 pub(crate) fn provide(providers: &mut Providers) {
     *providers = Providers {
-        check_mod_attrs: |tcx, def_id| {
+        check_mod_attrs: |tcx, module_def_id| {
             // Run both the default checks, and our `#[spirv(...)]` ones.
-            (rustc_interface::DEFAULT_QUERY_PROVIDERS.check_mod_attrs)(tcx, def_id);
-            check_mod_attrs(tcx, def_id);
+            (rustc_interface::DEFAULT_QUERY_PROVIDERS.check_mod_attrs)(tcx, module_def_id);
+            check_mod_attrs(tcx, module_def_id);
         },
         ..*providers
     };

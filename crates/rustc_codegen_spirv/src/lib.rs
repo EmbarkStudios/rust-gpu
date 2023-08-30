@@ -88,7 +88,7 @@ use rspirv::binary::Assemble;
 use rustc_ast::expand::allocator::AllocatorKind;
 use rustc_codegen_ssa::back::lto::{LtoModuleCodegen, SerializedModule, ThinModule};
 use rustc_codegen_ssa::back::write::{
-    CodegenContext, FatLTOInput, ModuleConfig, OngoingCodegen, TargetMachineFactoryConfig,
+    CodegenContext, FatLtoInput, ModuleConfig, OngoingCodegen, TargetMachineFactoryConfig,
 };
 use rustc_codegen_ssa::base::maybe_create_entry_wrapper;
 use rustc_codegen_ssa::mono_item::MonoItemExt;
@@ -101,7 +101,7 @@ use rustc_data_structures::fx::FxIndexMap;
 use rustc_errors::{ErrorGuaranteed, FatalError, Handler};
 use rustc_metadata::EncodedMetadata;
 use rustc_middle::dep_graph::{WorkProduct, WorkProductId};
-use rustc_middle::mir::mono::{Linkage, MonoItem, Visibility};
+use rustc_middle::mir::mono::{MonoItem, MonoItemData};
 use rustc_middle::mir::pretty::write_mir_pretty;
 use rustc_middle::query;
 use rustc_middle::ty::print::with_no_trimmed_paths;
@@ -117,10 +117,10 @@ use std::io::Write;
 use std::path::Path;
 use std::sync::Arc;
 
-fn dump_mir(tcx: TyCtxt<'_>, mono_items: &[(MonoItem<'_>, (Linkage, Visibility))], path: &Path) {
+fn dump_mir(tcx: TyCtxt<'_>, mono_items: &[(MonoItem<'_>, MonoItemData)], path: &Path) {
     create_dir_all(path.parent().unwrap()).unwrap();
     let mut file = File::create(path).unwrap();
-    for &(mono_item, (_, _)) in mono_items {
+    for &(mono_item, _) in mono_items {
         if let MonoItem::Fn(instance) = mono_item {
             if matches!(instance.def, InstanceDef::Item(_)) {
                 let mut mir = Cursor::new(Vec::new());
@@ -306,7 +306,7 @@ impl WriteBackendMethods for SpirvCodegenBackend {
 
     fn run_fat_lto(
         _: &CodegenContext<Self>,
-        _: Vec<FatLTOInput<Self>>,
+        _: Vec<FatLtoInput<Self>>,
         _: Vec<(SerializedModule<Self::ModuleBuffer>, WorkProduct)>,
     ) -> Result<LtoModuleCodegen<Self>, FatalError> {
         todo!()
@@ -322,6 +322,10 @@ impl WriteBackendMethods for SpirvCodegenBackend {
 
     fn print_pass_timings(&self) {
         println!("TODO: Implement print_pass_timings");
+    }
+
+    fn print_statistics(&self) {
+        println!("TODO: Implement print_statistics")
     }
 
     unsafe fn optimize(
@@ -416,16 +420,20 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
             let mono_items = cx.codegen_unit.items_in_deterministic_order(cx.tcx);
 
             if let Some(dir) = &cx.codegen_args.dump_mir {
-                dump_mir(tcx, &mono_items, &dir.join(cgu_name.to_string()));
+                dump_mir(tcx, mono_items.as_slice(), &dir.join(cgu_name.to_string()));
             }
 
-            for &(mono_item, (linkage, visibility)) in mono_items.iter() {
+            for &(mono_item, mono_item_data) in mono_items.iter() {
                 if let MonoItem::Fn(instance) = mono_item {
                     if is_blocklisted_fn(cx.tcx, &cx.sym, instance) {
                         continue;
                     }
                 }
-                mono_item.predefine::<Builder<'_, '_>>(&cx, linkage, visibility);
+                mono_item.predefine::<Builder<'_, '_>>(
+                    &cx,
+                    mono_item_data.linkage,
+                    mono_item_data.visibility,
+                );
             }
 
             // ... and now that we have everything pre-defined, fill out those definitions.

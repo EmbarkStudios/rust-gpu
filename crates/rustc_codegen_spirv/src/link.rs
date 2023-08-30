@@ -36,7 +36,7 @@ pub fn link(
     crate_name: &str,
 ) {
     let output_metadata = sess.opts.output_types.contains_key(&OutputType::Metadata);
-    for &crate_type in sess.crate_types().iter() {
+    for &crate_type in sess.opts.crate_types.iter() {
         if (sess.opts.unstable_opts.no_codegen || !sess.opts.output_types.should_codegen())
             && !output_metadata
             && crate_type == CrateType::Executable
@@ -601,7 +601,7 @@ fn do_link(
         Ok(v) => v,
         Err(rustc_errors::ErrorGuaranteed { .. }) => {
             sess.abort_if_errors();
-            bug!("Linker errored, but no error reported")
+            bug!("Linker errored, but no error reported");
         }
     }
 }

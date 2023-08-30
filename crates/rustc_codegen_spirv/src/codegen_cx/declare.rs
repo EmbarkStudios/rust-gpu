@@ -7,7 +7,7 @@ use crate::spirv_type::SpirvType;
 use itertools::Itertools;
 use rspirv::spirv::{FunctionControl, LinkageType, StorageClass, Word};
 use rustc_attr::InlineAttr;
-use rustc_codegen_ssa::traits::{BaseTypeMethods, PreDefineMethods, StaticMethods};
+use rustc_codegen_ssa::traits::{PreDefineMethods, StaticMethods};
 use rustc_hir::def::DefKind;
 use rustc_middle::bug;
 use rustc_middle::middle::codegen_fn_attrs::{CodegenFnAttrFlags, CodegenFnAttrs};
@@ -37,8 +37,8 @@ fn attrs_to_spirv(attrs: &CodegenFnAttrs) -> FunctionControl {
 impl<'tcx> CodegenCx<'tcx> {
     /// Returns a function if it already exists, or declares a header if it doesn't.
     pub fn get_fn_ext(&self, instance: Instance<'tcx>) -> SpirvValue {
-        assert!(!instance.substs.has_infer());
-        assert!(!instance.substs.has_escaping_bound_vars());
+        assert!(!instance.args.has_infer());
+        assert!(!instance.args.has_escaping_bound_vars());
 
         if let Some(&func) = self.instances.borrow().get(&instance) {
             return func;
@@ -214,7 +214,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 })
             });
             if let Some(spec) = spec {
-                if let Some((ty,)) = instance.substs.types().collect_tuple() {
+                if let Some((ty,)) = instance.args.types().collect_tuple() {
                     self.fmt_rt_arg_new_fn_ids_to_ty_and_spec
                         .borrow_mut()
                         .insert(fn_id, (ty, spec));
