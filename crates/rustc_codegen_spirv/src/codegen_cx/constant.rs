@@ -370,7 +370,8 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                     self.builder.lookup_const_by_id(pointee)
                 {
                     if let SpirvType::Pointer { pointee } = self.lookup_type(ty) {
-                        let init = self.create_const_alloc(alloc, pointee);
+                        let mut offset = Size::ZERO;
+                        let init = self.read_from_const_alloc(alloc, &mut offset, pointee);
                         return self.static_addr_of(init, alloc.inner().align, None);
                     }
                 }
@@ -422,7 +423,7 @@ impl<'tcx> CodegenCx<'tcx> {
         //     alloc.len()
         // );
         let mut offset = Size::ZERO;
-        let result = self.create_const_alloc2(alloc, &mut offset, ty);
+        let result = self.read_from_const_alloc(alloc, &mut offset, ty);
         assert_eq!(
             offset.bytes_usize(),
             alloc.inner().len(),
@@ -432,7 +433,7 @@ impl<'tcx> CodegenCx<'tcx> {
         result
     }
 
-    fn create_const_alloc2(
+    fn read_from_const_alloc(
         &self,
         alloc: ConstAllocation<'tcx>,
         offset: &mut Size,
@@ -515,7 +516,7 @@ impl<'tcx> CodegenCx<'tcx> {
                     let total_offset_start = base + field_offset;
                     let mut total_offset_end = total_offset_start;
                     values.push(
-                        self.create_const_alloc2(alloc, &mut total_offset_end, ty)
+                        self.read_from_const_alloc(alloc, &mut total_offset_end, ty)
                             .def_cx(self),
                     );
                     occupied_spaces.push(total_offset_start..total_offset_end);
@@ -534,7 +535,7 @@ impl<'tcx> CodegenCx<'tcx> {
             SpirvType::Array { element, count } => {
                 let count = self.builder.lookup_const_u64(count).unwrap() as usize;
                 let values = (0..count).map(|_| {
-                    self.create_const_alloc2(alloc, offset, element)
+                    self.read_from_const_alloc(alloc, offset, element)
                         .def_cx(self)
                 });
                 self.constant_composite(ty, values)
@@ -545,7 +546,7 @@ impl<'tcx> CodegenCx<'tcx> {
                     .expect("create_const_alloc: Vectors must be sized");
                 let final_offset = *offset + total_size;
                 let values = (0..count).map(|_| {
-                    self.create_const_alloc2(alloc, offset, element)
+                    self.read_from_const_alloc(alloc, offset, element)
                         .def_cx(self)
                 });
                 let result = self.constant_composite(ty, values);
@@ -560,7 +561,7 @@ impl<'tcx> CodegenCx<'tcx> {
                     .expect("create_const_alloc: Matrices must be sized");
                 let final_offset = *offset + total_size;
                 let values = (0..count).map(|_| {
-                    self.create_const_alloc2(alloc, offset, element)
+                    self.read_from_const_alloc(alloc, offset, element)
                         .def_cx(self)
                 });
                 let result = self.constant_composite(ty, values);
@@ -573,7 +574,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 let mut values = Vec::new();
                 while offset.bytes_usize() != alloc.inner().len() {
                     values.push(
-                        self.create_const_alloc2(alloc, offset, element)
+                        self.read_from_const_alloc(alloc, offset, element)
                             .def_cx(self),
                     );
                 }

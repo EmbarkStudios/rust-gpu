@@ -373,31 +373,108 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         }
     }
 
-    /// If possible, return the appropriate `OpAccessChain` indices for going from
-    /// a pointer to `ty`, to a pointer to `leaf_ty`, with an added `offset`.
+    /// Convenience wrapper for `adjust_pointer_for_sized_access`, falling back
+    /// on choosing `ty` as the leaf's type (and casting `ptr` to a pointer to it).
+    //
+    // HACK(eddyb) temporary workaround for untyped pointers upstream.
+    // FIXME(eddyb) replace with untyped memory SPIR-V + `qptr` or similar.
+    fn adjust_pointer_for_typed_access(
+        &mut self,
+        ptr: SpirvValue,
+        ty: <Self as BackendTypes>::Type,
+    ) -> (SpirvValue, <Self as BackendTypes>::Type) {
+        self.lookup_type(ty)
+            .sizeof(self)
+            .and_then(|size| self.adjust_pointer_for_sized_access(ptr, size))
+            .unwrap_or_else(|| (self.pointercast(ptr, self.type_ptr_to(ty)), ty))
+    }
+
+    /// If `ptr`'s pointee type contains any prefix field/element of size `size`,
+    /// i.e. some leaf which can be used for all accesses of size `size`, return
+    /// `ptr` adjusted to point to the innermost such leaf, and the leaf's type.
+    //
+    // FIXME(eddyb) technically this duplicates `pointercast`, but the main use
+    // of `pointercast` is being replaced by this, and this can be more efficient.
+    //
+    // HACK(eddyb) temporary workaround for untyped pointers upstream.
+    // FIXME(eddyb) replace with untyped memory SPIR-V + `qptr` or similar.
+    fn adjust_pointer_for_sized_access(
+        &mut self,
+        ptr: SpirvValue,
+        size: Size,
+    ) -> Option<(SpirvValue, <Self as BackendTypes>::Type)> {
+        let ptr = ptr.strip_ptrcasts();
+        let mut leaf_ty = match self.lookup_type(ptr.ty) {
+            SpirvType::Pointer { pointee } => pointee,
+            other => self.fatal(format!("non-pointer type: {other:?}")),
+        };
+
+        // FIXME(eddyb) this isn't efficient, `recover_access_chain_from_offset`
+        // could instead be doing all the extra digging itself.
+        let mut indices = SmallVec::<[_; 8]>::new();
+        while let Some((inner_indices, inner_ty)) =
+            self.recover_access_chain_from_offset(leaf_ty, Size::ZERO, Some(size), None)
+        {
+            indices.extend(inner_indices);
+            leaf_ty = inner_ty;
+        }
+
+        let leaf_ptr_ty = (self.lookup_type(leaf_ty).sizeof(self) == Some(size))
+            .then(|| self.type_ptr_to(leaf_ty))?;
+
+        let leaf_ptr = if indices.is_empty() {
+            assert_ty_eq!(self, ptr.ty, leaf_ptr_ty);
+            ptr
+        } else {
+            let indices = indices
+                .into_iter()
+                .map(|idx| self.constant_u32(self.span(), idx).def(self))
+                .collect::<Vec<_>>();
+            self.emit()
+                .access_chain(leaf_ptr_ty, None, ptr.def(self), indices)
+                .unwrap()
+                .with_type(leaf_ptr_ty)
+        };
+        Some((leaf_ptr, leaf_ty))
+    }
+
+    /// If possible, return the appropriate `OpAccessChain` indices for going
+    /// from a pointer to `ty`, to a pointer to some leaf field/element of size
+    /// `leaf_size` (and optionally type `leaf_ty`), while adding `offset` bytes.
     ///
     /// That is, try to turn `((_: *T) as *u8).add(offset) as *Leaf` into a series
     /// of struct field and array/vector element accesses.
     fn recover_access_chain_from_offset(
         &self,
-        mut ty: Word,
-        leaf_ty: Word,
+        mut ty: <Self as BackendTypes>::Type,
         mut offset: Size,
-    ) -> Option<Vec<u32>> {
-        assert_ne!(ty, leaf_ty);
+        // FIXME(eddyb) using `None` for "unsized" is a pretty bad design.
+        leaf_size_or_unsized: Option<Size>,
+        leaf_ty: Option<<Self as BackendTypes>::Type>,
+    ) -> Option<(SmallVec<[u32; 8]>, <Self as BackendTypes>::Type)> {
+        assert_ne!(Some(ty), leaf_ty);
 
-        // NOTE(eddyb) `ty` and `ty_kind` should be kept in sync.
+        // HACK(eddyb) this has the correct ordering (`Sized(_) < Unsized`).
+        #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+        enum MaybeSized {
+            Sized(Size),
+            Unsized,
+        }
+        let leaf_size = leaf_size_or_unsized.map_or(MaybeSized::Unsized, MaybeSized::Sized);
+
+        // NOTE(eddyb) `ty` and `ty_kind`/`ty_size` should be kept in sync.
         let mut ty_kind = self.lookup_type(ty);
 
-        let mut indices = Vec::new();
+        let mut indices = SmallVec::new();
         loop {
+            let ty_size;
             match ty_kind {
                 SpirvType::Adt {
                     field_types,
                     field_offsets,
                     ..
                 } => {
-                    let (i, field_ty, field_ty_kind, offset_in_field) = field_offsets
+                    let (i, field_ty, field_ty_kind, field_ty_size, offset_in_field) = field_offsets
                         .iter()
                         .enumerate()
                         .find_map(|(i, &field_offset)| {
@@ -409,16 +486,16 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                             // the leaf is somewhere inside the field.
                             let field_ty = field_types[i];
                             let field_ty_kind = self.lookup_type(field_ty);
+                            let field_ty_size = field_ty_kind
+                                .sizeof(self).map_or(MaybeSized::Unsized, MaybeSized::Sized);
 
                             let offset_in_field = offset - field_offset;
-                            if field_ty_kind
-                                .sizeof(self)
-                                .map_or(true, |size| offset_in_field < size)
-                                // If the field is a zero sized type, check the type to
-                                // get the correct entry
-                                || offset_in_field == Size::ZERO && leaf_ty == field_ty
+                            if MaybeSized::Sized(offset_in_field) < field_ty_size
+                                // If the field is a zero sized type, check the
+                                // expected size and type to get the correct entry
+                                || offset_in_field == Size::ZERO && leaf_size == MaybeSized::Sized(Size::ZERO) && leaf_ty == Some(field_ty)
                             {
-                                Some((i, field_ty, field_ty_kind, offset_in_field))
+                                Some((i, field_ty, field_ty_kind, field_ty_size, offset_in_field))
                             } else {
                                 None
                             }
@@ -426,6 +503,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
 
                     ty = field_ty;
                     ty_kind = field_ty_kind;
+                    ty_size = field_ty_size;
 
                     indices.push(i as u32);
                     offset = offset_in_field;
@@ -438,14 +516,24 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     ty_kind = self.lookup_type(ty);
 
                     let stride = ty_kind.sizeof(self)?;
+                    ty_size = MaybeSized::Sized(stride);
+
                     indices.push((offset.bytes() / stride.bytes()).try_into().ok()?);
                     offset = Size::from_bytes(offset.bytes() % stride.bytes());
                 }
                 _ => return None,
             }
 
-            if offset == Size::ZERO && ty == leaf_ty {
-                return Some(indices);
+            // Avoid digging beyond the point the leaf could actually fit.
+            if ty_size < leaf_size {
+                return None;
+            }
+
+            if offset == Size::ZERO
+                && ty_size == leaf_size
+                && leaf_ty.map_or(true, |leaf_ty| leaf_ty == ty)
+            {
+                return Some((indices, ty));
             }
         }
     }
@@ -765,6 +853,16 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn ret(&mut self, value: Self::Value) {
+        let func_ret_ty = {
+            let builder = self.emit();
+            let func = &builder.module_ref().functions[builder.selected_function().unwrap()];
+            func.def.as_ref().unwrap().result_type.unwrap()
+        };
+
+        // HACK(eddyb) temporary workaround for untyped pointers upstream.
+        // FIXME(eddyb) replace with untyped memory SPIR-V + `qptr` or similar.
+        let value = self.bitcast(value, func_ret_ty);
+
         self.emit().ret_value(value.def(self)).unwrap();
     }
 
@@ -1055,7 +1153,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn alloca(&mut self, ty: Self::Type, _align: Align) -> Self::Value {
-        let ptr_ty = SpirvType::Pointer { pointee: ty }.def(self.span(), self);
+        let ptr_ty = self.type_ptr_to(ty);
         // "All OpVariable instructions in a function must be the first instructions in the first block."
         let mut builder = self.emit();
         builder.select_block(Some(0)).unwrap();
@@ -1092,22 +1190,14 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn load(&mut self, ty: Self::Type, ptr: Self::Value, _align: Align) -> Self::Value {
-        if let Some(value) = ptr.const_fold_load(self) {
-            return value;
-        }
-        let ty = match self.lookup_type(ptr.ty) {
-            SpirvType::Pointer { pointee } => {
-                assert_ty_eq!(self, ty, pointee);
-                pointee
-            }
-            ty => self.fatal(format!(
-                "load called on variable that wasn't a pointer: {ty:?}"
-            )),
-        };
-        self.emit()
-            .load(ty, None, ptr.def(self), None, empty())
-            .unwrap()
-            .with_type(ty)
+        let (ptr, access_ty) = self.adjust_pointer_for_typed_access(ptr, ty);
+        let loaded_val = ptr.const_fold_load(self).unwrap_or_else(|| {
+            self.emit()
+                .load(access_ty, None, ptr.def(self), None, empty())
+                .unwrap()
+                .with_type(access_ty)
+        });
+        self.bitcast(loaded_val, ty)
     }
 
     fn volatile_load(&mut self, ty: Self::Type, ptr: Self::Value) -> Self::Value {
@@ -1124,31 +1214,24 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         order: AtomicOrdering,
         _size: Size,
     ) -> Self::Value {
-        let ty = match self.lookup_type(ptr.ty) {
-            SpirvType::Pointer { pointee } => {
-                assert_ty_eq!(self, ty, pointee);
-                pointee
-            }
-            ty => self.fatal(format!(
-                "atomic_load called on variable that wasn't a pointer: {ty:?}"
-            )),
-        };
+        let (ptr, access_ty) = self.adjust_pointer_for_typed_access(ptr, ty);
+
         // TODO: Default to device scope
         let memory = self.constant_u32(self.span(), Scope::Device as u32);
         let semantics = self.ordering_to_semantics_def(order);
         let result = self
             .emit()
             .atomic_load(
-                ty,
+                access_ty,
                 None,
                 ptr.def(self),
                 memory.def(self),
                 semantics.def(self),
             )
             .unwrap()
-            .with_type(ty);
-        self.validate_atomic(ty, result.def(self));
-        result
+            .with_type(access_ty);
+        self.validate_atomic(access_ty, result.def(self));
+        self.bitcast(result, ty)
     }
 
     fn load_operand(
@@ -1230,29 +1313,13 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn store(&mut self, val: Self::Value, ptr: Self::Value, _align: Align) -> Self::Value {
-        let ptr_elem_ty = match self.lookup_type(ptr.ty) {
-            SpirvType::Pointer { pointee } => pointee,
-            ty => self.fatal(format!(
-                "store called on variable that wasn't a pointer: {ty:?}"
-            )),
-        };
+        let (ptr, access_ty) = self.adjust_pointer_for_typed_access(ptr, val.ty);
+        let val = self.bitcast(val, access_ty);
 
-        // HACK(eddyb) https://github.com/rust-lang/rust/pull/101483 accidentally
-        // abused the fact that an `i1` LLVM value will be automatically `zext`'d
-        // to `i8` by `from_immediate`, and so you can pretend that, from the
-        // Rust perspective, a `bool` value has the type `u8`, as long as it will
-        // be stored to memory (which intrinsics all do, for historical reasons)
-        // - but we don't do that in `from_immediate`, so it's emulated here.
-        let val = match (self.lookup_type(val.ty), self.lookup_type(ptr_elem_ty)) {
-            (SpirvType::Bool, SpirvType::Integer(8, false)) => self.zext(val, ptr_elem_ty),
-
-            _ => val,
-        };
-
-        assert_ty_eq!(self, ptr_elem_ty, val.ty);
         self.emit()
             .store(ptr.def(self), val.def(self), None, empty())
             .unwrap();
+        // FIXME(eddyb) this is meant to be a handle the store instruction itself.
         val
     }
 
@@ -1276,13 +1343,9 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         order: AtomicOrdering,
         _size: Size,
     ) {
-        let ptr_elem_ty = match self.lookup_type(ptr.ty) {
-            SpirvType::Pointer { pointee } => pointee,
-            ty => self.fatal(format!(
-                "atomic_store called on variable that wasn't a pointer: {ty:?}"
-            )),
-        };
-        assert_ty_eq!(self, ptr_elem_ty, val.ty);
+        let (ptr, access_ty) = self.adjust_pointer_for_typed_access(ptr, val.ty);
+        let val = self.bitcast(val, access_ty);
+
         // TODO: Default to device scope
         let memory = self.constant_u32(self.span(), Scope::Device as u32);
         let semantics = self.ordering_to_semantics_def(order);
@@ -1311,69 +1374,59 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn struct_gep(&mut self, ty: Self::Type, ptr: Self::Value, idx: u64) -> Self::Value {
-        let pointee = match self.lookup_type(ptr.ty) {
-            SpirvType::Pointer { pointee } => {
-                assert_ty_eq!(self, ty, pointee);
-                pointee
-            }
-            other => self.fatal(format!(
-                "struct_gep not on pointer type: {other:?}, index {idx}"
-            )),
-        };
-        let pointee_kind = self.lookup_type(pointee);
-        let result_pointee_type = match pointee_kind {
-            SpirvType::Adt { field_types, .. } => field_types[idx as usize],
+        let (offset, result_pointee_type) = match self.lookup_type(ty) {
+            SpirvType::Adt {
+                field_offsets,
+                field_types,
+                ..
+            } => (field_offsets[idx as usize], field_types[idx as usize]),
             SpirvType::Array { element, .. }
             | SpirvType::RuntimeArray { element, .. }
             | SpirvType::Vector { element, .. }
-            | SpirvType::Matrix { element, .. } => element,
+            | SpirvType::Matrix { element, .. } => (
+                self.lookup_type(element).sizeof(self).unwrap() * idx,
+                element,
+            ),
             SpirvType::InterfaceBlock { inner_type } => {
                 assert_eq!(idx, 0);
-                inner_type
+                (Size::ZERO, inner_type)
             }
             other => self.fatal(format!(
                 "struct_gep not on struct, array, or vector type: {other:?}, index {idx}"
             )),
         };
-        let result_type = SpirvType::Pointer {
-            pointee: result_pointee_type,
-        }
-        .def(self.span(), self);
+        let result_type = self.type_ptr_to(result_pointee_type);
 
         // Special-case field accesses through a `pointercast`, to accesss the
         // right field in the original type, for the `Logical` addressing model.
-        if let SpirvValueKind::LogicalPtrCast {
-            original_ptr,
+        let ptr = ptr.strip_ptrcasts();
+        let original_pointee_ty = match self.lookup_type(ptr.ty) {
+            SpirvType::Pointer { pointee } => pointee,
+            other => self.fatal(format!("struct_gep called on non-pointer type: {other:?}")),
+        };
+        if let Some((indices, _)) = self.recover_access_chain_from_offset(
             original_pointee_ty,
-            bitcast_result_id: _,
-        } = ptr.kind
-        {
-            let offset = match pointee_kind {
-                SpirvType::Adt { field_offsets, .. } => field_offsets[idx as usize],
-                SpirvType::Array { element, .. }
-                | SpirvType::RuntimeArray { element, .. }
-                | SpirvType::Vector { element, .. }
-                | SpirvType::Matrix { element, .. } => {
-                    self.lookup_type(element).sizeof(self).unwrap() * idx
-                }
-                _ => unreachable!(),
-            };
-            if let Some(indices) = self.recover_access_chain_from_offset(
-                original_pointee_ty,
-                result_pointee_type,
-                offset,
-            ) {
-                let indices = indices
-                    .into_iter()
-                    .map(|idx| self.constant_u32(self.span(), idx).def(self))
-                    .collect::<Vec<_>>();
-                return self
-                    .emit()
-                    .access_chain(result_type, None, original_ptr, indices)
-                    .unwrap()
-                    .with_type(result_type);
-            }
+            offset,
+            self.lookup_type(result_pointee_type).sizeof(self),
+            Some(result_pointee_type),
+        ) {
+            let original_ptr = ptr.def(self);
+            let indices = indices
+                .into_iter()
+                .map(|idx| self.constant_u32(self.span(), idx).def(self))
+                .collect::<Vec<_>>();
+            return self
+                .emit()
+                .access_chain(result_type, None, original_ptr, indices)
+                .unwrap()
+                .with_type(result_type);
         }
+
+        // FIXME(eddyb) can we even get to this point, with valid SPIR-V?
+
+        // HACK(eddyb) temporary workaround for untyped pointers upstream.
+        // FIXME(eddyb) replace with untyped memory SPIR-V + `qptr` or similar.
+        let ptr = self.pointercast(ptr, self.type_ptr_to(ty));
 
         // Important! LLVM, and therefore intel-compute-runtime, require the `getelementptr` instruction (and therefore
         // OpAccessChain) on structs to be a constant i32. Not i64! i32.
@@ -1517,8 +1570,59 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         if val.ty == dest_ty {
             val
         } else {
-            let val_is_ptr = matches!(self.lookup_type(val.ty), SpirvType::Pointer { .. });
-            let dest_is_ptr = matches!(self.lookup_type(dest_ty), SpirvType::Pointer { .. });
+            let val_ty_kind = self.lookup_type(val.ty);
+            let dest_ty_kind = self.lookup_type(dest_ty);
+
+            // HACK(eddyb) account for bitcasts from/to aggregates not being legal
+            // in SPIR-V, but still being used to paper over untyped pointers,
+            // by unpacking/repacking newtype-shaped aggregates as-needed.
+            let unpack_newtype = |ty, kind| {
+                if !matches!(kind, SpirvType::Adt { .. } | SpirvType::Array { .. }) {
+                    return None;
+                }
+                let size = kind.sizeof(self)?;
+                let mut leaf_ty = ty;
+
+                // FIXME(eddyb) this isn't efficient, `recover_access_chain_from_offset`
+                // could instead be doing all the extra digging itself.
+                let mut indices = SmallVec::<[_; 8]>::new();
+                while let Some((inner_indices, inner_ty)) =
+                    self.recover_access_chain_from_offset(leaf_ty, Size::ZERO, Some(size), None)
+                {
+                    indices.extend(inner_indices);
+                    leaf_ty = inner_ty;
+                }
+
+                (!indices.is_empty()).then_some((indices, leaf_ty))
+            };
+            // Unpack input newtypes, and bitcast the leaf inside, instead.
+            if let Some((indices, in_leaf_ty)) = unpack_newtype(val.ty, val_ty_kind) {
+                let in_leaf = self
+                    .emit()
+                    .composite_extract(in_leaf_ty, None, val.def(self), indices)
+                    .unwrap()
+                    .with_type(in_leaf_ty);
+                return self.bitcast(in_leaf, dest_ty);
+            }
+            // Repack output newtypes, after bitcasting the leaf inside, instead.
+            if let Some((indices, out_leaf_ty)) = unpack_newtype(dest_ty, dest_ty_kind) {
+                let out_leaf = self.bitcast(val, out_leaf_ty);
+                let out_agg_undef = self.undef(dest_ty);
+                return self
+                    .emit()
+                    .composite_insert(
+                        dest_ty,
+                        None,
+                        out_leaf.def(self),
+                        out_agg_undef.def(self),
+                        indices,
+                    )
+                    .unwrap()
+                    .with_type(dest_ty);
+            }
+
+            let val_is_ptr = matches!(val_ty_kind, SpirvType::Pointer { .. });
+            let dest_is_ptr = matches!(dest_ty_kind, SpirvType::Pointer { .. });
 
             // Reuse the pointer-specific logic in `pointercast` for `*T -> *U`.
             if val_is_ptr && dest_is_ptr {
@@ -1605,29 +1709,21 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         }
     }
 
-    fn pointercast(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
-        let (val, val_pointee) = match val.kind {
-            // Strip a previous `pointercast`, to reveal the original pointer type.
-            SpirvValueKind::LogicalPtrCast {
-                original_ptr,
-                original_pointee_ty,
-                bitcast_result_id: _,
-            } => (
-                original_ptr.with_type(
-                    SpirvType::Pointer {
-                        pointee: original_pointee_ty,
-                    }
-                    .def(self.span(), self),
-                ),
-                original_pointee_ty,
-            ),
+    fn pointercast(&mut self, ptr: Self::Value, dest_ty: Self::Type) -> Self::Value {
+        // HACK(eddyb) reuse the special-casing in `const_bitcast`, which relies
+        // on adding a pointer type to an untyped pointer (to some const data).
+        if let SpirvValueKind::IllegalConst(_) = ptr.kind {
+            return self.const_bitcast(ptr, dest_ty);
+        }
 
-            _ => match self.lookup_type(val.ty) {
-                SpirvType::Pointer { pointee } => (val, pointee),
-                other => self.fatal(format!(
-                    "pointercast called on non-pointer source type: {other:?}"
-                )),
-            },
+        // Strip a previous `pointercast`, to reveal the original pointer type.
+        let ptr = ptr.strip_ptrcasts();
+
+        let ptr_pointee = match self.lookup_type(ptr.ty) {
+            SpirvType::Pointer { pointee } => pointee,
+            other => self.fatal(format!(
+                "pointercast called on non-pointer source type: {other:?}"
+            )),
         };
         let dest_pointee = match self.lookup_type(dest_ty) {
             SpirvType::Pointer { pointee } => pointee,
@@ -1635,26 +1731,29 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 "pointercast called on non-pointer dest type: {other:?}"
             )),
         };
-        if val.ty == dest_ty {
-            val
-        } else if let Some(indices) =
-            self.recover_access_chain_from_offset(val_pointee, dest_pointee, Size::ZERO)
-        {
+        if ptr.ty == dest_ty {
+            ptr
+        } else if let Some((indices, _)) = self.recover_access_chain_from_offset(
+            ptr_pointee,
+            Size::ZERO,
+            self.lookup_type(dest_pointee).sizeof(self),
+            Some(dest_pointee),
+        ) {
             let indices = indices
                 .into_iter()
                 .map(|idx| self.constant_u32(self.span(), idx).def(self))
                 .collect::<Vec<_>>();
             self.emit()
-                .access_chain(dest_ty, None, val.def(self), indices)
+                .access_chain(dest_ty, None, ptr.def(self), indices)
                 .unwrap()
                 .with_type(dest_ty)
         } else {
             // Defer the cast so that it has a chance to be avoided.
-            let original_ptr = val.def(self);
+            let original_ptr = ptr.def(self);
             SpirvValue {
                 kind: SpirvValueKind::LogicalPtrCast {
                     original_ptr,
-                    original_pointee_ty: val_pointee,
+                    original_ptr_ty: ptr.ty,
                     bitcast_result_id: self.emit().bitcast(dest_ty, None, original_ptr).unwrap(),
                 },
                 ty: dest_ty,
@@ -1930,17 +2029,33 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 "memcpy with mem flags is not supported yet: {flags:?}"
             ));
         }
-        let const_size = self.builder.lookup_const_u64(size);
-        if const_size == Some(0) {
+        let const_size = self.builder.lookup_const_u64(size).map(Size::from_bytes);
+        if const_size == Some(Size::ZERO) {
             // Nothing to do!
             return;
         }
-        let src_pointee = match self.lookup_type(src.ty) {
-            SpirvType::Pointer { pointee } => Some(pointee),
-            _ => None,
-        };
-        let src_element_size = src_pointee.and_then(|p| self.lookup_type(p).sizeof(self));
-        if src_element_size.is_some() && src_element_size == const_size.map(Size::from_bytes) {
+
+        let typed_copy_dst_src = const_size.and_then(|const_size| {
+            let dst_adj = self.adjust_pointer_for_sized_access(dst, const_size);
+            let src_adj = self.adjust_pointer_for_sized_access(src, const_size);
+            match (dst_adj, src_adj) {
+                // HACK(eddyb) fill in missing `dst`/`src` with the other side.
+                (Some((dst, access_ty)), None) => {
+                    Some((dst, self.pointercast(src, self.type_ptr_to(access_ty))))
+                }
+                (None, Some((src, access_ty))) => {
+                    Some((self.pointercast(dst, self.type_ptr_to(access_ty)), src))
+                }
+                (Some((dst, dst_access_ty)), Some((src, src_access_ty)))
+                    if dst_access_ty == src_access_ty =>
+                {
+                    Some((dst, src))
+                }
+                (None, None) | (Some(_), Some(_)) => None,
+            }
+        });
+
+        if let Some((dst, src)) = typed_copy_dst_src {
             if let Some(const_value) = src.const_fold_load(self) {
                 self.store(const_value, dst, Align::from_bytes(0).unwrap());
             } else {
@@ -2095,12 +2210,15 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn insert_value(&mut self, agg_val: Self::Value, elt: Self::Value, idx: u64) -> Self::Value {
-        match self.lookup_type(agg_val.ty) {
-            SpirvType::Adt { field_types, .. } => {
-                assert_ty_eq!(self, field_types[idx as usize], elt.ty);
-            }
+        let field_type = match self.lookup_type(agg_val.ty) {
+            SpirvType::Adt { field_types, .. } => field_types[idx as usize],
             other => self.fatal(format!("insert_value not implemented on type {other:?}")),
         };
+
+        // HACK(eddyb) temporary workaround for untyped pointers upstream.
+        // FIXME(eddyb) replace with untyped memory SPIR-V + `qptr` or similar.
+        let elt = self.bitcast(elt, field_type);
+
         self.emit()
             .composite_insert(
                 agg_val.ty,
@@ -2165,23 +2283,23 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         failure_order: AtomicOrdering,
         _weak: bool,
     ) -> Self::Value {
-        let dst_pointee_ty = match self.lookup_type(dst.ty) {
-            SpirvType::Pointer { pointee } => pointee,
-            ty => self.fatal(format!(
-                "atomic_cmpxchg called on variable that wasn't a pointer: {ty:?}"
-            )),
-        };
-        assert_ty_eq!(self, dst_pointee_ty, cmp.ty);
-        assert_ty_eq!(self, dst_pointee_ty, src.ty);
-        self.validate_atomic(dst_pointee_ty, dst.def(self));
+        assert_ty_eq!(self, cmp.ty, src.ty);
+        let ty = src.ty;
+
+        let (dst, access_ty) = self.adjust_pointer_for_typed_access(dst, ty);
+        let cmp = self.bitcast(cmp, access_ty);
+        let src = self.bitcast(src, access_ty);
+
+        self.validate_atomic(access_ty, dst.def(self));
         // TODO: Default to device scope
         let memory = self.constant_u32(self.span(), Scope::Device as u32);
         let semantics_equal = self.ordering_to_semantics_def(order);
         let semantics_unequal = self.ordering_to_semantics_def(failure_order);
         // Note: OpAtomicCompareExchangeWeak is deprecated, and has the same semantics
-        self.emit()
+        let result = self
+            .emit()
             .atomic_compare_exchange(
-                src.ty,
+                access_ty,
                 None,
                 dst.def(self),
                 memory.def(self),
@@ -2191,7 +2309,8 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 cmp.def(self),
             )
             .unwrap()
-            .with_type(src.ty)
+            .with_type(access_ty);
+        self.bitcast(result, ty)
     }
 
     fn atomic_rmw(
@@ -2201,48 +2320,45 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         src: Self::Value,
         order: AtomicOrdering,
     ) -> Self::Value {
-        let dst_pointee_ty = match self.lookup_type(dst.ty) {
-            SpirvType::Pointer { pointee } => pointee,
-            ty => self.fatal(format!(
-                "atomic_rmw called on variable that wasn't a pointer: {ty:?}"
-            )),
-        };
-        assert_ty_eq!(self, dst_pointee_ty, src.ty);
-        self.validate_atomic(dst_pointee_ty, dst.def(self));
+        let ty = src.ty;
+
+        let (dst, access_ty) = self.adjust_pointer_for_typed_access(dst, ty);
+        let src = self.bitcast(src, access_ty);
+
+        self.validate_atomic(access_ty, dst.def(self));
         // TODO: Default to device scope
         let memory = self
             .constant_u32(self.span(), Scope::Device as u32)
             .def(self);
         let semantics = self.ordering_to_semantics_def(order).def(self);
-        let mut emit = self.emit();
         use AtomicRmwBinOp::*;
-        match op {
-            AtomicXchg => emit.atomic_exchange(
-                src.ty,
+        let result = match op {
+            AtomicXchg => self.emit().atomic_exchange(
+                access_ty,
                 None,
                 dst.def(self),
                 memory,
                 semantics,
                 src.def(self),
             ),
-            AtomicAdd => emit.atomic_i_add(
-                src.ty,
+            AtomicAdd => self.emit().atomic_i_add(
+                access_ty,
                 None,
                 dst.def(self),
                 memory,
                 semantics,
                 src.def(self),
             ),
-            AtomicSub => emit.atomic_i_sub(
-                src.ty,
+            AtomicSub => self.emit().atomic_i_sub(
+                access_ty,
                 None,
                 dst.def(self),
                 memory,
                 semantics,
                 src.def(self),
             ),
-            AtomicAnd => emit.atomic_and(
-                src.ty,
+            AtomicAnd => self.emit().atomic_and(
+                access_ty,
                 None,
                 dst.def(self),
                 memory,
@@ -2250,48 +2366,48 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 src.def(self),
             ),
             AtomicNand => self.fatal("atomic nand is not supported"),
-            AtomicOr => emit.atomic_or(
-                src.ty,
+            AtomicOr => self.emit().atomic_or(
+                access_ty,
                 None,
                 dst.def(self),
                 memory,
                 semantics,
                 src.def(self),
             ),
-            AtomicXor => emit.atomic_xor(
-                src.ty,
+            AtomicXor => self.emit().atomic_xor(
+                access_ty,
                 None,
                 dst.def(self),
                 memory,
                 semantics,
                 src.def(self),
             ),
-            AtomicMax => emit.atomic_s_max(
-                src.ty,
+            AtomicMax => self.emit().atomic_s_max(
+                access_ty,
                 None,
                 dst.def(self),
                 memory,
                 semantics,
                 src.def(self),
             ),
-            AtomicMin => emit.atomic_s_min(
-                src.ty,
+            AtomicMin => self.emit().atomic_s_min(
+                access_ty,
                 None,
                 dst.def(self),
                 memory,
                 semantics,
                 src.def(self),
             ),
-            AtomicUMax => emit.atomic_u_max(
-                src.ty,
+            AtomicUMax => self.emit().atomic_u_max(
+                access_ty,
                 None,
                 dst.def(self),
                 memory,
                 semantics,
                 src.def(self),
             ),
-            AtomicUMin => emit.atomic_u_min(
-                src.ty,
+            AtomicUMin => self.emit().atomic_u_min(
+                access_ty,
                 None,
                 dst.def(self),
                 memory,
@@ -2300,7 +2416,8 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             ),
         }
         .unwrap()
-        .with_type(src.ty)
+        .with_type(access_ty);
+        self.bitcast(result, ty)
     }
 
     fn atomic_fence(&mut self, order: AtomicOrdering, _scope: SynchronizationScope) {
@@ -2394,9 +2511,15 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             ),
         };
 
-        for (argument, &argument_type) in args.iter().zip(argument_types) {
-            assert_ty_eq!(self, argument.ty, argument_type);
-        }
+        // HACK(eddyb) temporary workaround for untyped pointers upstream.
+        // FIXME(eddyb) replace with untyped memory SPIR-V + `qptr` or similar.
+        let args: SmallVec<[_; 8]> = args
+            .iter()
+            .zip_eq(argument_types)
+            .map(|(&arg, &expected_type)| self.bitcast(arg, expected_type))
+            .collect();
+        let args = &args[..];
+
         let libm_intrinsic = self.libm_intrinsics.borrow().get(&callee_val).copied();
         let buffer_load_intrinsic = self
             .buffer_load_intrinsic_fn_id

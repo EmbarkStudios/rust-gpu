@@ -194,7 +194,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
             align,
             size,
             field_types: els,
-            field_offsets: &field_offsets.as_slice(),
+            field_offsets: &field_offsets,
             field_names: None,
         }
         .def(DUMMY_SP, self)
