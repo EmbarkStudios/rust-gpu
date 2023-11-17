@@ -740,10 +740,14 @@ impl SampleImplRewriter {
     fn add_regs(&self, t: &mut Vec<TokenTree>) {
         for i in 0..SAMPLE_PARAM_COUNT {
             if self.0 & (1 << i) != 0 {
+                // HACK(eddyb) the extra `{...}` force the pointers to be to
+                // fresh variables holding value copies, instead of the originals,
+                // allowing `OpLoad _` inference to pick the appropriate type.
                 let s = if is_grad(i) {
-                    String::from("grad_x=in(reg) &params.grad.0.0,grad_y=in(reg) &params.grad.0.1,")
+                    "grad_x=in(reg) &{params.grad.0.0},grad_y=in(reg) &{params.grad.0.1},"
+                        .to_string()
                 } else {
-                    format!("{0} = in(reg) &params.{0}.0,", SAMPLE_PARAM_NAMES[i])
+                    format!("{0} = in(reg) &{{params.{0}.0}},", SAMPLE_PARAM_NAMES[i])
                 };
                 let ts: proc_macro2::TokenStream = s.parse().unwrap();
                 t.extend(ts);

@@ -102,6 +102,11 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         self.current_span.unwrap_or(DUMMY_SP)
     }
 
+    // HACK(eddyb) like the `CodegenCx` method but with `self.span()` awareness.
+    pub fn type_ptr_to(&self, ty: Word) -> Word {
+        SpirvType::Pointer { pointee: ty }.def(self.span(), self)
+    }
+
     // Given an ID, check if it's defined by an OpAccessChain, and if it is, return its ptr/indices
     fn find_access_chain(&self, id: spirv::Word) -> Option<(spirv::Word, Vec<spirv::Word>)> {
         let emit = self.emit();
@@ -130,20 +135,16 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         indices: &[SpirvValue],
         is_inbounds: bool,
     ) -> SpirvValue {
+        // HACK(eddyb) temporary workaround for untyped pointers upstream.
+        // FIXME(eddyb) replace with untyped memory SPIR-V + `qptr` or similar.
+        let ptr = self.pointercast(ptr, self.type_ptr_to(ty));
+
         // The first index is an offset to the pointer, the rest are actual members.
         // https://llvm.org/docs/GetElementPtr.html
         // "An OpAccessChain instruction is the equivalent of an LLVM getelementptr instruction where the first index element is zero."
         // https://github.com/gpuweb/gpuweb/issues/33
         let mut result_indices = Vec::with_capacity(indices.len() - 1);
-        let mut result_pointee_type = match self.lookup_type(ptr.ty) {
-            SpirvType::Pointer { pointee } => {
-                assert_ty_eq!(self, ty, pointee);
-                pointee
-            }
-            other_type => self.fatal(format!(
-                "GEP first deref not implemented for type {other_type:?}"
-            )),
-        };
+        let mut result_pointee_type = ty;
         for index in indices.iter().cloned().skip(1) {
             result_indices.push(index.def(self));
             result_pointee_type = match self.lookup_type(result_pointee_type) {
@@ -154,10 +155,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 )),
             };
         }
-        let result_type = SpirvType::Pointer {
-            pointee: result_pointee_type,
-        }
-        .def(self.span(), self);
+        let result_type = self.type_ptr_to(result_pointee_type);
 
         let ptr_id = ptr.def(self);
         if let Some((original_ptr, mut original_indices)) = self.find_access_chain(ptr_id) {

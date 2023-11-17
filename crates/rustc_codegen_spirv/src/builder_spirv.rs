@@ -58,8 +58,8 @@ pub enum SpirvValueKind {
         /// Pointer value being cast.
         original_ptr: Word,
 
-        /// Pointee type of `original_ptr`.
-        original_pointee_ty: Word,
+        /// Pointer type of `original_ptr`.
+        original_ptr_ty: Word,
 
         /// Result ID for the `OpBitcast` instruction representing the cast,
         /// to attach zombies to.
@@ -77,6 +77,18 @@ pub struct SpirvValue {
 }
 
 impl SpirvValue {
+    pub fn strip_ptrcasts(self) -> Self {
+        match self.kind {
+            SpirvValueKind::LogicalPtrCast {
+                original_ptr,
+                original_ptr_ty,
+                bitcast_result_id: _,
+            } => original_ptr.with_type(original_ptr_ty),
+
+            _ => self,
+        }
+    }
+
     pub fn const_fold_load(self, cx: &CodegenCx<'_>) -> Option<Self> {
         match self.kind {
             SpirvValueKind::Def(id) | SpirvValueKind::IllegalConst(id) => {
@@ -173,7 +185,7 @@ impl SpirvValue {
 
             SpirvValueKind::LogicalPtrCast {
                 original_ptr: _,
-                original_pointee_ty,
+                original_ptr_ty,
                 bitcast_result_id,
             } => {
                 cx.zombie_with_span(
@@ -181,9 +193,9 @@ impl SpirvValue {
                     span,
                     &format!(
                         "cannot cast between pointer types\
-                         \nfrom `*{}`\
+                         \nfrom `{}`\
                          \n  to `{}`",
-                        cx.debug_type(original_pointee_ty),
+                        cx.debug_type(original_ptr_ty),
                         cx.debug_type(self.ty)
                     ),
                 );

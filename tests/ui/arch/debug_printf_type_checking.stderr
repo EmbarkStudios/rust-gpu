@@ -75,9 +75,9 @@ help: the return type of this call is `u32` due to the type of the argument pass
     |                             |
     |                             this argument influences the return type of `spirv_std`
 note: function defined here
-   --> $SPIRV_STD_SRC/lib.rs:135:8
+   --> $SPIRV_STD_SRC/lib.rs:136:8
     |
-135 | pub fn debug_printf_assert_is_type<T>(ty: T) -> T {
+136 | pub fn debug_printf_assert_is_type<T>(ty: T) -> T {
     |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
     = note: this error originates in the macro `debug_printf` (in Nightly builds, run with -Z macro-backtrace for more info)
 help: change the type of the numeric literal from `u32` to `f32`
@@ -102,9 +102,9 @@ help: the return type of this call is `f32` due to the type of the argument pass
     |                             |
     |                             this argument influences the return type of `spirv_std`
 note: function defined here
-   --> $SPIRV_STD_SRC/lib.rs:135:8
+   --> $SPIRV_STD_SRC/lib.rs:136:8
     |
-135 | pub fn debug_printf_assert_is_type<T>(ty: T) -> T {
+136 | pub fn debug_printf_assert_is_type<T>(ty: T) -> T {
     |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
     = note: this error originates in the macro `debug_printf` (in Nightly builds, run with -Z macro-backtrace for more info)
 help: change the type of the numeric literal from `f32` to `u32`
@@ -113,32 +113,30 @@ help: change the type of the numeric literal from `f32` to `u32`
     |                               ~~~
 
 error[E0277]: the trait bound `{float}: Vector<f32, 2>` is not satisfied
-   --> $DIR/debug_printf_type_checking.rs:23:31
+   --> $DIR/debug_printf_type_checking.rs:23:9
     |
 23  |         debug_printf!("%v2f", 11.0);
-    |         ----------------------^^^^-
-    |         |                     |
-    |         |                     the trait `Vector<f32, 2>` is not implemented for `{float}`
-    |         required by a bound introduced by this call
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Vector<f32, 2>` is not implemented for `{float}`
     |
     = help: the following other types implement trait `Vector<T, N>`:
+              <Vec2 as Vector<f32, 2>>
+              <Vec3 as Vector<f32, 3>>
+              <Vec3A as Vector<f32, 3>>
+              <Vec4 as Vector<f32, 4>>
               <DVec2 as Vector<f64, 2>>
               <DVec3 as Vector<f64, 3>>
               <DVec4 as Vector<f64, 4>>
               <IVec2 as Vector<i32, 2>>
-              <IVec3 as Vector<i32, 3>>
-              <IVec4 as Vector<i32, 4>>
-              <UVec2 as Vector<u32, 2>>
-              <UVec3 as Vector<u32, 3>>
             and 5 others
 note: required by a bound in `debug_printf_assert_is_vector`
-   --> $SPIRV_STD_SRC/lib.rs:142:8
+   --> $SPIRV_STD_SRC/lib.rs:143:8
     |
-140 | pub fn debug_printf_assert_is_vector<
+141 | pub fn debug_printf_assert_is_vector<
     |        ----------------------------- required by a bound in this function
-141 |     TY: crate::scalar::Scalar,
-142 |     V: crate::vector::Vector<TY, SIZE>,
+142 |     TY: crate::scalar::Scalar,
+143 |     V: crate::vector::Vector<TY, SIZE>,
     |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `debug_printf_assert_is_vector`
+    = note: this error originates in the macro `debug_printf` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0308]: mismatched types
    --> $DIR/debug_printf_type_checking.rs:24:29
@@ -157,9 +155,9 @@ help: the return type of this call is `Vec2` due to the type of the argument pas
     |                             |
     |                             this argument influences the return type of `spirv_std`
 note: function defined here
-   --> $SPIRV_STD_SRC/lib.rs:135:8
+   --> $SPIRV_STD_SRC/lib.rs:136:8
     |
-135 | pub fn debug_printf_assert_is_type<T>(ty: T) -> T {
+136 | pub fn debug_printf_assert_is_type<T>(ty: T) -> T {
     |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
     = note: this error originates in the macro `debug_printf` (in Nightly builds, run with -Z macro-backtrace for more info)
 
