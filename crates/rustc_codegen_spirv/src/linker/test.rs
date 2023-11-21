@@ -6,6 +6,13 @@ use rustc_session::CompilerIO;
 use rustc_span::FileName;
 use std::io::Write;
 use std::sync::{Arc, Mutex};
+
+// `termcolor` is needed because we cannot construct an Emitter after it was added in
+// https://github.com/rust-lang/rust/pull/114104. This can be removed when
+// https://github.com/rust-lang/rust/pull/115393 lands.
+// We need to construct an emitter as yet another workaround,
+// see https://github.com/rust-lang/rust/pull/102992.
+extern crate termcolor;
 use termcolor::{ColorSpec, WriteColor};
 
 // https://github.com/colin-kiegel/rust-pretty-assertions/issues/24
@@ -81,9 +88,8 @@ fn link_with_linker_opts(
     struct BufWriter(Arc<Mutex<Vec<u8>>>);
 
     impl BufWriter {
-        fn to_string(self) -> String {
-            let x = self.0.into_inner().expect("diagnostics unlocked");
-            String::from_utf8(x).expect("conversion to string")
+        fn unwrap_to_string(self) -> String {
+            String::from_utf8(Arc::try_unwrap(self.0).ok().unwrap().into_inner().unwrap()).unwrap()
         }
     }
 
@@ -190,7 +196,13 @@ fn link_with_linker_opts(
         })
     })
     .flatten()
-    .map_err(|_e| buf.to_string())
+    .map_err(|_e| {
+        let mut diags = output.unwrap_to_string();
+        if let Some(diags_without_trailing_newlines) = diags.strip_suffix("\n\n") {
+            diags.truncate(diags_without_trailing_newlines.len());
+        }
+        diags
+    })
     .map_err(PrettyString)
 }
 
