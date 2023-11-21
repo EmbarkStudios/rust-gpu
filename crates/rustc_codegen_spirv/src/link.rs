@@ -616,11 +616,10 @@ pub(crate) fn run_thin(
     if cgcx.opts.cg.linker_plugin_lto.enabled() {
         unreachable!("We should never reach this case if the LTO step is deferred to the linker");
     }
-    if cgcx.lto != Lto::ThinLocal {
-        for _ in cgcx.each_linked_rlib_for_lto.iter() {
-            bug!("TODO: Implement whatever the heck this is");
-        }
-    }
+    assert!(
+        cgcx.lto == Lto::ThinLocal,
+        "no actual LTO implemented in Rust-GPU"
+    );
     let mut thin_buffers = Vec::with_capacity(modules.len());
     let mut module_names = Vec::with_capacity(modules.len() + cached_modules.len());
 

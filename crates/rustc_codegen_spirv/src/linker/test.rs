@@ -146,14 +146,15 @@ fn link_with_linker_opts(
                     output_file: None,
                     temps_dir: None,
                 },
-                None,
+                Default::default(),
                 Registry::new(&[]),
                 Default::default(),
                 Default::default(),
-                None,
-                None,
+                Default::default(),
+                Default::default(),
                 rustc_interface::util::rustc_version_str().unwrap_or("unknown"),
-                None,
+                Default::default(),
+                Default::default(),
             );
 
             // HACK(eddyb) inject `write_diags` into `sess`, to work around
@@ -179,6 +180,7 @@ fn link_with_linker_opts(
                 modules,
                 opts,
                 &OutputFilenames::new(
+                    "".into(),
                     "".into(),
                     "".into(),
                     None,

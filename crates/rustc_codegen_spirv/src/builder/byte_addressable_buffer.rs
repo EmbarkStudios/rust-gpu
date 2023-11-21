@@ -181,7 +181,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             }
             // PassMode::Pair is identical to PassMode::Direct - it's returned as a struct
             PassMode::Direct(_) | PassMode::Pair(_, _) => (),
-            PassMode::Cast(_, _) => {
+            PassMode::Cast { .. } => {
                 self.fatal("PassMode::Cast not supported in codegen_buffer_load_intrinsic")
             }
             PassMode::Indirect { .. } => {
@@ -349,7 +349,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             PassMode::Ignore => return,
             PassMode::Direct(_) => false,
             PassMode::Pair(_, _) => true,
-            PassMode::Cast(_, _) => {
+            PassMode::Cast { .. } => {
                 self.fatal("PassMode::Cast not supported in codegen_buffer_store_intrinsic")
             }
             PassMode::Indirect { .. } => {

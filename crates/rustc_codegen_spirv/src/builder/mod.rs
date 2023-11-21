@@ -309,7 +309,7 @@ impl<'a, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'tcx> {
             PassMode::Pair(..) => {
                 OperandValue::Pair(next(self, idx), next(self, idx)).store(self, dst);
             }
-            PassMode::Cast(_, _) | PassMode::Indirect { .. } => span_bug!(
+            PassMode::Cast { .. } | PassMode::Indirect { .. } => span_bug!(
                 self.span(),
                 "query hooks should've made this `PassMode` impossible: {:#?}",
                 arg_abi
@@ -328,7 +328,7 @@ impl<'a, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'tcx> {
             PassMode::Direct(_) | PassMode::Pair(..) => {
                 OperandValue::Immediate(val).store(self, dst);
             }
-            PassMode::Cast(_, _) | PassMode::Indirect { .. } => span_bug!(
+            PassMode::Cast { .. } | PassMode::Indirect { .. } => span_bug!(
                 self.span(),
                 "query hooks should've made this `PassMode` impossible: {:#?}",
                 arg_abi
