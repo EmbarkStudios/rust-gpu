@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9bb858ba049f1f21.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="rustc_codegen_spirv" data-themes="" data-resource-suffix="" data-rustdoc-version="1.72.0-nightly (cb80ff132 2023-07-07)" data-channel="nightly" data-search-js="search-f6292fe389d70017.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ><script src="../../static.files/storage-59fd9b8ccb335783.js"></script><script defer src="../../static.files/source-script-106908c7a7964ba4.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-47e7ab555ef2818a.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="rustc_codegen_spirv" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (4e78abb43 2023-08-28)" data-channel="nightly" data-search-js="search-6dfdfced5eff6596.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-f194925aa375ae96.css" data-theme-dark-css="dark-1dd4d1ce031e15de.css" data-theme-ayu-css="ayu-49e58d069f567085.css" ><script src="../../static.files/storage-db41da1a38ea3cb8.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-ef3a2de404864b0b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-f194925aa375ae96.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-1dd4d1ce031e15de.css"><link rel="stylesheet" href="../../static.files/noscript-cffde32267a19fd6.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -506,6 +506,15 @@
 <a href="#506" id="506">506</a>
 <a href="#507" id="507">507</a>
 <a href="#508" id="508">508</a>
+<a href="#509" id="509">509</a>
+<a href="#510" id="510">510</a>
+<a href="#511" id="511">511</a>
+<a href="#512" id="512">512</a>
+<a href="#513" id="513">513</a>
+<a href="#514" id="514">514</a>
+<a href="#515" id="515">515</a>
+<a href="#516" id="516">516</a>
+<a href="#517" id="517">517</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Welcome to the API documentation for the `rust-gpu` project, this API is
 //! unstable and mainly intended for developing on the project itself. This is
 //! the API documentation for `rustc_codegen_spirv` which is not that useful on
@@ -524,6 +533,7 @@
 //! [`spirv-tools`]: https://embarkstudios.github.io/rust-gpu/api/spirv_tools
 //! [`spirv-tools-sys`]: https://embarkstudios.github.io/rust-gpu/api/spirv_tools_sys
 </span><span class="attr">#![feature(rustc_private)]
+#![feature(array_methods)]
 #![feature(assert_matches)]
 #![feature(result_flattening)]
 #![feature(lint_reasons)]
@@ -596,7 +606,7 @@
 <span class="kw">use </span>rustc_ast::expand::allocator::AllocatorKind;
 <span class="kw">use </span>rustc_codegen_ssa::back::lto::{LtoModuleCodegen, SerializedModule, ThinModule};
 <span class="kw">use </span>rustc_codegen_ssa::back::write::{
-    CodegenContext, FatLTOInput, ModuleConfig, OngoingCodegen, TargetMachineFactoryConfig,
+    CodegenContext, FatLtoInput, ModuleConfig, OngoingCodegen, TargetMachineFactoryConfig,
 };
 <span class="kw">use </span>rustc_codegen_ssa::base::maybe_create_entry_wrapper;
 <span class="kw">use </span>rustc_codegen_ssa::mono_item::MonoItemExt;
@@ -609,7 +619,7 @@
 <span class="kw">use </span>rustc_errors::{ErrorGuaranteed, FatalError, Handler};
 <span class="kw">use </span>rustc_metadata::EncodedMetadata;
 <span class="kw">use </span>rustc_middle::dep_graph::{WorkProduct, WorkProductId};
-<span class="kw">use </span>rustc_middle::mir::mono::{Linkage, MonoItem, Visibility};
+<span class="kw">use </span>rustc_middle::mir::mono::{MonoItem, MonoItemData};
 <span class="kw">use </span>rustc_middle::mir::pretty::write_mir_pretty;
 <span class="kw">use </span>rustc_middle::query;
 <span class="kw">use </span>rustc_middle::ty::print::with_no_trimmed_paths;
@@ -625,10 +635,10 @@
 <span class="kw">use </span>std::path::Path;
 <span class="kw">use </span>std::sync::Arc;
 
-<span class="kw">fn </span>dump_mir(tcx: TyCtxt&lt;<span class="lifetime">&#39;_</span>&gt;, mono_items: <span class="kw-2">&amp;</span>[(MonoItem&lt;<span class="lifetime">&#39;_</span>&gt;, (Linkage, Visibility))], path: <span class="kw-2">&amp;</span>Path) {
+<span class="kw">fn </span>dump_mir(tcx: TyCtxt&lt;<span class="lifetime">&#39;_</span>&gt;, mono_items: <span class="kw-2">&amp;</span>[(MonoItem&lt;<span class="lifetime">&#39;_</span>&gt;, MonoItemData)], path: <span class="kw-2">&amp;</span>Path) {
     create_dir_all(path.parent().unwrap()).unwrap();
     <span class="kw">let </span><span class="kw-2">mut </span>file = File::create(path).unwrap();
-    <span class="kw">for </span><span class="kw-2">&amp;</span>(mono_item, (<span class="kw">_</span>, <span class="kw">_</span>)) <span class="kw">in </span>mono_items {
+    <span class="kw">for </span><span class="kw-2">&amp;</span>(mono_item, <span class="kw">_</span>) <span class="kw">in </span>mono_items {
         <span class="kw">if let </span>MonoItem::Fn(instance) = mono_item {
             <span class="kw">if </span><span class="macro">matches!</span>(instance.def, InstanceDef::Item(<span class="kw">_</span>)) {
                 <span class="kw">let </span><span class="kw-2">mut </span>mir = Cursor::new(Vec::new());
@@ -814,7 +824,7 @@
 
     <span class="kw">fn </span>run_fat_lto(
         <span class="kw">_</span>: <span class="kw-2">&amp;</span>CodegenContext&lt;<span class="self">Self</span>&gt;,
-        <span class="kw">_</span>: Vec&lt;FatLTOInput&lt;<span class="self">Self</span>&gt;&gt;,
+        <span class="kw">_</span>: Vec&lt;FatLtoInput&lt;<span class="self">Self</span>&gt;&gt;,
         <span class="kw">_</span>: Vec&lt;(SerializedModule&lt;<span class="self">Self</span>::ModuleBuffer&gt;, WorkProduct)&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;LtoModuleCodegen&lt;<span class="self">Self</span>&gt;, FatalError&gt; {
         <span class="macro">todo!</span>()
@@ -830,6 +840,10 @@
 
     <span class="kw">fn </span>print_pass_timings(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="macro">println!</span>(<span class="string">&quot;TODO: Implement print_pass_timings&quot;</span>);
+    }
+
+    <span class="kw">fn </span>print_statistics(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="macro">println!</span>(<span class="string">&quot;TODO: Implement print_statistics&quot;</span>);
     }
 
     <span class="kw">unsafe fn </span>optimize(
@@ -924,16 +938,20 @@
             <span class="kw">let </span>mono_items = cx.codegen_unit.items_in_deterministic_order(cx.tcx);
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(dir) = <span class="kw-2">&amp;</span>cx.codegen_args.dump_mir {
-                dump_mir(tcx, <span class="kw-2">&amp;</span>mono_items, <span class="kw-2">&amp;</span>dir.join(cgu_name.to_string()));
+                dump_mir(tcx, mono_items.as_slice(), <span class="kw-2">&amp;</span>dir.join(cgu_name.to_string()));
             }
 
-            <span class="kw">for </span><span class="kw-2">&amp;</span>(mono_item, (linkage, visibility)) <span class="kw">in </span>mono_items.iter() {
+            <span class="kw">for </span><span class="kw-2">&amp;</span>(mono_item, mono_item_data) <span class="kw">in </span>mono_items.iter() {
                 <span class="kw">if let </span>MonoItem::Fn(instance) = mono_item {
                     <span class="kw">if </span>is_blocklisted_fn(cx.tcx, <span class="kw-2">&amp;</span>cx.sym, instance) {
                         <span class="kw">continue</span>;
                     }
                 }
-                mono_item.predefine::&lt;Builder&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;&gt;(<span class="kw-2">&amp;</span>cx, linkage, visibility);
+                mono_item.predefine::&lt;Builder&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;&gt;(
+                    <span class="kw-2">&amp;</span>cx,
+                    mono_item_data.linkage,
+                    mono_item_data.visibility,
+                );
             }
 
             <span class="comment">// ... and now that we have everything pre-defined, fill out those definitions.

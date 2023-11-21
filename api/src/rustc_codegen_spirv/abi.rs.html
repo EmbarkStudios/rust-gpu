@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/abi.rs`."><title>abi.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9bb858ba049f1f21.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="rustc_codegen_spirv" data-themes="" data-resource-suffix="" data-rustdoc-version="1.72.0-nightly (cb80ff132 2023-07-07)" data-channel="nightly" data-search-js="search-f6292fe389d70017.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ><script src="../../static.files/storage-59fd9b8ccb335783.js"></script><script defer src="../../static.files/source-script-106908c7a7964ba4.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/abi.rs`."><title>abi.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-47e7ab555ef2818a.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="rustc_codegen_spirv" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (4e78abb43 2023-08-28)" data-channel="nightly" data-search-js="search-6dfdfced5eff6596.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-f194925aa375ae96.css" data-theme-dark-css="dark-1dd4d1ce031e15de.css" data-theme-ayu-css="ayu-49e58d069f567085.css" ><script src="../../static.files/storage-db41da1a38ea3cb8.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-ef3a2de404864b0b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-f194925aa375ae96.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-1dd4d1ce031e15de.css"><link rel="stylesheet" href="../../static.files/noscript-cffde32267a19fd6.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -985,6 +985,10 @@
 <a href="#985" id="985">985</a>
 <a href="#986" id="986">986</a>
 <a href="#987" id="987">987</a>
+<a href="#988" id="988">988</a>
+<a href="#989" id="989">989</a>
+<a href="#990" id="990">990</a>
+<a href="#991" id="991">991</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! This file is responsible for translation from rustc tys (`TyAndLayout`) to spir-v types. It&#39;s
 //! surprisingly difficult.
 
@@ -997,9 +1001,9 @@
 <span class="kw">use </span>rustc_index::Idx;
 <span class="kw">use </span>rustc_middle::query::{ExternProviders, Providers};
 <span class="kw">use </span>rustc_middle::ty::layout::{FnAbiOf, LayoutOf, TyAndLayout};
-<span class="kw">use </span>rustc_middle::ty::subst::SubstsRef;
+<span class="kw">use </span>rustc_middle::ty::GenericArgsRef;
 <span class="kw">use </span>rustc_middle::ty::{
-    <span class="self">self</span>, Const, FloatTy, GeneratorSubsts, IntTy, ParamEnv, PolyFnSig, Ty, TyCtxt, TyKind,
+    <span class="self">self</span>, Const, FloatTy, GeneratorArgs, IntTy, ParamEnv, PolyFnSig, Ty, TyCtxt, TyKind,
     TypeAndMut, UintTy,
 };
 <span class="kw">use </span>rustc_middle::{bug, span_bug};
@@ -1091,6 +1095,8 @@
             largest_niche,
             align,
             size,
+            max_repr_align,
+            unadjusted_abi_align,
         } = <span class="kw-2">*</span>layout;
         LayoutS {
             fields: <span class="kw">match </span><span class="kw-2">*</span>fields {
@@ -1134,6 +1140,8 @@
             largest_niche,
             align,
             size,
+            max_repr_align,
+            unadjusted_abi_align,
         }
     }
     providers.layout_of = |tcx, key| {
@@ -1330,7 +1338,7 @@
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;tcx</span>&gt; ConvSpirvType&lt;<span class="lifetime">&#39;tcx</span>&gt; <span class="kw">for </span>TyAndLayout&lt;<span class="lifetime">&#39;tcx</span>&gt; {
     <span class="kw">fn </span>spirv_type(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw-2">mut </span>span: Span, cx: <span class="kw-2">&amp;</span>CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt;) -&gt; Word {
-        <span class="kw">if let </span>TyKind::Adt(adt, substs) = <span class="kw-2">*</span><span class="self">self</span>.ty.kind() {
+        <span class="kw">if let </span>TyKind::Adt(adt, args) = <span class="kw-2">*</span><span class="self">self</span>.ty.kind() {
             <span class="kw">if </span>span == DUMMY_SP {
                 span = cx.tcx.def_span(adt.did());
             }
@@ -1339,7 +1347,7 @@
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(intrinsic_type_attr) = attrs.intrinsic_type.map(|attr| attr.value) {
                 <span class="kw">if let </span><span class="prelude-val">Ok</span>(spirv_type) =
-                    trans_intrinsic_type(cx, span, <span class="kw-2">*</span><span class="self">self</span>, substs, intrinsic_type_attr)
+                    trans_intrinsic_type(cx, span, <span class="kw-2">*</span><span class="self">self</span>, args, intrinsic_type_attr)
                 {
                     <span class="kw">return </span>spirv_type;
                 }
@@ -1769,7 +1777,7 @@
             }
         }
         <span class="kw">if let </span>(TyKind::Generator(<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>), <span class="prelude-val">Some</span>(index)) = (<span class="self">self</span>.ty.kind(), <span class="self">self</span>.variant) {
-            <span class="macro">write!</span>(f, <span class="string">&quot;::{}&quot;</span>, GeneratorSubsts::variant_name(index))<span class="question-mark">?</span>;
+            <span class="macro">write!</span>(f, <span class="string">&quot;::{}&quot;</span>, GeneratorArgs::variant_name(index))<span class="question-mark">?</span>;
         }
         <span class="prelude-val">Ok</span>(())
     }
@@ -1779,7 +1787,7 @@
     cx: <span class="kw-2">&amp;</span>CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt;,
     span: Span,
     ty: TyAndLayout&lt;<span class="lifetime">&#39;tcx</span>&gt;,
-    substs: SubstsRef&lt;<span class="lifetime">&#39;tcx</span>&gt;,
+    args: GenericArgsRef&lt;<span class="lifetime">&#39;tcx</span>&gt;,
     intrinsic_type_attr: IntrinsicType,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;Word, ErrorGuaranteed&gt; {
     <span class="kw">match </span>intrinsic_type_attr {
@@ -1804,7 +1812,7 @@
             //     &lt;_&gt;::from_u64(value).unwrap()
             // }
 
-            </span><span class="kw">let </span>sampled_type = <span class="kw">match </span>substs.type_at(<span class="number">0</span>).kind() {
+            </span><span class="kw">let </span>sampled_type = <span class="kw">match </span>args.type_at(<span class="number">0</span>).kind() {
                 TyKind::Int(int) =&gt; <span class="kw">match </span>int {
                     IntTy::Isize =&gt; {
                         SpirvType::Integer(cx.tcx.data_layout.pointer_size.bits() <span class="kw">as </span>u32, <span class="bool-val">true</span>)
@@ -1837,13 +1845,13 @@
                 }
             };
 
-            <span class="comment">// let dim: spirv::Dim = type_from_variant_discriminant(cx, substs.const_at(1));
-            // let depth: u32 = type_from_variant_discriminant(cx, substs.const_at(2));
-            // let arrayed: u32 = type_from_variant_discriminant(cx, substs.const_at(3));
-            // let multisampled: u32 = type_from_variant_discriminant(cx, substs.const_at(4));
-            // let sampled: u32 = type_from_variant_discriminant(cx, substs.const_at(5));
+            <span class="comment">// let dim: spirv::Dim = type_from_variant_discriminant(cx, args.const_at(1));
+            // let depth: u32 = type_from_variant_discriminant(cx, args.const_at(2));
+            // let arrayed: u32 = type_from_variant_discriminant(cx, args.const_at(3));
+            // let multisampled: u32 = type_from_variant_discriminant(cx, args.const_at(4));
+            // let sampled: u32 = type_from_variant_discriminant(cx, args.const_at(5));
             // let image_format: spirv::ImageFormat =
-            //     type_from_variant_discriminant(cx, substs.const_at(6));
+            //     type_from_variant_discriminant(cx, args.const_at(6));
 
             </span><span class="kw">fn </span>const_int_value&lt;<span class="lifetime">&#39;tcx</span>, P: FromPrimitive&gt;(
                 cx: <span class="kw-2">&amp;</span>CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt;,
@@ -1860,12 +1868,12 @@
                 }
             }
 
-            <span class="kw">let </span>dim = const_int_value(cx, substs.const_at(<span class="number">1</span>))<span class="question-mark">?</span>;
-            <span class="kw">let </span>depth = const_int_value(cx, substs.const_at(<span class="number">2</span>))<span class="question-mark">?</span>;
-            <span class="kw">let </span>arrayed = const_int_value(cx, substs.const_at(<span class="number">3</span>))<span class="question-mark">?</span>;
-            <span class="kw">let </span>multisampled = const_int_value(cx, substs.const_at(<span class="number">4</span>))<span class="question-mark">?</span>;
-            <span class="kw">let </span>sampled = const_int_value(cx, substs.const_at(<span class="number">5</span>))<span class="question-mark">?</span>;
-            <span class="kw">let </span>image_format = const_int_value(cx, substs.const_at(<span class="number">6</span>))<span class="question-mark">?</span>;
+            <span class="kw">let </span>dim = const_int_value(cx, args.const_at(<span class="number">1</span>))<span class="question-mark">?</span>;
+            <span class="kw">let </span>depth = const_int_value(cx, args.const_at(<span class="number">2</span>))<span class="question-mark">?</span>;
+            <span class="kw">let </span>arrayed = const_int_value(cx, args.const_at(<span class="number">3</span>))<span class="question-mark">?</span>;
+            <span class="kw">let </span>multisampled = const_int_value(cx, args.const_at(<span class="number">4</span>))<span class="question-mark">?</span>;
+            <span class="kw">let </span>sampled = const_int_value(cx, args.const_at(<span class="number">5</span>))<span class="question-mark">?</span>;
+            <span class="kw">let </span>image_format = const_int_value(cx, args.const_at(<span class="number">6</span>))<span class="question-mark">?</span>;
 
             <span class="kw">let </span>ty = SpirvType::Image {
                 sampled_type,
@@ -1900,7 +1908,7 @@
 
             <span class="comment">// We use a generic to indicate the underlying image type of the sampled image.
             // The spirv type of it will be generated by querying the type of the first generic.
-            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(image_ty) = substs.types().next() {
+            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(image_ty) = args.types().next() {
                 <span class="comment">// TODO: enforce that the generic param is an image type?
                 </span><span class="kw">let </span>image_type = cx.layout_of(image_ty).spirv_type(span, cx);
                 <span class="prelude-val">Ok</span>(SpirvType::SampledImage { image_type }.def(span, cx))
@@ -1921,7 +1929,7 @@
 
             <span class="comment">// We use a generic to indicate the underlying element type.
             // The spirv type of it will be generated by querying the type of the first generic.
-            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(elem_ty) = substs.types().next() {
+            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(elem_ty) = args.types().next() {
                 <span class="kw">let </span>element = cx.layout_of(elem_ty).spirv_type(span, cx);
                 <span class="prelude-val">Ok</span>(SpirvType::RuntimeArray { element }.def(span, cx))
             } <span class="kw">else </span>{
