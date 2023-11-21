@@ -104,7 +104,6 @@ use rustc_metadata::EncodedMetadata;
 use rustc_middle::dep_graph::{WorkProduct, WorkProductId};
 use rustc_middle::mir::mono::{MonoItem, MonoItemData};
 use rustc_middle::mir::pretty::write_mir_pretty;
-use rustc_middle::query;
 use rustc_middle::ty::print::with_no_trimmed_paths;
 use rustc_middle::ty::{self, Instance, InstanceDef, TyCtxt};
 use rustc_session::config::{self, OutputFilenames, OutputType};
@@ -219,7 +218,7 @@ impl CodegenBackend for SpirvCodegenBackend {
         }
     }
 
-    fn provide(&self, providers: &mut query::Providers) {
+    fn provide(&self, providers: &mut rustc_middle::util::Providers) {
         // FIXME(eddyb) this is currently only passed back to us, specifically
         // into `target_machine_factory` (which is a noop), but it might make
         // sense to move some of the target feature parsing into here.
@@ -227,10 +226,6 @@ impl CodegenBackend for SpirvCodegenBackend {
 
         crate::abi::provide(providers);
         crate::attr::provide(providers);
-    }
-
-    fn provide_extern(&self, providers: &mut query::ExternProviders) {
-        crate::abi::provide_extern(providers);
     }
 
     fn codegen_crate(

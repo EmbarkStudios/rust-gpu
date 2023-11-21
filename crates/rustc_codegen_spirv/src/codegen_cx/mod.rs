@@ -18,8 +18,8 @@ use rustc_codegen_ssa::traits::{
     AsmMethods, BackendTypes, DebugInfoMethods, GlobalAsmOperandRef, MiscMethods,
 };
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
+use rustc_middle::mir;
 use rustc_middle::mir::mono::CodegenUnit;
-use rustc_middle::mir::Body;
 use rustc_middle::ty::layout::{HasParamEnv, HasTyCtxt};
 use rustc_middle::ty::{Instance, ParamEnv, PolyExistentialTraitRef, Ty, TyCtxt};
 use rustc_session::Session;
@@ -861,8 +861,8 @@ impl<'tcx> DebugInfoMethods<'tcx> for CodegenCx<'tcx> {
         _instance: Instance<'tcx>,
         _fn_abi: &FnAbi<'tcx, Ty<'tcx>>,
         _llfn: Self::Function,
-        _mir: &Body<'_>,
-    ) -> Option<FunctionDebugContext<Self::DIScope, Self::DILocation>> {
+        _mir: &mir::Body<'tcx>,
+    ) -> Option<FunctionDebugContext<'tcx, Self::DIScope, Self::DILocation>> {
         // TODO: This is ignored. Do we want to implement this at some point?
         None
     }

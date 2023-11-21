@@ -790,7 +790,7 @@ impl<'tcx> BuilderSpirv<'tcx> {
 
                 let file_contents = self
                     .source_map
-                    .span_to_snippet(Span::with_root_ctxt(sf.start_pos, sf.end_pos))
+                    .span_to_snippet(Span::with_root_ctxt(sf.start_pos, sf.end_position()))
                     .ok();
 
                 // HACK(eddyb) this logic is duplicated from `spirt::spv::lift`.

@@ -8,7 +8,7 @@ use rspirv::spirv::{StorageClass, Word};
 use rustc_data_structures::fx::FxHashMap;
 use rustc_errors::ErrorGuaranteed;
 use rustc_index::Idx;
-use rustc_middle::query::{ExternProviders, Providers};
+use rustc_middle::query::Providers;
 use rustc_middle::ty::layout::{FnAbiOf, LayoutOf, TyAndLayout};
 use rustc_middle::ty::GenericArgsRef;
 use rustc_middle::ty::{
@@ -174,12 +174,6 @@ pub(crate) fn provide(providers: &mut Providers) {
     };
 }
 
-pub(crate) fn provide_extern(providers: &mut ExternProviders) {
-    // Reset providers overriden in `provide`, that need to still go through the
-    // `rustc_metadata::rmeta` decoding, as opposed to being locally computed.
-    providers.fn_sig = rustc_interface::DEFAULT_EXTERN_QUERY_PROVIDERS.fn_sig;
-}
-
 /// If a struct contains a pointer to itself, even indirectly, then doing a naiive recursive walk
 /// of the fields will result in an infinite loop. Because pointers are the only thing that are
 /// allowed to be recursive, keep track of what pointers we've translated, or are currently in the
@@ -312,7 +306,7 @@ impl<'tcx> ConvSpirvType<'tcx> for FnAbi<'tcx, Ty<'tcx>> {
         let return_type = match self.ret.mode {
             PassMode::Ignore => SpirvType::Void.def(span, cx),
             PassMode::Direct(_) | PassMode::Pair(..) => self.ret.layout.spirv_type(span, cx),
-            PassMode::Cast(_, _) | PassMode::Indirect { .. } => span_bug!(
+            PassMode::Cast { .. } | PassMode::Indirect { .. } => span_bug!(
                 span,
                 "query hooks should've made this `PassMode` impossible: {:#?}",
                 self.ret
@@ -328,7 +322,7 @@ impl<'tcx> ConvSpirvType<'tcx> for FnAbi<'tcx, Ty<'tcx>> {
                     argument_types.push(scalar_pair_element_backend_type(cx, span, arg.layout, 1));
                     continue;
                 }
-                PassMode::Cast(_, _) | PassMode::Indirect { .. } => span_bug!(
+                PassMode::Cast { .. } | PassMode::Indirect { .. } => span_bug!(
                     span,
                     "query hooks should've made this `PassMode` impossible: {:#?}",
                     arg
@@ -867,7 +861,7 @@ fn trans_intrinsic_type<'tcx>(
                 const_: Const<'tcx>,
             ) -> Result<P, ErrorGuaranteed> {
                 assert!(const_.ty().is_integral());
-                let value = const_.eval_bits(cx.tcx, ParamEnv::reveal_all(), const_.ty());
+                let value = const_.eval_bits(cx.tcx, ParamEnv::reveal_all());
                 match P::from_u128(value) {
                     Some(v) => Ok(v),
                     None => Err(cx

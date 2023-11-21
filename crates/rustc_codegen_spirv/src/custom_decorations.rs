@@ -458,8 +458,7 @@ impl<'a> SpanRegenerator<'a> {
                 // Only use this `FileName` candidate if we either:
                 // 1. reused a `SourceFile` with the right `src`/`external_src`
                 // 2. allocated a new `SourceFile` with our choice of `src`
-                self.source_map
-                    .ensure_source_file_source_present(sf.clone());
+                self.source_map.ensure_source_file_source_present(&sf);
                 let sf_src_matches = sf
                     .src
                     .as_ref()
@@ -499,7 +498,7 @@ impl<'a> SpanRegenerator<'a> {
             let multibyte_chars = {
                 let find = |bpos| {
                     file.multibyte_chars
-                        .binary_search_by_key(&bpos, |mbc| mbc.pos)
+                        .binary_search_by_key(&file.relative_position(bpos), |mbc| mbc.pos)
                         .unwrap_or_else(|x| x)
                 };
                 let Range { start, end } = line_bpos_range;
@@ -508,7 +507,7 @@ impl<'a> SpanRegenerator<'a> {
             let non_narrow_chars = {
                 let find = |bpos| {
                     file.non_narrow_chars
-                        .binary_search_by_key(&bpos, |nnc| nnc.pos())
+                        .binary_search_by_key(&file.relative_position(bpos), |nnc| nnc.pos())
                         .unwrap_or_else(|x| x)
                 };
                 let Range { start, end } = line_bpos_range;
@@ -524,12 +523,15 @@ impl<'a> SpanRegenerator<'a> {
             // itself is even worse than this, when it comes to `BytePos` lookups).
             let (mut cur_bpos, mut cur_col_display) = (line_bpos_range.start, 0);
             while cur_bpos < line_bpos_range.end && cur_col_display < col {
-                let next_special_bpos = special_chars.peek().map(|special| {
-                    special
-                        .as_ref()
-                        .map_any(|mbc| mbc.pos, |nnc| nnc.pos())
-                        .reduce(|x, _| x)
-                });
+                let next_special_bpos = special_chars
+                    .peek()
+                    .map(|special| {
+                        special
+                            .as_ref()
+                            .map_any(|mbc| mbc.pos, |nnc| nnc.pos())
+                            .reduce(|x, _| x)
+                    })
+                    .map(|rel_bpos| file.absolute_position(rel_bpos));
 
                 // Batch trivial chars (i.e. chars 1:1 wrt `BytePos` vs `col_display`).
                 let following_trivial_chars =
