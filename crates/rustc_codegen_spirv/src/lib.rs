@@ -325,7 +325,7 @@ impl WriteBackendMethods for SpirvCodegenBackend {
     }
 
     fn print_statistics(&self) {
-        println!("TODO: Implement print_statistics")
+        println!("TODO: Implement print_statistics");
     }
 
     unsafe fn optimize(

@@ -4,7 +4,7 @@
 //[via_intrinsic] build-pass
 // compile-flags: -C llvm-args=--disassemble-fn=ptr_copy::copy_via_raw_ptr
 
-#![cfg_attr(via_intrinsic, feature(intrinsics))]
+#![cfg_attr(via_intrinsic, allow(internal_features), feature(intrinsics))]
 
 use spirv_std::spirv;
 

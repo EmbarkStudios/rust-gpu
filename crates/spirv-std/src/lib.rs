@@ -1,6 +1,7 @@
 #![no_std]
 #![cfg_attr(
     target_arch = "spirv",
+    allow(internal_features),
     feature(
         asm_const,
         asm_experimental_arch,
