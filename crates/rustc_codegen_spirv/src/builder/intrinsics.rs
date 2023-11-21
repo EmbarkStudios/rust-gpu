@@ -327,6 +327,12 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                 }
             }
 
+            sym::compare_bytes => {
+                let undef = self.undef(ret_ty);
+                self.zombie(undef.def(self), "memcmp not implemented");
+                undef
+            }
+
             _ => self.fatal(format!("TODO: Unknown intrinsic '{name}'")),
         };
 
