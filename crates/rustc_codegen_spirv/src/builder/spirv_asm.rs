@@ -660,7 +660,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         /// `leftover_operands` is used for `IndexComposite` patterns, if any exist.
         /// If the pattern isn't constraining enough to determine an unique type,
         /// `Err(Ambiguous)` is returned instead.
-        fn arg_ty_pat(
+        fn subst_ty_pat(
             cx: &CodegenCx<'_>,
             pat: &TyPat<'_>,
             ty_vars: &[Option<Word>],
@@ -673,23 +673,23 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 },
 
                 TyPat::Pointer(_, pat) => SpirvType::Pointer {
-                    pointee: arg_ty_pat(cx, pat, ty_vars, leftover_operands)?,
+                    pointee: subst_ty_pat(cx, pat, ty_vars, leftover_operands)?,
                 }
                 .def(DUMMY_SP, cx),
 
                 TyPat::Vector4(pat) => SpirvType::Vector {
-                    element: arg_ty_pat(cx, pat, ty_vars, leftover_operands)?,
+                    element: subst_ty_pat(cx, pat, ty_vars, leftover_operands)?,
                     count: 4,
                 }
                 .def(DUMMY_SP, cx),
 
                 TyPat::SampledImage(pat) => SpirvType::SampledImage {
-                    image_type: arg_ty_pat(cx, pat, ty_vars, leftover_operands)?,
+                    image_type: subst_ty_pat(cx, pat, ty_vars, leftover_operands)?,
                 }
                 .def(DUMMY_SP, cx),
 
                 TyPat::IndexComposite(pat) => {
-                    let mut ty =arg_ty_pat(cx, pat, ty_vars, leftover_operands)?;
+                    let mut ty = subst_ty_pat(cx, pat, ty_vars, leftover_operands)?;
                     for index in leftover_operands {
                         let index_to_usize = || match *index {
                             // FIXME(eddyb) support more than just literals,
@@ -780,7 +780,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             _ => return None,
         }
 
-        match arg_ty_pat(
+        match subst_ty_pat(
             self,
             sig.output_type.unwrap(),
             &combined_ty_vars,
