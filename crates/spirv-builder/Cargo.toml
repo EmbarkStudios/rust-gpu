@@ -7,10 +7,10 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 
-# HACK(eddyb) allow `docs.rs` to build this crate by making `rustc_codegen_spirv`
-# dependency optional in a way that will always result in it being enabled
-# during normal builds (as `use-{installed,compiled}-tools` both require it),
-# and produces a compile-time error if it's missing and `cfg(doc)` isn't set.
+# HACK(eddyb) allow `docs.rs` to build `spirv-builder` by making building
+# `rustc_codegen_spirv` optional in a way that will always result in it being
+# built normally (as `use-{installed,compiled}-tools` both require it), and
+# produces a compile-time error if it's missing and `cfg(doc)` isn't set.
 [package.metadata.docs.rs]
 no-default-features = true
 
@@ -20,16 +20,22 @@ no-default-features = true
 [features]
 # See `rustc_codegen_spirv/Cargo.toml` for details on these features.
 default = ["use-compiled-tools"]
-use-installed-tools = ["dep:rustc_codegen_spirv", "rustc_codegen_spirv?/use-installed-tools"]
-use-compiled-tools = ["dep:rustc_codegen_spirv", "rustc_codegen_spirv?/use-compiled-tools"]
-skip-toolchain-check = ["rustc_codegen_spirv?/skip-toolchain-check"]
+use-installed-tools = ["rustc_codegen_spirv?/use-installed-tools"]
+use-compiled-tools = ["rustc_codegen_spirv?/use-compiled-tools"]
 
 watch = ["dep:notify"]
 
+# HACK(eddyb) this is how `spirv-builder`'s `build.rs` indicates to its nested
+# build of itself (done with a different `rustup` toolchain), to actually build
+# the codegen backend (`rustc_codegen_spirv`) as a dylib, and gets its path.
+internal-unstable-trigger-self-build-for-backend = ["dep:rustc_codegen_spirv"]
+
+[build-dependencies]
+cargo_metadata = { version = "0.18.1" }
+
 [dependencies]
-# See comment in `src/lib.rs` `invoke_rustc` regarding `rustc_codegen_spirv` dep.
+# See feature comment above about why `rustc_codegen_spirv` is optional.
 rustc_codegen_spirv.workspace = true
-# HACK(eddyb) see `docs.rs`-related comment above for why this is optional.
 rustc_codegen_spirv.optional = true
 
 rustc_codegen_spirv-types.workspace = true

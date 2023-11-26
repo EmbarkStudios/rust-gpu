@@ -5,3 +5,5 @@ Compiler backend for the `SPIR-V` target architecture. This crate is not intende
 ## Documentation
 
 Because of its nature, this crate can only be built using a very specific nightly version of the Rust toolchain. As such, the `docs.rs` build of the API documentation will likely fail. Please refer to the [documentation in the `rust-gpu` github repo](https://embarkstudios.github.io/rust-gpu/api/rustc_codegen_spirv/index.html) for properly built docs.
+
+<!-- FIXME(eddyb) explain how to build, and contribute, maybe copy old `spirv-builder/README.md` here? --->

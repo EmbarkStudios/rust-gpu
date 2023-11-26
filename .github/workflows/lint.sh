@@ -9,12 +9,15 @@ fi
 
 function clippy() {
     echo ::group::"$1"
-    cargo clippy \
-        --manifest-path "$1/Cargo.toml" \
-        --no-default-features \
-        --features "$FEAT" \
-        --all-targets \
-        -- -D warnings
+    # HACK(eddyb) need to be in `crates/rustc_codegen_spirv` to use its toolchain.
+    (
+        cd "$1"
+        cargo clippy \
+            --no-default-features \
+            --features "$FEAT" \
+            --all-targets \
+            -- -D warnings
+    )
     echo ::endgroup::
 }
 

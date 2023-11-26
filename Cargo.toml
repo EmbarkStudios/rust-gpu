@@ -12,7 +12,6 @@ members = [
     "examples/shaders/mouse-shader",
     "examples/multibuilder",
 
-    "crates/rustc_codegen_spirv",
     "crates/rustc_codegen_spirv-types",
     "crates/spirv-builder",
     "crates/spirv-std",
@@ -21,6 +20,11 @@ members = [
 
     "tests",
     "tests/deps-helper",
+]
+exclude = [
+    # HACK(eddyb) separate workspace because `rustc_codegen_spirv` requires its
+    # own `rust-toolchain.toml`, see also `crates/rustc_codegen_spirv/README.md`.
+    "crates/rustc_codegen_spirv",
 ]
 
 [workspace.package]
@@ -38,17 +42,6 @@ spirv-builder = { path = "./crates/spirv-builder", version = "=0.9.0", default-f
 rustc_codegen_spirv = { path = "./crates/rustc_codegen_spirv", version = "=0.9.0", default-features = false }
 rustc_codegen_spirv-types = { path = "./crates/rustc_codegen_spirv-types", version = "=0.9.0" }
 
-# Enable incremental by default in release mode.
+# Enable incremental by default in release mode, as well.
 [profile.release]
 incremental = true
-# HACK(eddyb) this is the default but without explicitly specifying it, Cargo
-# will treat the identical settings in `[profile.release.build-override]` below
-# as different sets of `rustc` flags and will not reuse artifacts between them.
-codegen-units = 256
-
-# Compile build-dependencies in release mode with the same settings
-# as regular dependencies (including the incremental enabled above).
-[profile.release.build-override]
-opt-level = 3
-incremental = true
-codegen-units = 256

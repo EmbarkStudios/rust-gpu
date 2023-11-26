@@ -18,8 +18,7 @@ These are the steps:
    inheritance, so this is the only place you'll find these actual versions. Make sure to pin the
    rust-gpu dependencies to their *exact* versions using the `=`-notation, such as: `=0.4.0`. All crates
    are built and published in tandem so you're not expected to be able to mix and match between versions.
-2. Add this new version to the table in `crates/spirv-builder/README.md` and make sure the correct
-   nightly version is listed there as well.
+2. Repeat version bumps to `crates/rustc_codegen_spirv` (which is sadly a nested workspace)
 3. Create a PR with that change. Wait for CI and a review, and merge it.
 4. Pull the merged `main` branch.
 5. Tag `main` with the version: `git tag v0.4.0`

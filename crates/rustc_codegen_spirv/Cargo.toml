@@ -1,12 +1,16 @@
+[workspace]
+resolver = "2"
+
 [package]
 name = "rustc_codegen_spirv"
 description = "SPIR-V code generator backend for rustc"
 documentation = "https://embarkstudios.github.io/rust-gpu/api/rustc_codegen_spirv/index.html"
-version.workspace = true
-authors.workspace = true
-edition.workspace = true
-license.workspace = true
-repository.workspace = true
+# FIXME(eddyb) automate checking these against the root workspace.
+version = "0.9.0"
+authors = ["Embark <opensource@embark-studios.com>"]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/EmbarkStudios/rust-gpu"
 
 [lib]
 crate-type = ["dylib"]
@@ -24,32 +28,15 @@ use-installed-tools = ["spirv-tools/use-installed-tools"]
 # If enabled will compile and link the C++ code for the spirv tools, the compiled
 # version is preferred if both this and `use-installed-tools` are enabled
 use-compiled-tools = ["spirv-tools/use-compiled-tools"]
-# If enabled, this will not check whether the current rustc version is set to the
-# appropriate channel. rustc_cogeden_spirv requires a specific nightly version,
-# and will likely produce compile errors when built against a different toolchain.
-# Enable this feature to be able to experiment with other versions.
-skip-toolchain-check = []
-
-# HACK(eddyb) these are not real "build dependencies", but rather dependencies
-# of proc macros, which we want to enable extra features in (without having
-# a proc macro crate to do that through), for the same reasons as the list at
-# the start of `[dependencies]` (avoiding unnecessary rebuilds).
-[build-dependencies]
-syn = { version = "1", features = ["extra-traits", "full"] }
 
 [dependencies]
-# HACK(eddyb) these only exist to unify features across dependency trees,
-# in order to avoid multiple separate instances of `rustc_codegen_spirv`.
-hashbrown = "0.11"
-libc = { version = "0.2", features = ["align", "extra_traits"] }
-num-traits = { version = "0.2", features = ["libm"] }
-once_cell = "1"
-regex = { version = "1", features = ["perf"] }
+# HACK(eddyb) quasi-workspace dependencies (this is a separate workspace sadly).
+rustc_codegen_spirv-types = { path = "../rustc_codegen_spirv-types", version = "=0.9.0" }
 
-# Normal dependencies.
 ar = "0.9.0"
 either = "1.8.0"
 indexmap = "1.6.0"
+num-traits = "0.2"
 rspirv = "0.11"
 rustc-demangle = "0.1.21"
 sanitize-filename = "0.4"
@@ -57,7 +44,6 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 smallvec = { version = "1.6.1", features = ["union"] }
 spirv-tools = { version = "0.9", default-features = false }
-rustc_codegen_spirv-types.workspace = true
 spirt = "0.3.0"
 lazy_static = "1.4.0"
 itertools = "0.10.5"
@@ -72,3 +58,7 @@ tempfile = "3.4"
 [package.metadata.rust-analyzer]
 # This crate uses #[feature(rustc_private)]
 rustc_private = true
+
+# Enable incremental by default in release mode, as well.
+[profile.release]
+incremental = true

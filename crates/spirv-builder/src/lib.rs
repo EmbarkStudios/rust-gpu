@@ -439,8 +439,8 @@ impl SpirvBuilder {
         let metadata_file = invoke_rustc(&self)?;
         match self.print_metadata {
             MetadataPrintout::Full | MetadataPrintout::DependencyOnly => {
-                leaf_deps(&metadata_file, |artifact| {
-                    println!("cargo:rerun-if-changed={artifact}");
+                leaf_deps(&metadata_file, |dep| {
+                    println!("cargo:rerun-if-changed={dep}");
                 })
                 // Close enough
                 .map_err(SpirvBuilderError::MetadataFileMissing)?;
@@ -495,36 +495,92 @@ impl SpirvBuilder {
     }
 }
 
-// https://github.com/rust-lang/cargo/blob/1857880b5124580c4aeb4e8bc5f1198f491d61b1/src/cargo/util/paths.rs#L29-L52
-fn dylib_path_envvar() -> &'static str {
-    if cfg!(windows) {
-        "PATH"
-    } else if cfg!(target_os = "macos") {
-        "DYLD_FALLBACK_LIBRARY_PATH"
-    } else {
-        "LD_LIBRARY_PATH"
-    }
-}
-fn dylib_path() -> Vec<PathBuf> {
-    match env::var_os(dylib_path_envvar()) {
-        Some(var) => env::split_paths(&var).collect(),
-        None => Vec::new(),
-    }
-}
+/// Internal module for codegen backend (`rustc_codegen_spirv`) management.
+///
+/// **Note**: this is only exported for internal use and should be considered unstable.
+pub mod codegen_backend {
+    use std::borrow::Cow;
+    use std::path::PathBuf;
 
-fn find_rustc_codegen_spirv() -> PathBuf {
-    let filename = format!(
-        "{}rustc_codegen_spirv{}",
-        env::consts::DLL_PREFIX,
-        env::consts::DLL_SUFFIX
-    );
-    for mut path in dylib_path() {
-        path.push(&filename);
-        if path.is_file() {
-            return path;
+    /// If `Some(toolchain)`, `RUSTUP_TOOLCHAIN` must be set to `toolchain` in
+    /// order to perform any builds with `codegen_backend_dylib_path()` active.
+    pub fn rustup_toolchain_override() -> Option<&'static str> {
+        option_env!("SPIRV_BUILDER_RUSTUP_TOOLCHAIN")
+    }
+
+    /// When the build script indirectly builds `rustc_codegen_spirv`, it also
+    /// obtains the correct path to the dylib and places it into an env var.
+    #[cfg(not(feature = "internal-unstable-trigger-self-build-for-backend"))]
+    pub fn codegen_backend_dylib_path() -> PathBuf {
+        // HACK(eddyb) see `_ensure_cfg_doc_means_rustdoc` for why this is done.
+        #[cfg(doc)]
+        {
+            _ensure_cfg_doc_means_rustdoc();
+            unreachable!()
+        }
+        #[cfg(not(doc))]
+        {
+            env!("SPIRV_BUILDER_CODEGEN_BACKEND_DYLIB_PATH").into()
         }
     }
-    panic!("Could not find {filename} in library path");
+
+    /// When actually doing the build of `rustc_codegen_spirv`, it's a dependency
+    /// of `spirv-builder`, and can be found in a directory that Cargo had added
+    /// to the per-OS dylib path env var.
+    #[cfg(feature = "internal-unstable-trigger-self-build-for-backend")]
+    pub fn codegen_backend_dylib_path() -> PathBuf {
+        use std::env;
+
+        // https://github.com/rust-lang/cargo/blob/1857880b5124580c4aeb4e8bc5f1198f491d61b1/src/cargo/util/paths.rs#L29-L52
+        const DYLIB_PATH_ENV_VAR: &str = {
+            if cfg!(windows) {
+                "PATH"
+            } else if cfg!(target_os = "macos") {
+                "DYLD_FALLBACK_LIBRARY_PATH"
+            } else {
+                "LD_LIBRARY_PATH"
+            }
+        };
+
+        let filename = format!(
+            "{}rustc_codegen_spirv{}",
+            env::consts::DLL_PREFIX,
+            env::consts::DLL_SUFFIX
+        );
+        let dylib_paths = env::var_os(DYLIB_PATH_ENV_VAR);
+        if let Some(dylib_paths) = &dylib_paths {
+            for mut path in env::split_paths(dylib_paths) {
+                path.push(&filename);
+                if path.is_file() {
+                    return path;
+                }
+            }
+        }
+        panic!("could not find {filename} in {DYLIB_PATH_ENV_VAR} ({dylib_paths:?})");
+    }
+
+    pub fn base_rustflags() -> impl Iterator<Item = Cow<'static, str>> {
+        let rustc_codegen_spirv = codegen_backend_dylib_path();
+
+        [
+            format!("-Zcodegen-backend={}", rustc_codegen_spirv.display()).into(),
+            // Ensure the codegen backend is emitted in `.d` files to force Cargo
+            // to rebuild crates compiled with it when it changes (this used to be
+            // the default until https://github.com/rust-lang/rust/pull/93969).
+            "-Zbinary-dep-depinfo".into(),
+            "-Csymbol-mangling-version=v0".into(),
+            "-Zcrate-attr=feature(register_tool)".into(),
+            "-Zcrate-attr=register_tool(rust_gpu)".into(),
+            // HACK(eddyb) this is the same configuration that we test with, and
+            // ensures no unwanted surprises from e.g. `core` debug assertions.
+            "-Coverflow-checks=off".into(),
+            "-Cdebug-assertions=off".into(),
+            // HACK(eddyb) we need this for `core::fmt::rt::Argument::new_*` calls
+            // to *never* be inlined, so we can pattern-match the calls themselves.
+            "-Zinline-mir=off".into(),
+        ]
+        .into_iter()
+    }
 }
 
 /// Joins strings together while ensuring none of the strings contain the separator.
@@ -539,33 +595,7 @@ fn join_checking_for_separators(strings: Vec<impl Borrow<str>>, sep: &str) -> St
 
 // Returns path to the metadata json.
 fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
-    // Okay, this is a little bonkers: in a normal world, we'd have the user clone
-    // rustc_codegen_spirv and pass in the path to it, and then we'd invoke cargo to build it, grab
-    // the resulting .so, and pass it into -Z codegen-backend. But that's really gross: the user
-    // needs to clone rustc_codegen_spirv and tell us its path! So instead, we *directly reference
-    // rustc_codegen_spirv in spirv-builder's Cargo.toml*, which means that it will get built
-    // alongside build.rs, and cargo will helpfully add it to LD_LIBRARY_PATH for us! However,
-    // rustc expects a full path, instead of a filename looked up via LD_LIBRARY_PATH, so we need
-    // to copy cargo's understanding of library lookup and find the library and its full path.
-    let rustc_codegen_spirv = find_rustc_codegen_spirv();
-
-    let mut rustflags = vec![
-        format!("-Zcodegen-backend={}", rustc_codegen_spirv.display()),
-        // Ensure the codegen backend is emitted in `.d` files to force Cargo
-        // to rebuild crates compiled with it when it changes (this used to be
-        // the default until https://github.com/rust-lang/rust/pull/93969).
-        "-Zbinary-dep-depinfo".to_string(),
-        "-Csymbol-mangling-version=v0".to_string(),
-        "-Zcrate-attr=feature(register_tool)".to_string(),
-        "-Zcrate-attr=register_tool(rust_gpu)".to_string(),
-        // HACK(eddyb) this is the same configuration that we test with, and
-        // ensures no unwanted surprises from e.g. `core` debug assertions.
-        "-Coverflow-checks=off".to_string(),
-        "-Cdebug-assertions=off".to_string(),
-        // HACK(eddyb) we need this for `core::fmt::rt::Argument::new_*` calls
-        // to *never* be inlined, so we can pattern-match the calls themselves.
-        "-Zinline-mir=off".to_string(),
-    ];
+    let mut rustflags: Vec<_> = codegen_backend::base_rustflags().collect();
 
     // Wrapper for `env::var` that appropriately informs Cargo of the dependency.
     let tracked_env_var_get = |name| {
@@ -635,22 +665,26 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
 
     let llvm_args = join_checking_for_separators(llvm_args, " ");
     if !llvm_args.is_empty() {
-        rustflags.push(["-Cllvm-args=", &llvm_args].concat());
+        rustflags.push(["-Cllvm-args=", &llvm_args].concat().into());
     }
 
     target_features.extend(builder.capabilities.iter().map(|cap| format!("+{cap:?}")));
     target_features.extend(builder.extensions.iter().map(|ext| format!("+ext:{ext}")));
     let target_features = join_checking_for_separators(target_features, ",");
     if !target_features.is_empty() {
-        rustflags.push(["-Ctarget-feature=", &target_features].concat());
+        rustflags.push(["-Ctarget-feature=", &target_features].concat().into());
     }
 
     if builder.deny_warnings {
-        rustflags.push("-Dwarnings".to_string());
+        rustflags.push("-Dwarnings".into());
     }
 
     if let Ok(extra_rustflags) = tracked_env_var_get("RUSTGPU_RUSTFLAGS") {
-        rustflags.extend(extra_rustflags.split_whitespace().map(|s| s.to_string()));
+        rustflags.extend(
+            extra_rustflags
+                .split_whitespace()
+                .map(|s| s.to_string().into()),
+        );
     }
 
     // If we're nested in `cargo` invocation, use a different `--target-dir`,
@@ -678,6 +712,7 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
     let profile = if builder.release { "release" } else { "dev" };
 
     let mut cargo = Command::new("cargo");
+    cargo.envs(codegen_backend::rustup_toolchain_override().map(|x| ("RUSTUP_TOOLCHAIN", x)));
     cargo.args([
         "build",
         "--lib",
@@ -700,7 +735,19 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
     // before we set any of our own below.
     for (key, _) in env::vars_os() {
         let remove = key.to_str().map_or(false, |s| {
-            s.starts_with("CARGO_FEATURES_") || s.starts_with("CARGO_CFG_")
+            (
+                // HACK(eddyb) these env vars can leak the wrong toolchain.
+                codegen_backend::rustup_toolchain_override().is_some()
+                    && [
+                        "CARGO",
+                        "RUSTC",
+                        "RUSTC_WORKSPACE_WRAPPER",
+                        "RUSTC_WRAPPER",
+                        "CARGO_RUSTC_WRAPPER",
+                    ]
+                    .contains(&s)
+            ) || s.starts_with("CARGO_FEATURES_")
+                || s.starts_with("CARGO_CFG_")
         });
         if remove {
             cargo.env_remove(key);
