@@ -9,7 +9,8 @@ use rustc_middle::ty::layout::{
 };
 use rustc_middle::ty::Ty;
 use rustc_middle::{bug, span_bug};
-use rustc_span::source_map::{Span, Spanned, DUMMY_SP};
+use rustc_span::source_map::Spanned;
+use rustc_span::{Span, DUMMY_SP};
 use rustc_target::abi::call::{CastTarget, FnAbi, Reg};
 use rustc_target::abi::{Abi, AddressSpace, FieldsShape};
 

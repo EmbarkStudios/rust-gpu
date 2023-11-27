@@ -3037,7 +3037,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         self.intcast(val, dest_ty, false)
     }
 
-    fn do_not_inline(&mut self, _llret: Self::Value) {
+    fn apply_attrs_to_cleanup_callsite(&mut self, _llret: Self::Value) {
         // Ignore
     }
 }
