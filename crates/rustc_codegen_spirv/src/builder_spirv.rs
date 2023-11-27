@@ -767,7 +767,7 @@ impl<'tcx> BuilderSpirv<'tcx> {
                     FileName::Real(name) => {
                         name.to_string_lossy(FileNameDisplayPreference::Remapped)
                     }
-                    _ => sf.name.prefer_remapped().to_string().into(),
+                    _ => sf.name.prefer_remapped_unconditionaly().to_string().into(),
                 };
                 let file_name = {
                     // FIXME(eddyb) it should be possible to arena-allocate a
