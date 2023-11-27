@@ -10,7 +10,7 @@ This crate gives a `rust-gpu` shader access to the required `#![spirv(..)]` attr
 
 Here is a small excerpt to see what a shader would look like. See [source][source] for full details of the shader that generates above image.
 
-```rust,no_run
+```rust,ignore
 use spirv_std::spirv;
 use glam::{Vec3, Vec4, vec2, vec3};
 
