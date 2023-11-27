@@ -12,7 +12,7 @@ use rustc_middle::query::Providers;
 use rustc_middle::ty::layout::{FnAbiOf, LayoutOf, TyAndLayout};
 use rustc_middle::ty::GenericArgsRef;
 use rustc_middle::ty::{
-    self, Const, FloatTy, GeneratorArgs, IntTy, ParamEnv, PolyFnSig, Ty, TyCtxt, TyKind,
+    self, Const, CoroutineArgs, FloatTy, IntTy, ParamEnv, PolyFnSig, Ty, TyCtxt, TyKind,
     TypeAndMut, UintTy,
 };
 use rustc_middle::{bug, span_bug};
@@ -64,6 +64,9 @@ pub(crate) fn provide(providers: &mut Providers) {
     ) -> &'tcx FnAbi<'tcx, Ty<'tcx>> {
         let readjust_arg_abi = |arg: &ArgAbi<'tcx, Ty<'tcx>>| {
             let mut arg = ArgAbi::new(&tcx, arg.layout, |_, _, _| ArgAttributes::new());
+            // FIXME: this is bad! https://github.com/rust-lang/rust/issues/115666
+            // <https://github.com/rust-lang/rust/commit/eaaa03faf77b157907894a4207d8378ecaec7b45>
+            arg.make_direct_deprecated();
 
             // Avoid pointlessly passing ZSTs, just like the official Rust ABI.
             if arg.layout.is_zst() {
@@ -96,7 +99,9 @@ pub(crate) fn provide(providers: &mut Providers) {
 
     // FIXME(eddyb) remove this by deriving `Clone` for `LayoutS` upstream.
     // FIXME(eddyb) the `S` suffix is a naming antipattern, rename upstream.
-    fn clone_layout(layout: &LayoutS) -> LayoutS {
+    fn clone_layout<FieldIdx: Idx, VariantIdx: Idx>(
+        layout: &LayoutS<FieldIdx, VariantIdx>,
+    ) -> LayoutS<FieldIdx, VariantIdx> {
         let LayoutS {
             ref fields,
             ref variants,
@@ -744,7 +749,7 @@ fn trans_struct<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>) -
 fn def_id_for_spirv_type_adt(layout: TyAndLayout<'_>) -> Option<DefId> {
     match *layout.ty.kind() {
         TyKind::Adt(def, _) => Some(def.did()),
-        TyKind::Foreign(def_id) | TyKind::Closure(def_id, _) | TyKind::Generator(def_id, ..) => {
+        TyKind::Foreign(def_id) | TyKind::Closure(def_id, _) | TyKind::Coroutine(def_id, ..) => {
             Some(def_id)
         }
         _ => None,
@@ -779,8 +784,8 @@ impl fmt::Display for TyLayoutNameKey<'_> {
                 write!(f, "::{}", def.variants()[index].name)?;
             }
         }
-        if let (TyKind::Generator(_, _, _), Some(index)) = (self.ty.kind(), self.variant) {
-            write!(f, "::{}", GeneratorArgs::variant_name(index))?;
+        if let (TyKind::Coroutine(_, _, _), Some(index)) = (self.ty.kind(), self.variant) {
+            write!(f, "::{}", CoroutineArgs::variant_name(index))?;
         }
         Ok(())
     }
