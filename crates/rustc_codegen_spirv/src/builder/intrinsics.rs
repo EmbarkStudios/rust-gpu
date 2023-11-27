@@ -12,8 +12,8 @@ use rustc_codegen_ssa::traits::{BuilderMethods, IntrinsicCallMethods};
 use rustc_middle::bug;
 use rustc_middle::ty::layout::LayoutOf;
 use rustc_middle::ty::{FnDef, Instance, ParamEnv, Ty, TyKind};
-use rustc_span::source_map::Span;
 use rustc_span::sym;
+use rustc_span::Span;
 use rustc_target::abi::call::{FnAbi, PassMode};
 use std::assert_matches::assert_matches;
 
