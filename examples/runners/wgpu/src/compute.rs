@@ -1,4 +1,4 @@
-use crate::{maybe_watch, CompiledShaderModules, Options};
+use crate::{CompiledShaderModules, Options};
 
 use std::{convert::TryInto, time::Duration};
 use wgpu::util::DeviceExt;
@@ -6,9 +6,7 @@ use wgpu::util::DeviceExt;
 pub fn start(options: &Options) {
     env_logger::init();
 
-    let compiled_shader_modules = maybe_watch(options, None);
-
-    futures::executor::block_on(start_internal(options, compiled_shader_modules));
+    futures::executor::block_on(start_internal(options, crate::prebuilt_shaders(options)));
 }
 
 async fn start_internal(options: &Options, compiled_shader_modules: CompiledShaderModules) {

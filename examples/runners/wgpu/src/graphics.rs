@@ -1,4 +1,4 @@
-use crate::{maybe_watch, CompiledShaderModules, Options};
+use crate::{CompiledShaderModules, Options};
 
 use shared::ShaderConstants;
 use winit::{
@@ -429,18 +429,17 @@ pub fn start(
     let event_loop = event_loop_builder.build();
 
     // Build the shader before we pop open a window, since it might take a while.
-    let initial_shader = maybe_watch(
-        options,
-        #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
-        {
-            let proxy = event_loop.create_proxy();
-            Some(Box::new(move |res| match proxy.send_event(res) {
-                Ok(it) => it,
-                // ShaderModuleDescriptor is not `Debug`, so can't use unwrap/expect
-                Err(_err) => panic!("Event loop dead"),
-            }))
-        },
-    );
+    let initial_shader = crate::prebuilt_shaders(options);
+
+    #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
+    {
+        let proxy = event_loop.create_proxy();
+        crate::watch(options, move |res| match proxy.send_event(res) {
+            Ok(it) => it,
+            // ShaderModuleDescriptor is not `Debug`, so can't use unwrap/expect
+            Err(_err) => panic!("Event loop dead"),
+        });
+    }
 
     let window = winit::window::WindowBuilder::new()
         .with_title("Rust GPU - wgpu")
