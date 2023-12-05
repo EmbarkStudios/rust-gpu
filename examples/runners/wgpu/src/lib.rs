@@ -85,6 +85,7 @@ pub enum RustGPUShader {
     Simplest,
     Sky,
     Compute,
+    Creation,
     Mouse,
 }
 
@@ -138,6 +139,7 @@ fn maybe_watch(
         std::env::set_var("PROFILE", env!("PROFILE"));
         let crate_name = match options.shader {
             RustGPUShader::Simplest => "simplest-shader",
+            RustGPUShader::Creation => "creation-shader",
             RustGPUShader::Sky => "sky-shader",
             RustGPUShader::Compute => "compute-shader",
             RustGPUShader::Mouse => "mouse-shader",
@@ -202,6 +204,7 @@ fn maybe_watch(
                 wgpu::include_spirv_raw!(env!("simplest_shader.spv"))
             }
             RustGPUShader::Sky => wgpu::include_spirv_raw!(env!("sky_shader.spv")),
+            RustGPUShader::Creation => wgpu::include_spirv_raw!(env!("creation_shader.spv")),
             RustGPUShader::Compute => wgpu::include_spirv_raw!(env!("compute_shader.spv")),
             RustGPUShader::Mouse => wgpu::include_spirv_raw!(env!("mouse_shader.spv")),
         };

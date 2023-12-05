@@ -39,6 +39,7 @@ clippy examples/runners/wgpu
 clippy_no_features examples/runners/cpu
 clippy_no_features examples/shaders/sky-shader
 clippy_no_features examples/shaders/simplest-shader
+clippy_no_features examples/shaders/creation-shader
 
 # Custom lints
 
