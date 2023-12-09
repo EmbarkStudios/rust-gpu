@@ -9,7 +9,7 @@ use shared::*;
 #[allow(warnings)]
 use spirv_std::num_traits::Float as _;
 use spirv_std::{
-    glam::{mat2, Vec2Swizzles, Vec3Swizzles},
+    glam::{mat2, Vec2Swizzles, Vec3Swizzles, Vec4Swizzles},
     spirv,
 };
 
@@ -76,8 +76,7 @@ pub fn main_fs(
 ) {
     let resolution = vec2(constants.width as f32, constants.height as f32);
 
-    let uv =
-        (in_frag_coord - (resolution.xy() / 2.0).extend(0.0).extend(0.0)) / constants.width as f32;
+    let uv = (in_frag_coord.xy() - (resolution.xy() / 2.0)) / resolution;
     let mut ro = Vec3::new(0.0, 0.0, -50.0);
     // ro.xz = rotate(ro.xz,iTime);
     let tmp = rotate(ro.xz(), constants.time);
@@ -89,7 +88,7 @@ pub fn main_fs(
 
     let uuv = ro + cf * 3.0 + uv.x * cs + uv.y * cu;
     let rd = (uuv - ro).normalize();
-    let col = rm(ro, rd, Time(constants.time));
+    let col = rm(ro, rd, Time(constants.time)).clamp(Vec4::ZERO, Vec4::ONE);
     *output = col;
 }
 

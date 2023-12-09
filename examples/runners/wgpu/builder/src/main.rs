@@ -21,6 +21,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     build_shader("../../../shaders/sky-shader", true)?;
     build_shader("../../../shaders/simplest-shader", false)?;
     build_shader("../../../shaders/fractal-pyramid-shader", false)?;
+    build_shader("../../../shaders/fork-shield-shader", false)?;
     build_shader("../../../shaders/creation-shader", false)?;
     build_shader("../../../shaders/compute-shader", false)?;
     build_shader("../../../shaders/mouse-shader", false)?;

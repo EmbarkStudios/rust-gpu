@@ -40,6 +40,7 @@ clippy_no_features examples/runners/cpu
 clippy_no_features examples/shaders/sky-shader
 clippy_no_features examples/shaders/simplest-shader
 clippy_no_features examples/shaders/fractal-pyramid-shader
+clippy_no_features examples/shaders/fork-shield-shader
 clippy_no_features examples/shaders/creation-shader
 
 # Custom lints
