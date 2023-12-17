@@ -148,13 +148,13 @@ impl AggregatedSpirvAttributes {
     pub fn parse<'tcx>(cx: &CodegenCx<'tcx>, attrs: &'tcx [Attribute]) -> Self {
         let mut aggregated_attrs = Self::default();
 
-        // NOTE(eddyb) `delay_span_bug` ensures that if attribute checking fails
+        // NOTE(eddyb) `span_delayed_bug` ensures that if attribute checking fails
         // to see an attribute error, it will cause an ICE instead.
         for parse_attr_result in crate::symbols::parse_attrs_for_checking(&cx.sym, attrs) {
             let (span, parsed_attr) = match parse_attr_result {
                 Ok(span_and_parsed_attr) => span_and_parsed_attr,
                 Err((span, msg)) => {
-                    cx.tcx.sess.delay_span_bug(span, msg);
+                    cx.tcx.sess.span_delayed_bug(span, msg);
                     continue;
                 }
             };
@@ -166,7 +166,7 @@ impl AggregatedSpirvAttributes {
                 }) => {
                     cx.tcx
                         .sess
-                        .delay_span_bug(span, format!("multiple {category} attributes"));
+                        .span_delayed_bug(span, format!("multiple {category} attributes"));
                 }
             }
         }

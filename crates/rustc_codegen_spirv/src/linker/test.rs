@@ -125,6 +125,7 @@ fn link_with_linker_opts(
         let mut early_error_handler = rustc_session::EarlyErrorHandler::new(
             rustc_session::config::ErrorOutputType::default(),
         );
+        early_error_handler.initialize_checked_jobserver();
         let matches = rustc_driver::handle_options(
             &early_error_handler,
             &["".to_string(), "x.rs".to_string()],
@@ -135,7 +136,7 @@ fn link_with_linker_opts(
 
         rustc_span::create_session_globals_then(sopts.edition, || {
             let mut sess = rustc_session::build_session(
-                &early_error_handler,
+                early_error_handler,
                 sopts,
                 CompilerIO {
                     input: Input::Str {

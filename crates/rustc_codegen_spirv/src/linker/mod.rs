@@ -534,7 +534,7 @@ pub fn link(
         }
 
         if any_spirt_bugs {
-            let mut note = sess.struct_note_without_error("SPIR-T bugs were reported");
+            let mut note = sess.struct_note("SPIR-T bugs were reported");
             note.help(format!(
                 "pretty-printed SPIR-T was saved to {}.html",
                 dump_spirt_file_path.as_ref().unwrap().display()
