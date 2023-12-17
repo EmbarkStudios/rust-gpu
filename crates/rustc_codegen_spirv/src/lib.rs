@@ -500,7 +500,7 @@ pub fn __rustc_codegen_backend() -> Box<dyn CodegenBackend> {
     rustc_driver::install_ice_hook(
         "https://github.com/EmbarkStudios/rust-gpu/issues/new",
         |handler| {
-            handler.note_without_error(concat!(
+            handler.note(concat!(
                 "`rust-gpu` version `",
                 env!("CARGO_PKG_VERSION"),
                 "`"
