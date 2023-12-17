@@ -350,7 +350,7 @@ fn do_spirv_opt(
                 }
                 Level::Error => sess.struct_err(msg.message).forget_guarantee(),
                 Level::Warning => sess.struct_warn(msg.message),
-                Level::Info | Level::Debug => sess.struct_note_without_error(msg.message),
+                Level::Info | Level::Debug => sess.struct_note(msg.message),
             };
 
             err.note(format!("module `{}`", filename.display()));

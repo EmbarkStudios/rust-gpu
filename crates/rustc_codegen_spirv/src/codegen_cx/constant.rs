@@ -290,7 +290,8 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                 }
             }
             Scalar::Ptr(ptr, _) => {
-                let (alloc_id, offset) = ptr.into_parts();
+                let (prov, offset) = ptr.into_parts();
+                let alloc_id = prov.alloc_id();
                 let (base_addr, _base_addr_space) = match self.tcx.global_alloc(alloc_id) {
                     GlobalAlloc::Memory(alloc) => {
                         let pointee = match self.lookup_type(ty) {
