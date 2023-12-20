@@ -5,7 +5,7 @@
 // HACK(eddyb) can't easily see warnings otherwise from `spirv-builder` builds.
 #![deny(warnings)]
 
-use glam::{vec2, vec4, Vec2, Vec3, Vec4, Vec4Swizzles};
+use glam::{vec2, Vec2, Vec3, Vec4, Vec4Swizzles};
 use shared::*;
 #[allow(warnings)]
 use spirv_std::num_traits::Float as _;
@@ -34,7 +34,9 @@ pub fn main_fs(
         l = p.length();
         uv += p / l * (z.sin() + 1.0) * (l * 9.0 - z - z).sin().abs();
 
-        let tmp = (uv % 1.0) - 0.5;
+        // modulo is defined as `x - y * floor(x/y)`.
+        // https://registry.khronos.org/OpenGL-Refpages/gl4/html/mod.xhtml
+        let tmp = (uv - 1.0 * (uv / 1.0).floor()) - 0.5;
         let val = 0.01 / tmp.length();
         match i {
             0 => c.x = val,
@@ -46,7 +48,7 @@ pub fn main_fs(
 
     let tmp = c / l;
 
-    *output = to_linear(vec4(tmp.x, tmp.y, tmp.z, t));
+    *output = to_linear(tmp.extend(t));
 }
 
 #[spirv(vertex)]
