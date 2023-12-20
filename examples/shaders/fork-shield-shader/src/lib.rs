@@ -46,12 +46,12 @@ pub fn main_fs(
         c += h(i) / 250.0 * z / (((g.x * 1.5 + g).max(g + g).y - 1.0).abs() + 0.1 - i * 0.08);
     }
 
-    *output = Vec4::new(
+    *output = to_linear(Vec4::new(
         (c.x * c.x).tanh(),
         (c.y * c.y).tanh(),
         (c.z * c.z).tanh(),
         1.0,
-    );
+    ));
 }
 
 #[spirv(vertex)]

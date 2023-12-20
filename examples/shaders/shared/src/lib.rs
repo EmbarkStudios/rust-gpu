@@ -3,7 +3,7 @@
 #![cfg_attr(target_arch = "spirv", no_std, feature(lang_items))]
 
 use core::f32::consts::PI;
-use glam::{vec3, Vec3};
+use glam::{vec3, Vec3, Vec4};
 
 pub use spirv_std::glam;
 
@@ -13,6 +13,25 @@ pub use spirv_std::glam;
 use spirv_std::num_traits::Float;
 
 use bytemuck::{Pod, Zeroable};
+
+
+pub fn to_linear(color: Vec4) -> Vec4 {
+    Vec4::new(
+        to_linear_f32(color.x),
+        to_linear_f32(color.y),
+        to_linear_f32(color.z),
+        color.w,
+    )
+}
+
+pub fn to_linear_f32(color: f32) -> f32 {
+    if color <= 0.04045 {
+        color / 12.92
+    } else {
+        ((color + 0.055) / 1.055).powf(2.4)
+    }
+}
+
 
 #[derive(Copy, Clone, Pod, Zeroable)]
 #[repr(C)]

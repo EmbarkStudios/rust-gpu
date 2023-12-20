@@ -46,7 +46,7 @@ pub fn main_fs(
 
     let tmp = c / l;
 
-    *output = vec4(tmp.x, tmp.y, tmp.z, t);
+    *output = to_linear(vec4(tmp.x, tmp.y, tmp.z, t));
 }
 
 #[spirv(vertex)]

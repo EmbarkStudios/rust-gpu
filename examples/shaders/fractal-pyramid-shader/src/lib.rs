@@ -89,7 +89,7 @@ pub fn main_fs(
     let uuv = ro + cf * 3.0 + uv.x * cs + uv.y * cu;
     let rd = (uuv - ro).normalize();
     let col = rm(ro, rd, Time(constants.time)).clamp(Vec4::ZERO, Vec4::ONE);
-    *output = col;
+    *output = to_linear(Vec4::new(col.x, col.y, col.z, col.w));
 }
 
 #[spirv(vertex)]
