@@ -78,7 +78,7 @@ use ash::{
 
 use raw_window_handle::{HasRawDisplayHandle, HasRawWindowHandle};
 use winit::{
-    event::{Event, VirtualKeyCode, WindowEvent},
+    event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
 };
 
@@ -112,7 +112,7 @@ pub fn main() {
     let shaders = compile_shaders();
 
     // runtime setup
-    let event_loop = EventLoop::new();
+    let event_loop = EventLoop::new().unwrap();
     let window = winit::window::WindowBuilder::new()
         .with_title("Rust GPU - ash")
         .with_inner_size(winit::dpi::LogicalSize::new(
@@ -145,71 +145,93 @@ pub fn main() {
 
     let (compiler_sender, compiler_reciever) = sync_channel(1);
 
-    event_loop.run(move |event, _window_target, control_flow| match event {
-        Event::RedrawEventsCleared { .. } => {
-            match compiler_reciever.try_recv() {
-                Err(TryRecvError::Empty) => {
-                    if ctx.rendering_paused {
-                        let vk::Extent2D { width, height } = ctx.base.surface_resolution();
-                        if height > 0 && width > 0 {
-                            ctx.recreate_swapchain();
+    event_loop
+        .run(move |event, event_loop_window_target| match event {
+            Event::AboutToWait { .. } => {
+                match compiler_reciever.try_recv() {
+                    Err(TryRecvError::Empty) => {
+                        if ctx.rendering_paused {
+                            let vk::Extent2D { width, height } = ctx.base.surface_resolution();
+                            if height > 0 && width > 0 {
+                                ctx.recreate_swapchain();
+                                ctx.render();
+                            }
+                        } else {
                             ctx.render();
                         }
-                    } else {
-                        ctx.render();
                     }
-                }
-                Ok(new_shaders) => {
-                    for SpvFile { name, data } in new_shaders {
-                        ctx.insert_shader_module(name, &data);
+                    Ok(new_shaders) => {
+                        for SpvFile { name, data } in new_shaders {
+                            ctx.insert_shader_module(name, &data);
+                        }
+                        ctx.recompiling_shaders = false;
+                        ctx.rebuild_pipelines(vk::PipelineCache::null());
                     }
-                    ctx.recompiling_shaders = false;
-                    ctx.rebuild_pipelines(vk::PipelineCache::null());
-                }
-                Err(TryRecvError::Disconnected) => {
-                    panic!("compiler reciever disconnected unexpectedly");
-                }
-            };
-        }
-        Event::WindowEvent { event, .. } => match event {
-            WindowEvent::KeyboardInput { input, .. } => match input.virtual_keycode {
-                Some(VirtualKeyCode::Escape) => *control_flow = ControlFlow::Exit,
-                Some(VirtualKeyCode::F5) => {
-                    if !ctx.recompiling_shaders {
-                        ctx.recompiling_shaders = true;
-                        let compiler_sender = compiler_sender.clone();
-                        thread::spawn(move || {
-                            if let Err(TrySendError::Disconnected(_)) =
-                                compiler_sender.try_send(compile_shaders())
-                            {
-                                panic!("compiler sender disconnected unexpectedly");
-                            };
-                        });
+                    Err(TryRecvError::Disconnected) => {
+                        panic!("compiler reciever disconnected unexpectedly");
                     }
-                }
-                Some(key @ (VirtualKeyCode::NumpadAdd | VirtualKeyCode::NumpadSubtract)) => {
-                    let factor =
-                        &mut ctx.sky_fs_spec_id_0x5007_sun_intensity_extra_spec_const_factor;
-                    *factor = if key == VirtualKeyCode::NumpadAdd {
-                        factor.saturating_add(1)
-                    } else {
-                        factor.saturating_sub(1)
-                    };
-
-                    // HACK(eddyb) to see any changes, re-specializing the
-                    // shader module is needed (e.g. during pipeline rebuild).
-                    ctx.rebuild_pipelines(vk::PipelineCache::null());
-                }
-                _ => *control_flow = ControlFlow::Wait,
-            },
-            WindowEvent::Resized(_) => {
-                ctx.recreate_swapchain();
+                };
             }
-            WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
-            _ => *control_flow = ControlFlow::Wait,
-        },
-        _ => *control_flow = ControlFlow::Wait,
-    });
+            Event::WindowEvent { event, .. } => match event {
+                WindowEvent::KeyboardInput {
+                    event:
+                        winit::event::KeyEvent {
+                            logical_key: winit::keyboard::Key::Named(key),
+                            state: winit::event::ElementState::Pressed,
+                            ..
+                        },
+                    ..
+                } => match key {
+                    winit::keyboard::NamedKey::Escape => event_loop_window_target.exit(),
+                    winit::keyboard::NamedKey::F5 => {
+                        if !ctx.recompiling_shaders {
+                            ctx.recompiling_shaders = true;
+                            let compiler_sender = compiler_sender.clone();
+                            thread::spawn(move || {
+                                if let Err(TrySendError::Disconnected(_)) =
+                                    compiler_sender.try_send(compile_shaders())
+                                {
+                                    panic!("compiler sender disconnected unexpectedly");
+                                };
+                            });
+                        }
+                    }
+                    _ => {}
+                },
+                WindowEvent::KeyboardInput {
+                    event:
+                        winit::event::KeyEvent {
+                            physical_key: winit::keyboard::PhysicalKey::Code(key_code),
+                            state: winit::event::ElementState::Pressed,
+                            ..
+                        },
+                    ..
+                } => match key_code {
+                    winit::keyboard::KeyCode::NumpadAdd
+                    | winit::keyboard::KeyCode::NumpadSubtract => {
+                        let factor =
+                            &mut ctx.sky_fs_spec_id_0x5007_sun_intensity_extra_spec_const_factor;
+                        *factor = if key_code == winit::keyboard::KeyCode::NumpadAdd {
+                            factor.saturating_add(1)
+                        } else {
+                            factor.saturating_sub(1)
+                        };
+
+                        // HACK(eddyb) to see any changes, re-specializing the
+                        // shader module is needed (e.g. during pipeline rebuild).
+                        ctx.rebuild_pipelines(vk::PipelineCache::null());
+                    }
+                    _ => {}
+                },
+                WindowEvent::Resized(_) => {
+                    ctx.recreate_swapchain();
+                }
+                WindowEvent::CloseRequested => event_loop_window_target.exit(),
+                _ => {}
+            },
+            _ => event_loop_window_target.set_control_flow(ControlFlow::Wait),
+        })
+        .unwrap();
 }
 
 pub fn compile_shaders() -> Vec<SpvFile> {
