@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed 🛠
+- [PR#1112](https://github.com/EmbarkStudios/rust-gpu/pull/1112) updated wgpu and winit in example runners
 - [PR#1100](https://github.com/EmbarkStudios/rust-gpu/pull/1100) updated toolchain to `nightly-2023-09-30`
 - [PR#1091](https://github.com/EmbarkStudios/rust-gpu/pull/1091) updated toolchain to `nightly-2023-08-29`
 - [PR#1085](https://github.com/EmbarkStudios/rust-gpu/pull/1085) updated toolchain to `nightly-2023-07-08`
