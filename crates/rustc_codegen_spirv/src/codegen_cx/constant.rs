@@ -64,7 +64,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 0 | 1 => self.def_constant(ty, SpirvConst::Bool(val != 0)),
                 _ => self
                     .tcx
-                    .sess
+                    .dcx()
                     .fatal(format!("Invalid constant value for bool: {val}")),
             },
             SpirvType::Integer(128, _) => {
@@ -72,7 +72,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 self.zombie_no_span(result.def_cx(self), "u128 constant");
                 result
             }
-            other => self.tcx.sess.fatal(format!(
+            other => self.tcx.dcx().fatal(format!(
                 "constant_int invalid on type {}",
                 other.debug(ty, self)
             )),
@@ -93,7 +93,7 @@ impl<'tcx> CodegenCx<'tcx> {
         match self.lookup_type(ty) {
             SpirvType::Float(32) => self.def_constant(ty, SpirvConst::F32((val as f32).to_bits())),
             SpirvType::Float(64) => self.def_constant(ty, SpirvConst::F64(val.to_bits())),
-            other => self.tcx.sess.fatal(format!(
+            other => self.tcx.dcx().fatal(format!(
                 "constant_float invalid on type {}",
                 other.debug(ty, self)
             )),
@@ -257,10 +257,10 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                             1 => self.constant_bool(DUMMY_SP, true),
                             _ => self
                                 .tcx
-                                .sess
+                                .dcx()
                                 .fatal(format!("Invalid constant value for bool: {data}")),
                         },
-                        other => self.tcx.sess.fatal(format!(
+                        other => self.tcx.dcx().fatal(format!(
                             "scalar_to_backend Primitive::Int not supported on type {}",
                             other.debug(ty, self)
                         )),
@@ -296,7 +296,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                     GlobalAlloc::Memory(alloc) => {
                         let pointee = match self.lookup_type(ty) {
                             SpirvType::Pointer { pointee } => pointee,
-                            other => self.tcx.sess.fatal(format!(
+                            other => self.tcx.dcx().fatal(format!(
                                 "GlobalAlloc::Memory type not implemented: {}",
                                 other.debug(ty, self)
                             )),
@@ -316,7 +316,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                             .unwrap_memory();
                         let pointee = match self.lookup_type(ty) {
                             SpirvType::Pointer { pointee } => pointee,
-                            other => self.tcx.sess.fatal(format!(
+                            other => self.tcx.dcx().fatal(format!(
                                 "GlobalAlloc::VTable type not implemented: {}",
                                 other.debug(ty, self)
                             )),
@@ -335,7 +335,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                     base_addr
                 } else {
                     self.tcx
-                        .sess
+                        .dcx()
                         .fatal("Non-zero scalar_to_backend ptr.offset not supported")
                     // let offset = self.constant_u64(ptr.offset.bytes());
                     // self.gep(base_addr, once(offset))
@@ -345,7 +345,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                     value
                 } else {
                     self.tcx
-                        .sess
+                        .dcx()
                         .fatal("Non-pointer-typed scalar_to_backend Scalar::Ptr not supported");
                     // unsafe { llvm::LLVMConstPtrToInt(llval, llty) }
                 }
@@ -447,7 +447,7 @@ impl<'tcx> CodegenCx<'tcx> {
         match ty_concrete {
             SpirvType::Void => self
                 .tcx
-                .sess
+                .dcx()
                 .fatal("cannot create const alloc of type void"),
             SpirvType::Bool
             | SpirvType::Integer(..)
@@ -465,7 +465,7 @@ impl<'tcx> CodegenCx<'tcx> {
                             128 => Integer::I128,
                             other => {
                                 self.tcx
-                                    .sess
+                                    .dcx()
                                     .fatal(format!("invalid size for integer: {other}"));
                             }
                         };
@@ -476,7 +476,7 @@ impl<'tcx> CodegenCx<'tcx> {
                         64 => Primitive::F64,
                         other => {
                             self.tcx
-                                .sess
+                                .dcx()
                                 .fatal(format!("invalid size for float: {other}"));
                         }
                     },
@@ -602,26 +602,26 @@ impl<'tcx> CodegenCx<'tcx> {
             }
             SpirvType::Function { .. } => self
                 .tcx
-                .sess
+                .dcx()
                 .fatal("TODO: SpirvType::Function not supported yet in create_const_alloc"),
-            SpirvType::Image { .. } => self.tcx.sess.fatal("cannot create a constant image value"),
+            SpirvType::Image { .. } => self.tcx.dcx().fatal("cannot create a constant image value"),
             SpirvType::Sampler => self
                 .tcx
-                .sess
+                .dcx()
                 .fatal("cannot create a constant sampler value"),
             SpirvType::SampledImage { .. } => self
                 .tcx
-                .sess
+                .dcx()
                 .fatal("cannot create a constant sampled image value"),
             SpirvType::InterfaceBlock { .. } => self
                 .tcx
-                .sess
+                .dcx()
                 .fatal("cannot create a constant interface block value"),
             SpirvType::AccelerationStructureKhr => self
                 .tcx
-                .sess
+                .dcx()
                 .fatal("cannot create a constant acceleration structure"),
-            SpirvType::RayQueryKhr => self.tcx.sess.fatal("cannot create a constant ray query"),
+            SpirvType::RayQueryKhr => self.tcx.dcx().fatal("cannot create a constant ray query"),
         }
     }
 }

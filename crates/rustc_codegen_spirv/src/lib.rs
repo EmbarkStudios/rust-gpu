@@ -99,7 +99,7 @@ use rustc_codegen_ssa::traits::{
 };
 use rustc_codegen_ssa::{CodegenResults, CompiledModule, ModuleCodegen, ModuleKind};
 use rustc_data_structures::fx::FxIndexMap;
-use rustc_errors::{ErrorGuaranteed, FatalError, Handler};
+use rustc_errors::{DiagCtxt, ErrorGuaranteed, FatalError};
 use rustc_metadata::EncodedMetadata;
 use rustc_middle::dep_graph::{WorkProduct, WorkProductId};
 use rustc_middle::mir::mono::{MonoItem, MonoItemData};
@@ -294,7 +294,7 @@ impl WriteBackendMethods for SpirvCodegenBackend {
 
     fn run_link(
         _cgcx: &CodegenContext<Self>,
-        _diag_handler: &Handler,
+        _diag_handler: &DiagCtxt,
         _modules: Vec<ModuleCodegen<Self::Module>>,
     ) -> Result<ModuleCodegen<Self::Module>, FatalError> {
         todo!()
@@ -326,7 +326,7 @@ impl WriteBackendMethods for SpirvCodegenBackend {
 
     unsafe fn optimize(
         _: &CodegenContext<Self>,
-        _: &Handler,
+        _: &DiagCtxt,
         _: &ModuleCodegen<Self::Module>,
         _: &ModuleConfig,
     ) -> Result<(), FatalError> {
@@ -357,7 +357,7 @@ impl WriteBackendMethods for SpirvCodegenBackend {
 
     unsafe fn codegen(
         cgcx: &CodegenContext<Self>,
-        _diag_handler: &Handler,
+        _diag_handler: &DiagCtxt,
         module: ModuleCodegen<Self::Module>,
         _config: &ModuleConfig,
     ) -> Result<CompiledModule, FatalError> {
