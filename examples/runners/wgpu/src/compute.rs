@@ -16,8 +16,9 @@ async fn start_internal(options: &Options, compiled_shader_modules: CompiledShad
     let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
         backends,
         dx12_shader_compiler: wgpu::util::dx12_shader_compiler_from_env().unwrap_or_default(),
+        ..Default::default()
     });
-    let adapter = wgpu::util::initialize_adapter_from_env_or_default(&instance, backends, None)
+    let adapter = wgpu::util::initialize_adapter_from_env_or_default(&instance, None)
         .await
         .expect("Failed to find an appropriate adapter");
 
@@ -142,7 +143,7 @@ async fn start_internal(options: &Options, compiled_shader_modules: CompiledShad
         device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
 
     {
-        let mut cpass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor { label: None });
+        let mut cpass = encoder.begin_compute_pass(&Default::default());
         cpass.set_bind_group(0, &bind_group, &[]);
         cpass.set_pipeline(&compute_pipeline);
         cpass.write_timestamp(&queries, 0);
