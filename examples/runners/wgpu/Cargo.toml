@@ -10,11 +10,18 @@ repository.workspace = true
 [lib]
 crate-type = ["lib", "cdylib"]
 
-# See rustc_codegen_spirv/Cargo.toml for details on these features
+# See `rustc_codegen_spirv/Cargo.toml` for details on these features.
 [features]
 default = ["use-compiled-tools"]
 use-installed-tools = ["spirv-builder/use-installed-tools"]
 use-compiled-tools = ["spirv-builder/use-compiled-tools"]
+
+[build-dependencies]
+spirv-builder.workspace = true
+
+[target.'cfg(not(any(target_os = "android", target_arch = "wasm32")))'.dependencies]
+spirv-builder = { workspace = true, features = ["watch"] }
+env_logger = "0.10.0"
 
 [dependencies]
 cfg-if = "1.0.0"
@@ -26,10 +33,6 @@ winit = { version = "0.28.3", features = ["android-native-activity"] }
 structopt = "0.3"
 strum = { version = "0.23.0", default_features = false, features = ["std", "derive"] }
 bytemuck = "1.6.3"
-
-[target.'cfg(not(any(target_os = "android", target_arch = "wasm32")))'.dependencies]
-env_logger = "0.10.0"
-spirv-builder = { workspace = true, features = ["watch"] }
 
 [target.'cfg(target_os = "android")'.dependencies]
 android_logger = "0.13.0"

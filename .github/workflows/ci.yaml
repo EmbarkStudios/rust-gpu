@@ -72,17 +72,17 @@ jobs:
       # Fetch dependencies in a separate step to clearly show how long each part
       # of the testing takes
       - name: cargo fetch --locked
-        run: cargo fetch --locked --target ${{ matrix.target }}
+        run: |
+          cargo fetch --locked --target ${{ matrix.target }}
+          cd crates/rustc_codegen_spirv
+          cargo fetch --locked --target ${{ matrix.target }}
 
       # Core crates
-      # Compiled in --release because cargo compiletest would otherwise compile in release again.
-      - name: rustc_codegen_spirv build
-        if: ${{ matrix.target != 'aarch64-linux-android' }}
-        run: cargo test -p rustc_codegen_spirv --release --no-default-features --features "use-installed-tools" --no-run
-
       - name: rustc_codegen_spirv test
         if: ${{ matrix.target != 'aarch64-linux-android' }}
-        run: cargo test -p rustc_codegen_spirv --release --no-default-features --features "use-installed-tools"
+        run: |
+          cd crates/rustc_codegen_spirv
+          cargo test --no-default-features --features "use-installed-tools"
 
       - name: compiletest
         if: ${{ matrix.target != 'aarch64-linux-android' }}
@@ -95,9 +95,7 @@ jobs:
 
       - name: build example shaders
         if: ${{ matrix.target != 'aarch64-linux-android' }}
-        env:
-          OUT_DIR: "target/tmp"
-        run: cargo run -p example-runner-wgpu-builder --release --no-default-features --features "use-installed-tools"
+        run: cargo build -p example-runner-wgpu --no-default-features --features "use-installed-tools"
 
       - name: Build WGPU Example for Android
         if: ${{ matrix.target == 'aarch64-linux-android' }}
@@ -142,13 +140,22 @@ jobs:
       - name: install rust-toolchain
         run: cargo version
       - name: cargo fetch --locked
-        run: cargo fetch --locked
+        run: |
+          cargo fetch --locked
+          cd crates/rustc_codegen_spirv
+          cargo fetch --locked
       - name: Rustfmt
-        run: cargo fmt --all -- --check
+        run: |
+          cargo fmt --all -- --check
+          cd crates/rustc_codegen_spirv
+          cargo fmt --all -- --check
       - name: Rustfmt tests
         run: rustfmt --check tests/ui/**/*.rs
       - name: Check docs are valid
-        run: RUSTDOCFLAGS=-Dwarnings cargo doc --no-deps
+        run: |
+          RUSTDOCFLAGS=-Dwarnings cargo doc --no-deps
+          cd crates/rustc_codegen_spirv
+          RUSTDOCFLAGS=-Dwarnings cargo doc --no-deps
       - name: Check docs for `spirv-std` and `spirv-builder` on stable (for docs.rs)
         run: |
           RUSTDOCFLAGS=-Dwarnings cargo +stable doc --no-deps -p spirv-std

@@ -1,4 +1,5 @@
 use std::{
+    borrow::Cow,
     env,
     io::{Error, ErrorKind, Result},
     path::{Path, PathBuf},
@@ -65,16 +66,11 @@ fn main() {
     let deps_target_dir = original_target_dir.join("compiletest-deps");
     let compiletest_build_dir = original_target_dir.join("compiletest-results");
 
-    // Pull in rustc_codegen_spirv as a dynamic library in the same way
-    // spirv-builder does.
-    let codegen_backend_path = find_rustc_codegen_spirv();
-
     let runner = Runner {
         opt,
         tests_dir,
         compiletest_build_dir,
         deps_target_dir,
-        codegen_backend_path,
     };
 
     runner.run_mode("ui");
@@ -85,44 +81,41 @@ struct Runner {
     tests_dir: PathBuf,
     compiletest_build_dir: PathBuf,
     deps_target_dir: PathBuf,
-    codegen_backend_path: PathBuf,
 }
 
 impl Runner {
-    /// Runs the given `mode` on the directory that matches that name, using the
-    /// backend provided by `codegen_backend_path`.
+    /// Runs the given `mode` on the directory that matches that name.
     #[allow(clippy::string_add)]
     fn run_mode(&self, mode: &'static str) {
         /// RUSTFLAGS passed to all test files.
-        fn test_rustc_flags(
-            codegen_backend_path: &Path,
-            deps: &TestDeps,
-            indirect_deps_dirs: &[&Path],
-        ) -> String {
-            [
-                &*rust_flags(codegen_backend_path),
-                &*indirect_deps_dirs
-                    .iter()
-                    .map(|dir| format!("-L dependency={}", dir.display()))
-                    .fold(String::new(), |a, b| b + " " + &a),
-                "--edition 2021",
-                &*format!("--extern noprelude:core={}", deps.core.display()),
-                &*format!(
-                    "--extern noprelude:compiler_builtins={}",
-                    deps.compiler_builtins.display()
-                ),
-                &*format!(
-                    "--extern spirv_std_macros={}",
-                    deps.spirv_std_macros.display()
-                ),
-                &*format!("--extern spirv_std={}", deps.spirv_std.display()),
-                &*format!("--extern glam={}", deps.glam.display()),
-                "--crate-type dylib",
-                "-Zunstable-options",
-                "-Zcrate-attr=no_std",
-                "-Zcrate-attr=feature(asm_const,asm_experimental_arch)",
-            ]
-            .join(" ")
+        fn test_rustc_flags(deps: &TestDeps, indirect_deps_dirs: &[&Path]) -> String {
+            SPIRV_BUILD_RUSTFLAGS
+                .iter()
+                .copied()
+                .chain([
+                    &*indirect_deps_dirs
+                        .iter()
+                        .map(|dir| format!("-L dependency={}", dir.display()))
+                        .fold(String::new(), |a, b| b + " " + &a),
+                    "--edition 2021",
+                    &*format!("--extern noprelude:core={}", deps.core.display()),
+                    &*format!(
+                        "--extern noprelude:compiler_builtins={}",
+                        deps.compiler_builtins.display()
+                    ),
+                    &*format!(
+                        "--extern spirv_std_macros={}",
+                        deps.spirv_std_macros.display()
+                    ),
+                    &*format!("--extern spirv_std={}", deps.spirv_std.display()),
+                    &*format!("--extern glam={}", deps.glam.display()),
+                    "--crate-type dylib",
+                    "-Zunstable-options",
+                    "-Zcrate-attr=no_std",
+                    "-Zcrate-attr=feature(asm_const,asm_experimental_arch)",
+                ])
+                .collect::<Vec<_>>()
+                .join(" ")
         }
 
         struct Variation {
@@ -146,9 +139,8 @@ impl Runner {
             let stage_id = variation.name;
 
             let target = format!("{TARGET_PREFIX}{env}");
-            let libs = build_deps(&self.deps_target_dir, &self.codegen_backend_path, &target);
+            let libs = build_deps(&self.deps_target_dir, &target);
             let mut flags = test_rustc_flags(
-                &self.codegen_backend_path,
                 &libs,
                 &[
                     &self
@@ -175,20 +167,24 @@ impl Runner {
             // FIXME(eddyb) do we need this? shouldn't `compiletest` be independent?
             config.clean_rmeta();
 
+            // HACK(eddyb) there isn't a nicer way to force the correct `rustc`.
+            if let Some(toolchain) = spirv_builder::codegen_backend::rustup_toolchain_override() {
+                env::set_var("RUSTUP_TOOLCHAIN", toolchain);
+            }
+
             compiletest::run_tests(&config);
         }
     }
 }
 
 /// Runs the processes needed to build `spirv-std` & other deps.
-fn build_deps(deps_target_dir: &Path, codegen_backend_path: &Path, target: &str) -> TestDeps {
-    // HACK(eddyb) this is only needed until we enable `resolver = "2"`, as the
-    // old ("1") resolver has a bug where it picks up extra features based on the
-    // current directory (and so we always set the working dir as a workaround).
-    let old_cargo_resolver_workaround_cwd = deps_target_dir.parent().unwrap();
-
+fn build_deps(deps_target_dir: &Path, target: &str) -> TestDeps {
     // Build compiletests-deps-helper
     std::process::Command::new("cargo")
+        .envs(
+            spirv_builder::codegen_backend::rustup_toolchain_override()
+                .map(|x| ("RUSTUP_TOOLCHAIN", x)),
+        )
         .args([
             "build",
             "-p",
@@ -199,8 +195,7 @@ fn build_deps(deps_target_dir: &Path, codegen_backend_path: &Path, target: &str)
         ])
         .arg("--target-dir")
         .arg(deps_target_dir)
-        .env("RUSTFLAGS", rust_flags(codegen_backend_path))
-        .current_dir(old_cargo_resolver_workaround_cwd)
+        .env("RUSTFLAGS", SPIRV_BUILD_RUSTFLAGS.join(" "))
         .stderr(std::process::Stdio::inherit())
         .stdout(std::process::Stdio::inherit())
         .status()
@@ -236,7 +231,7 @@ fn build_deps(deps_target_dir: &Path, codegen_backend_path: &Path, target: &str)
     .any(|o| o.is_none())
     {
         clean_deps(deps_target_dir);
-        build_deps(deps_target_dir, codegen_backend_path, target)
+        build_deps(deps_target_dir, target)
     } else {
         TestDeps {
             core: core.unwrap(),
@@ -327,41 +322,30 @@ struct TestDeps {
     glam: PathBuf,
 }
 
-/// The RUSTFLAGS passed to all SPIR-V builds.
-// FIXME(eddyb) expose most of these from `spirv-builder`.
-fn rust_flags(codegen_backend_path: &Path) -> String {
-    let target_features = [
-        "Int8",
-        "Int16",
-        "Int64",
-        "Float64",
-        // Only needed for `ui/arch/read_clock_khr.rs`.
-        "ShaderClockKHR",
-        "ext:SPV_KHR_shader_clock",
-    ];
+lazy_static::lazy_static! {
+    /// The RUSTFLAGS passed to all SPIR-V builds.
+    static ref SPIRV_BUILD_RUSTFLAGS: Vec<&'static str> = {
+        let target_features = [
+            "Int8",
+            "Int16",
+            "Int64",
+            "Float64",
+            // Only needed for `ui/arch/read_clock_khr.rs`.
+            "ShaderClockKHR",
+            "ext:SPV_KHR_shader_clock",
+        ];
 
-    [
-        &*format!("-Zcodegen-backend={}", codegen_backend_path.display()),
-        // Ensure the codegen backend is emitted in `.d` files to force Cargo
-        // to rebuild crates compiled with it when it changes (this used to be
-        // the default until https://github.com/rust-lang/rust/pull/93969).
-        "-Zbinary-dep-depinfo",
-        "-Csymbol-mangling-version=v0",
-        "-Zcrate-attr=feature(register_tool)",
-        "-Zcrate-attr=register_tool(rust_gpu)",
-        // HACK(eddyb) this is the same configuration that we test with, and
-        // ensures no unwanted surprises from e.g. `core` debug assertions.
-        "-Coverflow-checks=off",
-        "-Cdebug-assertions=off",
-        // HACK(eddyb) we need this for `core::fmt::rt::Argument::new_*` calls
-        // to *never* be inlined, so we can pattern-match the calls themselves.
-        "-Zinline-mir=off",
-        // NOTE(eddyb) flags copied from `spirv-builder` are all above this line.
-        "-Cdebuginfo=2",
-        "-Cembed-bitcode=no",
-        &format!("-Ctarget-feature=+{}", target_features.join(",+")),
-    ]
-    .join(" ")
+        spirv_builder::codegen_backend::base_rustflags()
+            .chain([
+                "-Cdebuginfo=2".into(),
+                "-Cembed-bitcode=no".into(),
+                format!("-Ctarget-feature=+{}", target_features.join(",+")).into(),
+            ]).map(|s| match s {
+                Cow::Borrowed(s) => s,
+                Cow::Owned(s) => String::leak(s),
+            })
+            .collect::<Vec<_>>()
+    };
 }
 
 /// Convience function to map process failure to results in Rust.
@@ -376,37 +360,4 @@ fn map_status_to_result(status: std::process::ExitStatus) -> Result<()> {
             ),
         )),
     }
-}
-
-// https://github.com/rust-lang/cargo/blob/1857880b5124580c4aeb4e8bc5f1198f491d61b1/src/cargo/util/paths.rs#L29-L52
-fn dylib_path_envvar() -> &'static str {
-    if cfg!(windows) {
-        "PATH"
-    } else if cfg!(target_os = "macos") {
-        "DYLD_FALLBACK_LIBRARY_PATH"
-    } else {
-        "LD_LIBRARY_PATH"
-    }
-}
-
-fn dylib_path() -> Vec<PathBuf> {
-    match env::var_os(dylib_path_envvar()) {
-        Some(var) => env::split_paths(&var).collect(),
-        None => Vec::new(),
-    }
-}
-
-fn find_rustc_codegen_spirv() -> PathBuf {
-    let filename = format!(
-        "{}rustc_codegen_spirv{}",
-        env::consts::DLL_PREFIX,
-        env::consts::DLL_SUFFIX
-    );
-    for mut path in dylib_path() {
-        path.push(&filename);
-        if path.is_file() {
-            return path;
-        }
-    }
-    panic!("Could not find {filename} in library path");
 }
