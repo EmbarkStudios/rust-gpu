@@ -167,7 +167,7 @@ pub fn link(
             bound += module.header.as_ref().unwrap().bound - 1;
             let this_version = module.header.as_ref().unwrap().version();
             if version != this_version {
-                return Err(sess.err(format!(
+                return Err(sess.dcx().err(format!(
                     "cannot link two modules with different SPIR-V versions: v{}.{} and v{}.{}",
                     version.0, version.1, this_version.0, this_version.1
                 )));
@@ -426,6 +426,7 @@ pub fn link(
                     };
 
                     return Err(sess
+                        .dcx()
                         .struct_err(format!("{e}"))
                         .note("while lowering SPIR-V module to SPIR-T (spirt::spv::lower)")
                         .note(format!("input SPIR-V module {was_saved_msg}"))
@@ -534,7 +535,7 @@ pub fn link(
         }
 
         if any_spirt_bugs {
-            let mut note = sess.struct_note("SPIR-T bugs were reported");
+            let mut note = sess.dcx().struct_note("SPIR-T bugs were reported");
             note.help(format!(
                 "pretty-printed SPIR-T was saved to {}.html",
                 dump_spirt_file_path.as_ref().unwrap().display()
@@ -576,12 +577,12 @@ pub fn link(
         if ext_inst_set.starts_with(custom_insts::CUSTOM_EXT_INST_SET_PREFIX) {
             let expected = &custom_insts::CUSTOM_EXT_INST_SET[..];
             if ext_inst_set == expected {
-                return Err(sess.err(format!(
+                return Err(sess.dcx().err(format!(
                     "`OpExtInstImport {ext_inst_set:?}` should not have been \
                          left around after SPIR-T passes"
                 )));
             } else {
-                return Err(sess.err(format!(
+                return Err(sess.dcx().err(format!(
                     "unsupported `OpExtInstImport {ext_inst_set:?}`
                      (expected {expected:?} name - version mismatch?)"
                 )));
