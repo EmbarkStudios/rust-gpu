@@ -219,17 +219,27 @@ pub struct Options {
 
     #[structopt(long)]
     force_spirv_passthru: bool,
+
+    #[structopt(long)]
+    emulate_push_constants_with_storage_buffer: bool,
 }
 
 #[cfg_attr(target_os = "android", export_name = "android_main")]
 pub fn main(
     #[cfg(target_os = "android")] android_app: winit::platform::android::activity::AndroidApp,
 ) {
-    let options: Options = Options::from_args();
+    let mut options: Options = Options::from_args();
 
     #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
     if options.shader == RustGPUShader::Compute {
         return compute::start(&options);
+    }
+
+    // HACK(eddyb) force push constant emulation using (read-only) SSBOs, on
+    // wasm->WebGPU, as push constants are currently not supported.
+    // FIXME(eddyb) could push constant support be automatically detected at runtime?
+    if cfg!(target_arch = "wasm32") {
+        options.emulate_push_constants_with_storage_buffer = true;
     }
 
     graphics::start(
