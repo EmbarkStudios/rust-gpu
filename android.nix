@@ -3,8 +3,8 @@
 # Tested in `NIXPKGS_ACCEPT_ANDROID_SDK_LICENSE=1 nix-shell android.nix --pure`,
 # by running the following commands (x64 target is for the Android Emulator):
 #   rustup target add aarch64-linux-android x86_64-linux-android
-#   cargo apk build -p example-runner-wgpu --target aarch64-linux-android
-#   cargo apk build -p example-runner-wgpu --target x86_64-linux-android
+#   cargo apk build -p example-runner-wgpu --lib --target aarch64-linux-android
+#   cargo apk build -p example-runner-wgpu --lib --target x86_64-linux-android
 #
 # (you can also replace `cargo apk build` with `cargo apk run` to launch it,
 # via `adb`, into either the Android Emulator, or a physical Android device)
