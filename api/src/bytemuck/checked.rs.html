@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bytemuck-1.12.3/src/checked.rs`."><title>checked.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="bytemuck" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../bytemuck/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bytemuck-1.14.0/src/checked.rs`."><title>checked.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="bytemuck" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../bytemuck/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -485,6 +485,41 @@
 <a href="#485" id="485">485</a>
 <a href="#486" id="486">486</a>
 <a href="#487" id="487">487</a>
+<a href="#488" id="488">488</a>
+<a href="#489" id="489">489</a>
+<a href="#490" id="490">490</a>
+<a href="#491" id="491">491</a>
+<a href="#492" id="492">492</a>
+<a href="#493" id="493">493</a>
+<a href="#494" id="494">494</a>
+<a href="#495" id="495">495</a>
+<a href="#496" id="496">496</a>
+<a href="#497" id="497">497</a>
+<a href="#498" id="498">498</a>
+<a href="#499" id="499">499</a>
+<a href="#500" id="500">500</a>
+<a href="#501" id="501">501</a>
+<a href="#502" id="502">502</a>
+<a href="#503" id="503">503</a>
+<a href="#504" id="504">504</a>
+<a href="#505" id="505">505</a>
+<a href="#506" id="506">506</a>
+<a href="#507" id="507">507</a>
+<a href="#508" id="508">508</a>
+<a href="#509" id="509">509</a>
+<a href="#510" id="510">510</a>
+<a href="#511" id="511">511</a>
+<a href="#512" id="512">512</a>
+<a href="#513" id="513">513</a>
+<a href="#514" id="514">514</a>
+<a href="#515" id="515">515</a>
+<a href="#516" id="516">516</a>
+<a href="#517" id="517">517</a>
+<a href="#518" id="518">518</a>
+<a href="#519" id="519">519</a>
+<a href="#520" id="520">520</a>
+<a href="#521" id="521">521</a>
+<a href="#522" id="522">522</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Checked versions of the casting functions exposed in crate root
 //! that support [`CheckedBitPattern`] types.
 
@@ -502,7 +537,7 @@
 /// To do this, we define a `Bits` type which is a type with equivalent layout
 /// to `Self` other than the invalid bit patterns which disallow `Self` from
 /// being [`AnyBitPattern`]. This `Bits` type must itself implement
-/// [`AnyBitPattern`]. Then, we implement a function that checks wheter a
+/// [`AnyBitPattern`]. Then, we implement a function that checks whether a
 /// certain instance of the `Bits` is also a valid bit pattern of `Self`. If
 /// this check passes, then we can allow casting from the `Bits` to `Self` (and
 /// therefore, any type which is able to be cast to `Bits` is also able to be
@@ -657,16 +692,50 @@
   }
 }
 
+<span class="comment">// Rust 1.70.0 documents that NonZero[int] has the same layout as [int].
+</span><span class="macro">macro_rules! </span>impl_checked_for_nonzero {
+  ($(<span class="macro-nonterminal">$nonzero</span>:ty: <span class="macro-nonterminal">$primitive</span>:ty),* $(,)<span class="question-mark">?</span>) =&gt; {
+    $(
+      <span class="kw">unsafe impl </span>CheckedBitPattern <span class="kw">for </span><span class="macro-nonterminal">$nonzero </span>{
+        <span class="kw">type </span>Bits = <span class="macro-nonterminal">$primitive</span>;
+
+        <span class="attr">#[inline]
+        </span><span class="kw">fn </span>is_valid_bit_pattern(bits: <span class="kw-2">&amp;</span><span class="self">Self</span>::Bits) -&gt; bool {
+          <span class="kw-2">*</span>bits != <span class="number">0
+        </span>}
+      }
+    )*
+  };
+}
+<span class="macro">impl_checked_for_nonzero! </span>{
+  core::num::NonZeroU8: u8,
+  core::num::NonZeroI8: i8,
+  core::num::NonZeroU16: u16,
+  core::num::NonZeroI16: i16,
+  core::num::NonZeroU32: u32,
+  core::num::NonZeroI32: i32,
+  core::num::NonZeroU64: u64,
+  core::num::NonZeroI64: i64,
+  core::num::NonZeroI128: i128,
+  core::num::NonZeroU128: u128,
+  core::num::NonZeroUsize: usize,
+  core::num::NonZeroIsize: isize,
+}
+
 <span class="doccomment">/// The things that can go wrong when casting between [`CheckedBitPattern`] data
 /// forms.
 </span><span class="attr">#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 </span><span class="kw">pub enum </span>CheckedCastError {
   <span class="doccomment">/// An error occurred during a true-[`Pod`] cast
+  ///
+  /// [`Pod`]: crate::Pod
   </span>PodCastError(<span class="kw">crate</span>::PodCastError),
   <span class="doccomment">/// When casting to a [`CheckedBitPattern`] type, it is possible that the
   /// original data contains an invalid bit pattern. If so, the cast will
   /// fail and this error will be returned. Will never happen on casts
   /// between [`Pod`] types.
+  ///
+  /// [`Pod`]: crate::Pod
   </span>InvalidBitPattern,
 }
 
@@ -677,6 +746,7 @@
   }
 }
 <span class="attr">#[cfg(feature = <span class="string">&quot;extern_crate_std&quot;</span>)]
+#[cfg_attr(feature = <span class="string">&quot;nightly_docs&quot;</span>, doc(cfg(feature = <span class="string">&quot;extern_crate_std&quot;</span>)))]
 </span><span class="kw">impl </span>std::error::Error <span class="kw">for </span>CheckedCastError {}
 
 <span class="kw">impl </span>From&lt;<span class="kw">crate</span>::PodCastError&gt; <span class="kw">for </span>CheckedCastError {
@@ -696,7 +766,7 @@
 </span><span class="kw">pub fn </span>try_from_bytes&lt;T: CheckedBitPattern&gt;(
   s: <span class="kw-2">&amp;</span>[u8],
 ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>T, CheckedCastError&gt; {
-  <span class="kw">let </span>pod = <span class="kw">unsafe </span>{ internal::try_from_bytes(s) }<span class="question-mark">?</span>;
+  <span class="kw">let </span>pod = <span class="kw">crate</span>::try_from_bytes(s)<span class="question-mark">?</span>;
 
   <span class="kw">if </span>&lt;T <span class="kw">as </span>CheckedBitPattern&gt;::is_valid_bit_pattern(pod) {
     <span class="prelude-val">Ok</span>(<span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(pod <span class="kw">as </span><span class="kw-2">*const </span>&lt;T <span class="kw">as </span>CheckedBitPattern&gt;::Bits <span class="kw">as </span><span class="kw-2">*const </span>T) })
@@ -734,7 +804,7 @@
 </span><span class="kw">pub fn </span>try_pod_read_unaligned&lt;T: CheckedBitPattern&gt;(
   bytes: <span class="kw-2">&amp;</span>[u8],
 ) -&gt; <span class="prelude-ty">Result</span>&lt;T, CheckedCastError&gt; {
-  <span class="kw">let </span>pod = <span class="kw">unsafe </span>{ internal::try_pod_read_unaligned(bytes) }<span class="question-mark">?</span>;
+  <span class="kw">let </span>pod = <span class="kw">crate</span>::try_pod_read_unaligned(bytes)<span class="question-mark">?</span>;
 
   <span class="kw">if </span>&lt;T <span class="kw">as </span>CheckedBitPattern&gt;::is_valid_bit_pattern(<span class="kw-2">&amp;</span>pod) {
     <span class="prelude-val">Ok</span>(<span class="kw">unsafe </span>{ <span class="macro">transmute!</span>(pod) })
@@ -758,7 +828,7 @@
 </span><span class="kw">pub fn </span>try_cast&lt;A: NoUninit, B: CheckedBitPattern&gt;(
   a: A,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;B, CheckedCastError&gt; {
-  <span class="kw">let </span>pod = <span class="kw">unsafe </span>{ internal::try_cast(a) }<span class="question-mark">?</span>;
+  <span class="kw">let </span>pod = <span class="kw">crate</span>::try_cast(a)<span class="question-mark">?</span>;
 
   <span class="kw">if </span>&lt;B <span class="kw">as </span>CheckedBitPattern&gt;::is_valid_bit_pattern(<span class="kw-2">&amp;</span>pod) {
     <span class="prelude-val">Ok</span>(<span class="kw">unsafe </span>{ <span class="macro">transmute!</span>(pod) })
@@ -778,7 +848,7 @@
 </span><span class="kw">pub fn </span>try_cast_ref&lt;A: NoUninit, B: CheckedBitPattern&gt;(
   a: <span class="kw-2">&amp;</span>A,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>B, CheckedCastError&gt; {
-  <span class="kw">let </span>pod = <span class="kw">unsafe </span>{ internal::try_cast_ref(a) }<span class="question-mark">?</span>;
+  <span class="kw">let </span>pod = <span class="kw">crate</span>::try_cast_ref(a)<span class="question-mark">?</span>;
 
   <span class="kw">if </span>&lt;B <span class="kw">as </span>CheckedBitPattern&gt;::is_valid_bit_pattern(pod) {
     <span class="prelude-val">Ok</span>(<span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(pod <span class="kw">as </span><span class="kw-2">*const </span>&lt;B <span class="kw">as </span>CheckedBitPattern&gt;::Bits <span class="kw">as </span><span class="kw-2">*const </span>B) })
@@ -789,7 +859,7 @@
 
 <span class="doccomment">/// Try to convert a `&amp;mut T` into `&amp;mut U`.
 ///
-/// As [`checked_cast_ref`], but `mut`.
+/// As [`try_cast_ref`], but `mut`.
 </span><span class="attr">#[inline]
 </span><span class="kw">pub fn </span>try_cast_mut&lt;
   A: NoUninit + AnyBitPattern,
@@ -827,7 +897,7 @@
 </span><span class="kw">pub fn </span>try_cast_slice&lt;A: NoUninit, B: CheckedBitPattern&gt;(
   a: <span class="kw-2">&amp;</span>[A],
 ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>[B], CheckedCastError&gt; {
-  <span class="kw">let </span>pod = <span class="kw">unsafe </span>{ internal::try_cast_slice(a) }<span class="question-mark">?</span>;
+  <span class="kw">let </span>pod = <span class="kw">crate</span>::try_cast_slice(a)<span class="question-mark">?</span>;
 
   <span class="kw">if </span>pod.iter().all(|pod| &lt;B <span class="kw">as </span>CheckedBitPattern&gt;::is_valid_bit_pattern(pod)) {
     <span class="prelude-val">Ok</span>(<span class="kw">unsafe </span>{
@@ -841,7 +911,7 @@
 <span class="doccomment">/// Try to convert `&amp;mut [A]` into `&amp;mut [B]` (possibly with a change in
 /// length).
 ///
-/// As [`checked_cast_slice`], but `&amp;mut`.
+/// As [`try_cast_slice`], but `&amp;mut`.
 </span><span class="attr">#[inline]
 </span><span class="kw">pub fn </span>try_cast_slice_mut&lt;
   A: NoUninit + AnyBitPattern,
@@ -853,7 +923,7 @@
 
   <span class="kw">if </span>pod.iter().all(|pod| &lt;B <span class="kw">as </span>CheckedBitPattern&gt;::is_valid_bit_pattern(pod)) {
     <span class="prelude-val">Ok</span>(<span class="kw">unsafe </span>{
-      core::slice::from_raw_parts_mut(pod.as_ptr() <span class="kw">as </span><span class="kw-2">*mut </span>B, pod.len())
+      core::slice::from_raw_parts_mut(pod.as_mut_ptr() <span class="kw">as </span><span class="kw-2">*mut </span>B, pod.len())
     })
   } <span class="kw">else </span>{
     <span class="prelude-val">Err</span>(CheckedCastError::InvalidBitPattern)
@@ -891,7 +961,7 @@
 /// ## Panics
 /// * This is like `try_pod_read_unaligned` but will panic on failure.
 </span><span class="attr">#[inline]
-</span><span class="kw">pub fn </span>pod_read_unaligned&lt;T: AnyBitPattern&gt;(bytes: <span class="kw-2">&amp;</span>[u8]) -&gt; T {
+</span><span class="kw">pub fn </span>pod_read_unaligned&lt;T: CheckedBitPattern&gt;(bytes: <span class="kw-2">&amp;</span>[u8]) -&gt; T {
   <span class="kw">match </span>try_pod_read_unaligned(bytes) {
     <span class="prelude-val">Ok</span>(t) =&gt; t,
     <span class="prelude-val">Err</span>(e) =&gt; something_went_wrong(<span class="string">&quot;pod_read_unaligned&quot;</span>, e),

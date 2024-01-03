@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/memchr-2.4.1/src/memmem/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="memchr" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../memchr/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/memchr-2.7.1/src/memmem/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="memchr" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../memchr/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -735,565 +735,6 @@
 <a href="#735" id="735">735</a>
 <a href="#736" id="736">736</a>
 <a href="#737" id="737">737</a>
-<a href="#738" id="738">738</a>
-<a href="#739" id="739">739</a>
-<a href="#740" id="740">740</a>
-<a href="#741" id="741">741</a>
-<a href="#742" id="742">742</a>
-<a href="#743" id="743">743</a>
-<a href="#744" id="744">744</a>
-<a href="#745" id="745">745</a>
-<a href="#746" id="746">746</a>
-<a href="#747" id="747">747</a>
-<a href="#748" id="748">748</a>
-<a href="#749" id="749">749</a>
-<a href="#750" id="750">750</a>
-<a href="#751" id="751">751</a>
-<a href="#752" id="752">752</a>
-<a href="#753" id="753">753</a>
-<a href="#754" id="754">754</a>
-<a href="#755" id="755">755</a>
-<a href="#756" id="756">756</a>
-<a href="#757" id="757">757</a>
-<a href="#758" id="758">758</a>
-<a href="#759" id="759">759</a>
-<a href="#760" id="760">760</a>
-<a href="#761" id="761">761</a>
-<a href="#762" id="762">762</a>
-<a href="#763" id="763">763</a>
-<a href="#764" id="764">764</a>
-<a href="#765" id="765">765</a>
-<a href="#766" id="766">766</a>
-<a href="#767" id="767">767</a>
-<a href="#768" id="768">768</a>
-<a href="#769" id="769">769</a>
-<a href="#770" id="770">770</a>
-<a href="#771" id="771">771</a>
-<a href="#772" id="772">772</a>
-<a href="#773" id="773">773</a>
-<a href="#774" id="774">774</a>
-<a href="#775" id="775">775</a>
-<a href="#776" id="776">776</a>
-<a href="#777" id="777">777</a>
-<a href="#778" id="778">778</a>
-<a href="#779" id="779">779</a>
-<a href="#780" id="780">780</a>
-<a href="#781" id="781">781</a>
-<a href="#782" id="782">782</a>
-<a href="#783" id="783">783</a>
-<a href="#784" id="784">784</a>
-<a href="#785" id="785">785</a>
-<a href="#786" id="786">786</a>
-<a href="#787" id="787">787</a>
-<a href="#788" id="788">788</a>
-<a href="#789" id="789">789</a>
-<a href="#790" id="790">790</a>
-<a href="#791" id="791">791</a>
-<a href="#792" id="792">792</a>
-<a href="#793" id="793">793</a>
-<a href="#794" id="794">794</a>
-<a href="#795" id="795">795</a>
-<a href="#796" id="796">796</a>
-<a href="#797" id="797">797</a>
-<a href="#798" id="798">798</a>
-<a href="#799" id="799">799</a>
-<a href="#800" id="800">800</a>
-<a href="#801" id="801">801</a>
-<a href="#802" id="802">802</a>
-<a href="#803" id="803">803</a>
-<a href="#804" id="804">804</a>
-<a href="#805" id="805">805</a>
-<a href="#806" id="806">806</a>
-<a href="#807" id="807">807</a>
-<a href="#808" id="808">808</a>
-<a href="#809" id="809">809</a>
-<a href="#810" id="810">810</a>
-<a href="#811" id="811">811</a>
-<a href="#812" id="812">812</a>
-<a href="#813" id="813">813</a>
-<a href="#814" id="814">814</a>
-<a href="#815" id="815">815</a>
-<a href="#816" id="816">816</a>
-<a href="#817" id="817">817</a>
-<a href="#818" id="818">818</a>
-<a href="#819" id="819">819</a>
-<a href="#820" id="820">820</a>
-<a href="#821" id="821">821</a>
-<a href="#822" id="822">822</a>
-<a href="#823" id="823">823</a>
-<a href="#824" id="824">824</a>
-<a href="#825" id="825">825</a>
-<a href="#826" id="826">826</a>
-<a href="#827" id="827">827</a>
-<a href="#828" id="828">828</a>
-<a href="#829" id="829">829</a>
-<a href="#830" id="830">830</a>
-<a href="#831" id="831">831</a>
-<a href="#832" id="832">832</a>
-<a href="#833" id="833">833</a>
-<a href="#834" id="834">834</a>
-<a href="#835" id="835">835</a>
-<a href="#836" id="836">836</a>
-<a href="#837" id="837">837</a>
-<a href="#838" id="838">838</a>
-<a href="#839" id="839">839</a>
-<a href="#840" id="840">840</a>
-<a href="#841" id="841">841</a>
-<a href="#842" id="842">842</a>
-<a href="#843" id="843">843</a>
-<a href="#844" id="844">844</a>
-<a href="#845" id="845">845</a>
-<a href="#846" id="846">846</a>
-<a href="#847" id="847">847</a>
-<a href="#848" id="848">848</a>
-<a href="#849" id="849">849</a>
-<a href="#850" id="850">850</a>
-<a href="#851" id="851">851</a>
-<a href="#852" id="852">852</a>
-<a href="#853" id="853">853</a>
-<a href="#854" id="854">854</a>
-<a href="#855" id="855">855</a>
-<a href="#856" id="856">856</a>
-<a href="#857" id="857">857</a>
-<a href="#858" id="858">858</a>
-<a href="#859" id="859">859</a>
-<a href="#860" id="860">860</a>
-<a href="#861" id="861">861</a>
-<a href="#862" id="862">862</a>
-<a href="#863" id="863">863</a>
-<a href="#864" id="864">864</a>
-<a href="#865" id="865">865</a>
-<a href="#866" id="866">866</a>
-<a href="#867" id="867">867</a>
-<a href="#868" id="868">868</a>
-<a href="#869" id="869">869</a>
-<a href="#870" id="870">870</a>
-<a href="#871" id="871">871</a>
-<a href="#872" id="872">872</a>
-<a href="#873" id="873">873</a>
-<a href="#874" id="874">874</a>
-<a href="#875" id="875">875</a>
-<a href="#876" id="876">876</a>
-<a href="#877" id="877">877</a>
-<a href="#878" id="878">878</a>
-<a href="#879" id="879">879</a>
-<a href="#880" id="880">880</a>
-<a href="#881" id="881">881</a>
-<a href="#882" id="882">882</a>
-<a href="#883" id="883">883</a>
-<a href="#884" id="884">884</a>
-<a href="#885" id="885">885</a>
-<a href="#886" id="886">886</a>
-<a href="#887" id="887">887</a>
-<a href="#888" id="888">888</a>
-<a href="#889" id="889">889</a>
-<a href="#890" id="890">890</a>
-<a href="#891" id="891">891</a>
-<a href="#892" id="892">892</a>
-<a href="#893" id="893">893</a>
-<a href="#894" id="894">894</a>
-<a href="#895" id="895">895</a>
-<a href="#896" id="896">896</a>
-<a href="#897" id="897">897</a>
-<a href="#898" id="898">898</a>
-<a href="#899" id="899">899</a>
-<a href="#900" id="900">900</a>
-<a href="#901" id="901">901</a>
-<a href="#902" id="902">902</a>
-<a href="#903" id="903">903</a>
-<a href="#904" id="904">904</a>
-<a href="#905" id="905">905</a>
-<a href="#906" id="906">906</a>
-<a href="#907" id="907">907</a>
-<a href="#908" id="908">908</a>
-<a href="#909" id="909">909</a>
-<a href="#910" id="910">910</a>
-<a href="#911" id="911">911</a>
-<a href="#912" id="912">912</a>
-<a href="#913" id="913">913</a>
-<a href="#914" id="914">914</a>
-<a href="#915" id="915">915</a>
-<a href="#916" id="916">916</a>
-<a href="#917" id="917">917</a>
-<a href="#918" id="918">918</a>
-<a href="#919" id="919">919</a>
-<a href="#920" id="920">920</a>
-<a href="#921" id="921">921</a>
-<a href="#922" id="922">922</a>
-<a href="#923" id="923">923</a>
-<a href="#924" id="924">924</a>
-<a href="#925" id="925">925</a>
-<a href="#926" id="926">926</a>
-<a href="#927" id="927">927</a>
-<a href="#928" id="928">928</a>
-<a href="#929" id="929">929</a>
-<a href="#930" id="930">930</a>
-<a href="#931" id="931">931</a>
-<a href="#932" id="932">932</a>
-<a href="#933" id="933">933</a>
-<a href="#934" id="934">934</a>
-<a href="#935" id="935">935</a>
-<a href="#936" id="936">936</a>
-<a href="#937" id="937">937</a>
-<a href="#938" id="938">938</a>
-<a href="#939" id="939">939</a>
-<a href="#940" id="940">940</a>
-<a href="#941" id="941">941</a>
-<a href="#942" id="942">942</a>
-<a href="#943" id="943">943</a>
-<a href="#944" id="944">944</a>
-<a href="#945" id="945">945</a>
-<a href="#946" id="946">946</a>
-<a href="#947" id="947">947</a>
-<a href="#948" id="948">948</a>
-<a href="#949" id="949">949</a>
-<a href="#950" id="950">950</a>
-<a href="#951" id="951">951</a>
-<a href="#952" id="952">952</a>
-<a href="#953" id="953">953</a>
-<a href="#954" id="954">954</a>
-<a href="#955" id="955">955</a>
-<a href="#956" id="956">956</a>
-<a href="#957" id="957">957</a>
-<a href="#958" id="958">958</a>
-<a href="#959" id="959">959</a>
-<a href="#960" id="960">960</a>
-<a href="#961" id="961">961</a>
-<a href="#962" id="962">962</a>
-<a href="#963" id="963">963</a>
-<a href="#964" id="964">964</a>
-<a href="#965" id="965">965</a>
-<a href="#966" id="966">966</a>
-<a href="#967" id="967">967</a>
-<a href="#968" id="968">968</a>
-<a href="#969" id="969">969</a>
-<a href="#970" id="970">970</a>
-<a href="#971" id="971">971</a>
-<a href="#972" id="972">972</a>
-<a href="#973" id="973">973</a>
-<a href="#974" id="974">974</a>
-<a href="#975" id="975">975</a>
-<a href="#976" id="976">976</a>
-<a href="#977" id="977">977</a>
-<a href="#978" id="978">978</a>
-<a href="#979" id="979">979</a>
-<a href="#980" id="980">980</a>
-<a href="#981" id="981">981</a>
-<a href="#982" id="982">982</a>
-<a href="#983" id="983">983</a>
-<a href="#984" id="984">984</a>
-<a href="#985" id="985">985</a>
-<a href="#986" id="986">986</a>
-<a href="#987" id="987">987</a>
-<a href="#988" id="988">988</a>
-<a href="#989" id="989">989</a>
-<a href="#990" id="990">990</a>
-<a href="#991" id="991">991</a>
-<a href="#992" id="992">992</a>
-<a href="#993" id="993">993</a>
-<a href="#994" id="994">994</a>
-<a href="#995" id="995">995</a>
-<a href="#996" id="996">996</a>
-<a href="#997" id="997">997</a>
-<a href="#998" id="998">998</a>
-<a href="#999" id="999">999</a>
-<a href="#1000" id="1000">1000</a>
-<a href="#1001" id="1001">1001</a>
-<a href="#1002" id="1002">1002</a>
-<a href="#1003" id="1003">1003</a>
-<a href="#1004" id="1004">1004</a>
-<a href="#1005" id="1005">1005</a>
-<a href="#1006" id="1006">1006</a>
-<a href="#1007" id="1007">1007</a>
-<a href="#1008" id="1008">1008</a>
-<a href="#1009" id="1009">1009</a>
-<a href="#1010" id="1010">1010</a>
-<a href="#1011" id="1011">1011</a>
-<a href="#1012" id="1012">1012</a>
-<a href="#1013" id="1013">1013</a>
-<a href="#1014" id="1014">1014</a>
-<a href="#1015" id="1015">1015</a>
-<a href="#1016" id="1016">1016</a>
-<a href="#1017" id="1017">1017</a>
-<a href="#1018" id="1018">1018</a>
-<a href="#1019" id="1019">1019</a>
-<a href="#1020" id="1020">1020</a>
-<a href="#1021" id="1021">1021</a>
-<a href="#1022" id="1022">1022</a>
-<a href="#1023" id="1023">1023</a>
-<a href="#1024" id="1024">1024</a>
-<a href="#1025" id="1025">1025</a>
-<a href="#1026" id="1026">1026</a>
-<a href="#1027" id="1027">1027</a>
-<a href="#1028" id="1028">1028</a>
-<a href="#1029" id="1029">1029</a>
-<a href="#1030" id="1030">1030</a>
-<a href="#1031" id="1031">1031</a>
-<a href="#1032" id="1032">1032</a>
-<a href="#1033" id="1033">1033</a>
-<a href="#1034" id="1034">1034</a>
-<a href="#1035" id="1035">1035</a>
-<a href="#1036" id="1036">1036</a>
-<a href="#1037" id="1037">1037</a>
-<a href="#1038" id="1038">1038</a>
-<a href="#1039" id="1039">1039</a>
-<a href="#1040" id="1040">1040</a>
-<a href="#1041" id="1041">1041</a>
-<a href="#1042" id="1042">1042</a>
-<a href="#1043" id="1043">1043</a>
-<a href="#1044" id="1044">1044</a>
-<a href="#1045" id="1045">1045</a>
-<a href="#1046" id="1046">1046</a>
-<a href="#1047" id="1047">1047</a>
-<a href="#1048" id="1048">1048</a>
-<a href="#1049" id="1049">1049</a>
-<a href="#1050" id="1050">1050</a>
-<a href="#1051" id="1051">1051</a>
-<a href="#1052" id="1052">1052</a>
-<a href="#1053" id="1053">1053</a>
-<a href="#1054" id="1054">1054</a>
-<a href="#1055" id="1055">1055</a>
-<a href="#1056" id="1056">1056</a>
-<a href="#1057" id="1057">1057</a>
-<a href="#1058" id="1058">1058</a>
-<a href="#1059" id="1059">1059</a>
-<a href="#1060" id="1060">1060</a>
-<a href="#1061" id="1061">1061</a>
-<a href="#1062" id="1062">1062</a>
-<a href="#1063" id="1063">1063</a>
-<a href="#1064" id="1064">1064</a>
-<a href="#1065" id="1065">1065</a>
-<a href="#1066" id="1066">1066</a>
-<a href="#1067" id="1067">1067</a>
-<a href="#1068" id="1068">1068</a>
-<a href="#1069" id="1069">1069</a>
-<a href="#1070" id="1070">1070</a>
-<a href="#1071" id="1071">1071</a>
-<a href="#1072" id="1072">1072</a>
-<a href="#1073" id="1073">1073</a>
-<a href="#1074" id="1074">1074</a>
-<a href="#1075" id="1075">1075</a>
-<a href="#1076" id="1076">1076</a>
-<a href="#1077" id="1077">1077</a>
-<a href="#1078" id="1078">1078</a>
-<a href="#1079" id="1079">1079</a>
-<a href="#1080" id="1080">1080</a>
-<a href="#1081" id="1081">1081</a>
-<a href="#1082" id="1082">1082</a>
-<a href="#1083" id="1083">1083</a>
-<a href="#1084" id="1084">1084</a>
-<a href="#1085" id="1085">1085</a>
-<a href="#1086" id="1086">1086</a>
-<a href="#1087" id="1087">1087</a>
-<a href="#1088" id="1088">1088</a>
-<a href="#1089" id="1089">1089</a>
-<a href="#1090" id="1090">1090</a>
-<a href="#1091" id="1091">1091</a>
-<a href="#1092" id="1092">1092</a>
-<a href="#1093" id="1093">1093</a>
-<a href="#1094" id="1094">1094</a>
-<a href="#1095" id="1095">1095</a>
-<a href="#1096" id="1096">1096</a>
-<a href="#1097" id="1097">1097</a>
-<a href="#1098" id="1098">1098</a>
-<a href="#1099" id="1099">1099</a>
-<a href="#1100" id="1100">1100</a>
-<a href="#1101" id="1101">1101</a>
-<a href="#1102" id="1102">1102</a>
-<a href="#1103" id="1103">1103</a>
-<a href="#1104" id="1104">1104</a>
-<a href="#1105" id="1105">1105</a>
-<a href="#1106" id="1106">1106</a>
-<a href="#1107" id="1107">1107</a>
-<a href="#1108" id="1108">1108</a>
-<a href="#1109" id="1109">1109</a>
-<a href="#1110" id="1110">1110</a>
-<a href="#1111" id="1111">1111</a>
-<a href="#1112" id="1112">1112</a>
-<a href="#1113" id="1113">1113</a>
-<a href="#1114" id="1114">1114</a>
-<a href="#1115" id="1115">1115</a>
-<a href="#1116" id="1116">1116</a>
-<a href="#1117" id="1117">1117</a>
-<a href="#1118" id="1118">1118</a>
-<a href="#1119" id="1119">1119</a>
-<a href="#1120" id="1120">1120</a>
-<a href="#1121" id="1121">1121</a>
-<a href="#1122" id="1122">1122</a>
-<a href="#1123" id="1123">1123</a>
-<a href="#1124" id="1124">1124</a>
-<a href="#1125" id="1125">1125</a>
-<a href="#1126" id="1126">1126</a>
-<a href="#1127" id="1127">1127</a>
-<a href="#1128" id="1128">1128</a>
-<a href="#1129" id="1129">1129</a>
-<a href="#1130" id="1130">1130</a>
-<a href="#1131" id="1131">1131</a>
-<a href="#1132" id="1132">1132</a>
-<a href="#1133" id="1133">1133</a>
-<a href="#1134" id="1134">1134</a>
-<a href="#1135" id="1135">1135</a>
-<a href="#1136" id="1136">1136</a>
-<a href="#1137" id="1137">1137</a>
-<a href="#1138" id="1138">1138</a>
-<a href="#1139" id="1139">1139</a>
-<a href="#1140" id="1140">1140</a>
-<a href="#1141" id="1141">1141</a>
-<a href="#1142" id="1142">1142</a>
-<a href="#1143" id="1143">1143</a>
-<a href="#1144" id="1144">1144</a>
-<a href="#1145" id="1145">1145</a>
-<a href="#1146" id="1146">1146</a>
-<a href="#1147" id="1147">1147</a>
-<a href="#1148" id="1148">1148</a>
-<a href="#1149" id="1149">1149</a>
-<a href="#1150" id="1150">1150</a>
-<a href="#1151" id="1151">1151</a>
-<a href="#1152" id="1152">1152</a>
-<a href="#1153" id="1153">1153</a>
-<a href="#1154" id="1154">1154</a>
-<a href="#1155" id="1155">1155</a>
-<a href="#1156" id="1156">1156</a>
-<a href="#1157" id="1157">1157</a>
-<a href="#1158" id="1158">1158</a>
-<a href="#1159" id="1159">1159</a>
-<a href="#1160" id="1160">1160</a>
-<a href="#1161" id="1161">1161</a>
-<a href="#1162" id="1162">1162</a>
-<a href="#1163" id="1163">1163</a>
-<a href="#1164" id="1164">1164</a>
-<a href="#1165" id="1165">1165</a>
-<a href="#1166" id="1166">1166</a>
-<a href="#1167" id="1167">1167</a>
-<a href="#1168" id="1168">1168</a>
-<a href="#1169" id="1169">1169</a>
-<a href="#1170" id="1170">1170</a>
-<a href="#1171" id="1171">1171</a>
-<a href="#1172" id="1172">1172</a>
-<a href="#1173" id="1173">1173</a>
-<a href="#1174" id="1174">1174</a>
-<a href="#1175" id="1175">1175</a>
-<a href="#1176" id="1176">1176</a>
-<a href="#1177" id="1177">1177</a>
-<a href="#1178" id="1178">1178</a>
-<a href="#1179" id="1179">1179</a>
-<a href="#1180" id="1180">1180</a>
-<a href="#1181" id="1181">1181</a>
-<a href="#1182" id="1182">1182</a>
-<a href="#1183" id="1183">1183</a>
-<a href="#1184" id="1184">1184</a>
-<a href="#1185" id="1185">1185</a>
-<a href="#1186" id="1186">1186</a>
-<a href="#1187" id="1187">1187</a>
-<a href="#1188" id="1188">1188</a>
-<a href="#1189" id="1189">1189</a>
-<a href="#1190" id="1190">1190</a>
-<a href="#1191" id="1191">1191</a>
-<a href="#1192" id="1192">1192</a>
-<a href="#1193" id="1193">1193</a>
-<a href="#1194" id="1194">1194</a>
-<a href="#1195" id="1195">1195</a>
-<a href="#1196" id="1196">1196</a>
-<a href="#1197" id="1197">1197</a>
-<a href="#1198" id="1198">1198</a>
-<a href="#1199" id="1199">1199</a>
-<a href="#1200" id="1200">1200</a>
-<a href="#1201" id="1201">1201</a>
-<a href="#1202" id="1202">1202</a>
-<a href="#1203" id="1203">1203</a>
-<a href="#1204" id="1204">1204</a>
-<a href="#1205" id="1205">1205</a>
-<a href="#1206" id="1206">1206</a>
-<a href="#1207" id="1207">1207</a>
-<a href="#1208" id="1208">1208</a>
-<a href="#1209" id="1209">1209</a>
-<a href="#1210" id="1210">1210</a>
-<a href="#1211" id="1211">1211</a>
-<a href="#1212" id="1212">1212</a>
-<a href="#1213" id="1213">1213</a>
-<a href="#1214" id="1214">1214</a>
-<a href="#1215" id="1215">1215</a>
-<a href="#1216" id="1216">1216</a>
-<a href="#1217" id="1217">1217</a>
-<a href="#1218" id="1218">1218</a>
-<a href="#1219" id="1219">1219</a>
-<a href="#1220" id="1220">1220</a>
-<a href="#1221" id="1221">1221</a>
-<a href="#1222" id="1222">1222</a>
-<a href="#1223" id="1223">1223</a>
-<a href="#1224" id="1224">1224</a>
-<a href="#1225" id="1225">1225</a>
-<a href="#1226" id="1226">1226</a>
-<a href="#1227" id="1227">1227</a>
-<a href="#1228" id="1228">1228</a>
-<a href="#1229" id="1229">1229</a>
-<a href="#1230" id="1230">1230</a>
-<a href="#1231" id="1231">1231</a>
-<a href="#1232" id="1232">1232</a>
-<a href="#1233" id="1233">1233</a>
-<a href="#1234" id="1234">1234</a>
-<a href="#1235" id="1235">1235</a>
-<a href="#1236" id="1236">1236</a>
-<a href="#1237" id="1237">1237</a>
-<a href="#1238" id="1238">1238</a>
-<a href="#1239" id="1239">1239</a>
-<a href="#1240" id="1240">1240</a>
-<a href="#1241" id="1241">1241</a>
-<a href="#1242" id="1242">1242</a>
-<a href="#1243" id="1243">1243</a>
-<a href="#1244" id="1244">1244</a>
-<a href="#1245" id="1245">1245</a>
-<a href="#1246" id="1246">1246</a>
-<a href="#1247" id="1247">1247</a>
-<a href="#1248" id="1248">1248</a>
-<a href="#1249" id="1249">1249</a>
-<a href="#1250" id="1250">1250</a>
-<a href="#1251" id="1251">1251</a>
-<a href="#1252" id="1252">1252</a>
-<a href="#1253" id="1253">1253</a>
-<a href="#1254" id="1254">1254</a>
-<a href="#1255" id="1255">1255</a>
-<a href="#1256" id="1256">1256</a>
-<a href="#1257" id="1257">1257</a>
-<a href="#1258" id="1258">1258</a>
-<a href="#1259" id="1259">1259</a>
-<a href="#1260" id="1260">1260</a>
-<a href="#1261" id="1261">1261</a>
-<a href="#1262" id="1262">1262</a>
-<a href="#1263" id="1263">1263</a>
-<a href="#1264" id="1264">1264</a>
-<a href="#1265" id="1265">1265</a>
-<a href="#1266" id="1266">1266</a>
-<a href="#1267" id="1267">1267</a>
-<a href="#1268" id="1268">1268</a>
-<a href="#1269" id="1269">1269</a>
-<a href="#1270" id="1270">1270</a>
-<a href="#1271" id="1271">1271</a>
-<a href="#1272" id="1272">1272</a>
-<a href="#1273" id="1273">1273</a>
-<a href="#1274" id="1274">1274</a>
-<a href="#1275" id="1275">1275</a>
-<a href="#1276" id="1276">1276</a>
-<a href="#1277" id="1277">1277</a>
-<a href="#1278" id="1278">1278</a>
-<a href="#1279" id="1279">1279</a>
-<a href="#1280" id="1280">1280</a>
-<a href="#1281" id="1281">1281</a>
-<a href="#1282" id="1282">1282</a>
-<a href="#1283" id="1283">1283</a>
-<a href="#1284" id="1284">1284</a>
-<a href="#1285" id="1285">1285</a>
-<a href="#1286" id="1286">1286</a>
-<a href="#1287" id="1287">1287</a>
-<a href="#1288" id="1288">1288</a>
-<a href="#1289" id="1289">1289</a>
-<a href="#1290" id="1290">1290</a>
-<a href="#1291" id="1291">1291</a>
-<a href="#1292" id="1292">1292</a>
-<a href="#1293" id="1293">1293</a>
-<a href="#1294" id="1294">1294</a>
-<a href="#1295" id="1295">1295</a>
-<a href="#1296" id="1296">1296</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 This module provides forward and reverse substring search routines.
 
@@ -1362,100 +803,28 @@ assert_eq!(None, finder.find(b&quot;quux baz bar&quot;));
 ```
 */
 
-</span><span class="kw">pub use </span><span class="self">self</span>::prefilter::Prefilter;
+</span><span class="kw">pub use </span><span class="kw">crate</span>::memmem::searcher::PrefilterConfig <span class="kw">as </span>Prefilter;
+
+<span class="comment">// This is exported here for use in the crate::arch::all::twoway
+// implementation. This is essentially an abstraction breaker. Namely, the
+// public API of twoway doesn&#39;t support providing a prefilter, but its crate
+// internal API does. The main reason for this is that I didn&#39;t want to do the
+// API design required to support it without a concrete use case.
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span><span class="kw">crate</span>::memmem::searcher::Pre;
 
 <span class="kw">use crate</span>::{
-    cow::CowBytes,
-    memmem::{
-        prefilter::{Pre, PrefilterFn, PrefilterState},
-        rabinkarp::NeedleHash,
-        rarebytes::RareNeedleBytes,
+    arch::all::{
+        packedpair::{DefaultFrequencyRank, HeuristicFrequencyRank},
+        rabinkarp,
     },
+    cow::CowBytes,
+    memmem::searcher::{PrefilterState, Searcher, SearcherRev},
 };
 
-<span class="doccomment">/// Defines a suite of quickcheck properties for forward and reverse
-/// substring searching.
-///
-/// This is defined in this specific spot so that it can be used freely among
-/// the different substring search implementations. I couldn&#39;t be bothered to
-/// fight with the macro-visibility rules enough to figure out how to stuff it
-/// somewhere more convenient.
-</span><span class="attr">#[cfg(all(test, feature = <span class="string">&quot;std&quot;</span>))]
-</span><span class="macro">macro_rules! </span>define_memmem_quickcheck_tests {
-    (<span class="macro-nonterminal">$fwd</span>:expr, <span class="macro-nonterminal">$rev</span>:expr) =&gt; {
-        <span class="kw">use </span><span class="kw">crate</span>::memmem::proptests;
+<span class="kw">mod </span>searcher;
 
-        <span class="macro">quickcheck::quickcheck! </span>{
-            <span class="kw">fn </span>qc_fwd_prefix_is_substring(bs: Vec&lt;u8&gt;) -&gt; bool {
-                proptests::prefix_is_substring(<span class="bool-val">false</span>, <span class="kw-2">&amp;</span>bs, <span class="macro-nonterminal">$fwd</span>)
-            }
-
-            <span class="kw">fn </span>qc_fwd_suffix_is_substring(bs: Vec&lt;u8&gt;) -&gt; bool {
-                proptests::suffix_is_substring(<span class="bool-val">false</span>, <span class="kw-2">&amp;</span>bs, <span class="macro-nonterminal">$fwd</span>)
-            }
-
-            <span class="kw">fn </span>qc_fwd_matches_naive(
-                haystack: Vec&lt;u8&gt;,
-                needle: Vec&lt;u8&gt;
-            ) -&gt; bool {
-                proptests::matches_naive(<span class="bool-val">false</span>, <span class="kw-2">&amp;</span>haystack, <span class="kw-2">&amp;</span>needle, <span class="macro-nonterminal">$fwd</span>)
-            }
-
-            <span class="kw">fn </span>qc_rev_prefix_is_substring(bs: Vec&lt;u8&gt;) -&gt; bool {
-                proptests::prefix_is_substring(<span class="bool-val">true</span>, <span class="kw-2">&amp;</span>bs, <span class="macro-nonterminal">$rev</span>)
-            }
-
-            <span class="kw">fn </span>qc_rev_suffix_is_substring(bs: Vec&lt;u8&gt;) -&gt; bool {
-                proptests::suffix_is_substring(<span class="bool-val">true</span>, <span class="kw-2">&amp;</span>bs, <span class="macro-nonterminal">$rev</span>)
-            }
-
-            <span class="kw">fn </span>qc_rev_matches_naive(
-                haystack: Vec&lt;u8&gt;,
-                needle: Vec&lt;u8&gt;
-            ) -&gt; bool {
-                proptests::matches_naive(<span class="bool-val">true</span>, <span class="kw-2">&amp;</span>haystack, <span class="kw-2">&amp;</span>needle, <span class="macro-nonterminal">$rev</span>)
-            }
-        }
-    };
-}
-
-<span class="doccomment">/// Defines a suite of &quot;simple&quot; hand-written tests for a substring
-/// implementation.
-///
-/// This is defined here for the same reason that
-/// define_memmem_quickcheck_tests is defined here.
-</span><span class="attr">#[cfg(test)]
-</span><span class="macro">macro_rules! </span>define_memmem_simple_tests {
-    (<span class="macro-nonterminal">$fwd</span>:expr, <span class="macro-nonterminal">$rev</span>:expr) =&gt; {
-        <span class="kw">use </span><span class="kw">crate</span>::memmem::testsimples;
-
-        <span class="attr">#[test]
-        </span><span class="kw">fn </span>simple_forward() {
-            testsimples::run_search_tests_fwd(<span class="macro-nonterminal">$fwd</span>);
-        }
-
-        <span class="attr">#[test]
-        </span><span class="kw">fn </span>simple_reverse() {
-            testsimples::run_search_tests_rev(<span class="macro-nonterminal">$rev</span>);
-        }
-    };
-}
-
-<span class="kw">mod </span>byte_frequencies;
-<span class="attr">#[cfg(all(target_arch = <span class="string">&quot;x86_64&quot;</span>, memchr_runtime_simd))]
-</span><span class="kw">mod </span>genericsimd;
-<span class="kw">mod </span>prefilter;
-<span class="kw">mod </span>rabinkarp;
-<span class="kw">mod </span>rarebytes;
-<span class="kw">mod </span>twoway;
-<span class="kw">mod </span>util;
-<span class="comment">// SIMD is only supported on x86_64 currently.
-</span><span class="attr">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
-</span><span class="kw">mod </span>vector;
-<span class="attr">#[cfg(all(not(miri), target_arch = <span class="string">&quot;x86_64&quot;</span>, memchr_runtime_simd))]
-</span><span class="kw">mod </span>x86;
-
-<span class="doccomment">/// Returns an iterator over all occurrences of a substring in a haystack.
+<span class="doccomment">/// Returns an iterator over all non-overlapping occurrences of a substring in
+/// a haystack.
 ///
 /// # Complexity
 ///
@@ -1488,8 +857,8 @@ assert_eq!(None, finder.find(b&quot;quux baz bar&quot;));
     FindIter::new(haystack, Finder::new(needle))
 }
 
-<span class="doccomment">/// Returns a reverse iterator over all occurrences of a substring in a
-/// haystack.
+<span class="doccomment">/// Returns a reverse iterator over all non-overlapping occurrences of a
+/// substring in a haystack.
 ///
 /// # Complexity
 ///
@@ -1552,7 +921,7 @@ assert_eq!(None, finder.find(b&quot;quux baz bar&quot;));
 </span><span class="attr">#[inline]
 </span><span class="kw">pub fn </span>find(haystack: <span class="kw-2">&amp;</span>[u8], needle: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
     <span class="kw">if </span>haystack.len() &lt; <span class="number">64 </span>{
-        rabinkarp::find(haystack, needle)
+        rabinkarp::Finder::new(needle).find(haystack, needle)
     } <span class="kw">else </span>{
         Finder::new(needle).find(haystack)
     }
@@ -1589,7 +958,7 @@ assert_eq!(None, finder.find(b&quot;quux baz bar&quot;));
 </span><span class="attr">#[inline]
 </span><span class="kw">pub fn </span>rfind(haystack: <span class="kw-2">&amp;</span>[u8], needle: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
     <span class="kw">if </span>haystack.len() &lt; <span class="number">64 </span>{
-        rabinkarp::rfind(haystack, needle)
+        rabinkarp::FinderRev::new(needle).rfind(haystack, needle)
     } <span class="kw">else </span>{
         FinderRev::new(needle).rfind(haystack)
     }
@@ -1601,7 +970,7 @@ assert_eq!(None, finder.find(b&quot;quux baz bar&quot;));
 ///
 /// `&#39;h` is the lifetime of the haystack while `&#39;n` is the lifetime of the
 /// needle.
-</span><span class="attr">#[derive(Debug)]
+</span><span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">pub struct </span>FindIter&lt;<span class="lifetime">&#39;h</span>, <span class="lifetime">&#39;n</span>&gt; {
     haystack: <span class="kw-2">&amp;</span><span class="lifetime">&#39;h </span>[u8],
     prestate: PrefilterState,
@@ -1615,8 +984,26 @@ assert_eq!(None, finder.find(b&quot;quux baz bar&quot;));
         haystack: <span class="kw-2">&amp;</span><span class="lifetime">&#39;h </span>[u8],
         finder: Finder&lt;<span class="lifetime">&#39;n</span>&gt;,
     ) -&gt; FindIter&lt;<span class="lifetime">&#39;h</span>, <span class="lifetime">&#39;n</span>&gt; {
-        <span class="kw">let </span>prestate = finder.searcher.prefilter_state();
+        <span class="kw">let </span>prestate = PrefilterState::new();
         FindIter { haystack, prestate, finder, pos: <span class="number">0 </span>}
+    }
+
+    <span class="doccomment">/// Convert this iterator into its owned variant, such that it no longer
+    /// borrows the finder and needle.
+    ///
+    /// If this is already an owned iterator, then this is a no-op. Otherwise,
+    /// this copies the needle.
+    ///
+    /// This is only available when the `alloc` feature is enabled.
+    </span><span class="attr">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]
+    #[inline]
+    </span><span class="kw">pub fn </span>into_owned(<span class="self">self</span>) -&gt; FindIter&lt;<span class="lifetime">&#39;h</span>, <span class="lifetime">&#39;static</span>&gt; {
+        FindIter {
+            haystack: <span class="self">self</span>.haystack,
+            prestate: <span class="self">self</span>.prestate,
+            finder: <span class="self">self</span>.finder.into_owned(),
+            pos: <span class="self">self</span>.pos,
+        }
     }
 }
 
@@ -1624,20 +1011,32 @@ assert_eq!(None, finder.find(b&quot;quux baz bar&quot;));
     <span class="kw">type </span>Item = usize;
 
     <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
-        <span class="kw">if </span><span class="self">self</span>.pos &gt; <span class="self">self</span>.haystack.len() {
-            <span class="kw">return </span><span class="prelude-val">None</span>;
-        }
-        <span class="kw">let </span>result = <span class="self">self
-            </span>.finder
-            .searcher
-            .find(<span class="kw-2">&amp;mut </span><span class="self">self</span>.prestate, <span class="kw-2">&amp;</span><span class="self">self</span>.haystack[<span class="self">self</span>.pos..]);
-        <span class="kw">match </span>result {
-            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
-            <span class="prelude-val">Some</span>(i) =&gt; {
-                <span class="kw">let </span>pos = <span class="self">self</span>.pos + i;
-                <span class="self">self</span>.pos = pos + core::cmp::max(<span class="number">1</span>, <span class="self">self</span>.finder.needle().len());
-                <span class="prelude-val">Some</span>(pos)
-            }
+        <span class="kw">let </span>needle = <span class="self">self</span>.finder.needle();
+        <span class="kw">let </span>haystack = <span class="self">self</span>.haystack.get(<span class="self">self</span>.pos..)<span class="question-mark">?</span>;
+        <span class="kw">let </span>idx =
+            <span class="self">self</span>.finder.searcher.find(<span class="kw-2">&amp;mut </span><span class="self">self</span>.prestate, haystack, needle)<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>pos = <span class="self">self</span>.pos + idx;
+        <span class="self">self</span>.pos = pos + needle.len().max(<span class="number">1</span>);
+
+        <span class="prelude-val">Some</span>(pos)
+    }
+
+    <span class="kw">fn </span>size_hint(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (usize, <span class="prelude-ty">Option</span>&lt;usize&gt;) {
+        <span class="comment">// The largest possible number of non-overlapping matches is the
+        // quotient of the haystack and the needle (or the length of the
+        // haystack, if the needle is empty)
+        </span><span class="kw">match </span><span class="self">self</span>.haystack.len().checked_sub(<span class="self">self</span>.pos) {
+            <span class="prelude-val">None </span>=&gt; (<span class="number">0</span>, <span class="prelude-val">Some</span>(<span class="number">0</span>)),
+            <span class="prelude-val">Some</span>(haystack_len) =&gt; <span class="kw">match </span><span class="self">self</span>.finder.needle().len() {
+                <span class="comment">// Empty needles always succeed and match at every point
+                // (including the very end)
+                </span><span class="number">0 </span>=&gt; (
+                    haystack_len.saturating_add(<span class="number">1</span>),
+                    haystack_len.checked_add(<span class="number">1</span>),
+                ),
+                needle_len =&gt; (<span class="number">0</span>, <span class="prelude-val">Some</span>(haystack_len / needle_len)),
+            },
         }
     }
 }
@@ -1648,7 +1047,7 @@ assert_eq!(None, finder.find(b&quot;quux baz bar&quot;));
 ///
 /// `&#39;h` is the lifetime of the haystack while `&#39;n` is the lifetime of the
 /// needle.
-</span><span class="attr">#[derive(Debug)]
+</span><span class="attr">#[derive(Clone, Debug)]
 </span><span class="kw">pub struct </span>FindRevIter&lt;<span class="lifetime">&#39;h</span>, <span class="lifetime">&#39;n</span>&gt; {
     haystack: <span class="kw-2">&amp;</span><span class="lifetime">&#39;h </span>[u8],
     finder: FinderRev&lt;<span class="lifetime">&#39;n</span>&gt;,
@@ -1665,6 +1064,23 @@ assert_eq!(None, finder.find(b&quot;quux baz bar&quot;));
     ) -&gt; FindRevIter&lt;<span class="lifetime">&#39;h</span>, <span class="lifetime">&#39;n</span>&gt; {
         <span class="kw">let </span>pos = <span class="prelude-val">Some</span>(haystack.len());
         FindRevIter { haystack, finder, pos }
+    }
+
+    <span class="doccomment">/// Convert this iterator into its owned variant, such that it no longer
+    /// borrows the finder and needle.
+    ///
+    /// If this is already an owned iterator, then this is a no-op. Otherwise,
+    /// this copies the needle.
+    ///
+    /// This is only available when the `std` feature is enabled.
+    </span><span class="attr">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]
+    #[inline]
+    </span><span class="kw">pub fn </span>into_owned(<span class="self">self</span>) -&gt; FindRevIter&lt;<span class="lifetime">&#39;h</span>, <span class="lifetime">&#39;static</span>&gt; {
+        FindRevIter {
+            haystack: <span class="self">self</span>.haystack,
+            finder: <span class="self">self</span>.finder.into_owned(),
+            pos: <span class="self">self</span>.pos,
+        }
     }
 }
 
@@ -1706,7 +1122,8 @@ assert_eq!(None, finder.find(b&quot;quux baz bar&quot;));
 /// the lifetime of its needle.
 </span><span class="attr">#[derive(Clone, Debug)]
 </span><span class="kw">pub struct </span>Finder&lt;<span class="lifetime">&#39;n</span>&gt; {
-    searcher: Searcher&lt;<span class="lifetime">&#39;n</span>&gt;,
+    needle: CowBytes&lt;<span class="lifetime">&#39;n</span>&gt;,
+    searcher: Searcher,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;n</span>&gt; Finder&lt;<span class="lifetime">&#39;n</span>&gt; {
@@ -1740,8 +1157,11 @@ assert_eq!(None, finder.find(b&quot;quux baz bar&quot;));
     /// assert_eq!(Some(4), Finder::new(&quot;bar&quot;).find(haystack));
     /// assert_eq!(None, Finder::new(&quot;quux&quot;).find(haystack));
     /// ```
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>find(<span class="kw-2">&amp;</span><span class="self">self</span>, haystack: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
-        <span class="self">self</span>.searcher.find(<span class="kw-2">&amp;mut </span><span class="self">self</span>.searcher.prefilter_state(), haystack)
+        <span class="kw">let </span><span class="kw-2">mut </span>prestate = PrefilterState::new();
+        <span class="kw">let </span>needle = <span class="self">self</span>.needle.as_slice();
+        <span class="self">self</span>.searcher.find(<span class="kw-2">&amp;mut </span>prestate, haystack, needle)
     }
 
     <span class="doccomment">/// Returns an iterator over all occurrences of a substring in a haystack.
@@ -1784,11 +1204,14 @@ assert_eq!(None, finder.find(b&quot;quux baz bar&quot;));
     /// If this is already an owned finder, then this is a no-op. Otherwise,
     /// this copies the needle.
     ///
-    /// This is only available when the `std` feature is enabled.
-    </span><span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+    /// This is only available when the `alloc` feature is enabled.
+    </span><span class="attr">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]
     #[inline]
     </span><span class="kw">pub fn </span>into_owned(<span class="self">self</span>) -&gt; Finder&lt;<span class="lifetime">&#39;static</span>&gt; {
-        Finder { searcher: <span class="self">self</span>.searcher.into_owned() }
+        Finder {
+            needle: <span class="self">self</span>.needle.into_owned(),
+            searcher: <span class="self">self</span>.searcher.clone(),
+        }
     }
 
     <span class="doccomment">/// Convert this finder into its borrowed variant.
@@ -1803,7 +1226,10 @@ assert_eq!(None, finder.find(b&quot;quux baz bar&quot;));
     /// shorter of the two.
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>as_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Finder&lt;<span class="lifetime">&#39;_</span>&gt; {
-        Finder { searcher: <span class="self">self</span>.searcher.as_ref() }
+        Finder {
+            needle: CowBytes::new(<span class="self">self</span>.needle()),
+            searcher: <span class="self">self</span>.searcher.clone(),
+        }
     }
 
     <span class="doccomment">/// Returns the needle that this finder searches for.
@@ -1814,7 +1240,7 @@ assert_eq!(None, finder.find(b&quot;quux baz bar&quot;));
     /// needle returned must necessarily be the shorter of the two.
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>needle(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
-        <span class="self">self</span>.searcher.needle()
+        <span class="self">self</span>.needle.as_slice()
     }
 }
 
@@ -1833,7 +1259,8 @@ assert_eq!(None, finder.find(b&quot;quux baz bar&quot;));
 /// the lifetime of its needle.
 </span><span class="attr">#[derive(Clone, Debug)]
 </span><span class="kw">pub struct </span>FinderRev&lt;<span class="lifetime">&#39;n</span>&gt; {
-    searcher: SearcherRev&lt;<span class="lifetime">&#39;n</span>&gt;,
+    needle: CowBytes&lt;<span class="lifetime">&#39;n</span>&gt;,
+    searcher: SearcherRev,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;n</span>&gt; FinderRev&lt;<span class="lifetime">&#39;n</span>&gt; {
@@ -1871,7 +1298,7 @@ assert_eq!(None, finder.find(b&quot;quux baz bar&quot;));
     /// assert_eq!(None, FinderRev::new(&quot;quux&quot;).rfind(haystack));
     /// ```
     </span><span class="kw">pub fn </span>rfind&lt;B: AsRef&lt;[u8]&gt;&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, haystack: B) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
-        <span class="self">self</span>.searcher.rfind(haystack.as_ref())
+        <span class="self">self</span>.searcher.rfind(haystack.as_ref(), <span class="self">self</span>.needle.as_slice())
     }
 
     <span class="doccomment">/// Returns a reverse iterator over all occurrences of a substring in a
@@ -1916,10 +1343,13 @@ assert_eq!(None, finder.find(b&quot;quux baz bar&quot;));
     /// this copies the needle.
     ///
     /// This is only available when the `std` feature is enabled.
-    </span><span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+    </span><span class="attr">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]
     #[inline]
     </span><span class="kw">pub fn </span>into_owned(<span class="self">self</span>) -&gt; FinderRev&lt;<span class="lifetime">&#39;static</span>&gt; {
-        FinderRev { searcher: <span class="self">self</span>.searcher.into_owned() }
+        FinderRev {
+            needle: <span class="self">self</span>.needle.into_owned(),
+            searcher: <span class="self">self</span>.searcher.clone(),
+        }
     }
 
     <span class="doccomment">/// Convert this finder into its borrowed variant.
@@ -1934,7 +1364,10 @@ assert_eq!(None, finder.find(b&quot;quux baz bar&quot;));
     /// shorter of the two.
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>as_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; FinderRev&lt;<span class="lifetime">&#39;_</span>&gt; {
-        FinderRev { searcher: <span class="self">self</span>.searcher.as_ref() }
+        FinderRev {
+            needle: CowBytes::new(<span class="self">self</span>.needle()),
+            searcher: <span class="self">self</span>.searcher.clone(),
+        }
     }
 
     <span class="doccomment">/// Returns the needle that this finder searches for.
@@ -1945,7 +1378,7 @@ assert_eq!(None, finder.find(b&quot;quux baz bar&quot;));
     /// needle returned must necessarily be the shorter of the two.
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>needle(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
-        <span class="self">self</span>.searcher.needle()
+        <span class="self">self</span>.needle.as_slice()
     }
 }
 
@@ -1956,7 +1389,7 @@ assert_eq!(None, finder.find(b&quot;quux baz bar&quot;));
 /// heuristic prefilters used to speed up certain searches.
 </span><span class="attr">#[derive(Clone, Debug, Default)]
 </span><span class="kw">pub struct </span>FinderBuilder {
-    config: SearcherConfig,
+    prefilter: Prefilter,
 }
 
 <span class="kw">impl </span>FinderBuilder {
@@ -1971,7 +1404,26 @@ assert_eq!(None, finder.find(b&quot;quux baz bar&quot;));
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         needle: <span class="kw-2">&amp;</span><span class="lifetime">&#39;n </span>B,
     ) -&gt; Finder&lt;<span class="lifetime">&#39;n</span>&gt; {
-        Finder { searcher: Searcher::new(<span class="self">self</span>.config, needle.as_ref()) }
+        <span class="self">self</span>.build_forward_with_ranker(DefaultFrequencyRank, needle)
+    }
+
+    <span class="doccomment">/// Build a forward finder using the given needle and a custom heuristic for
+    /// determining the frequency of a given byte in the dataset.
+    /// See [`HeuristicFrequencyRank`] for more details.
+    </span><span class="kw">pub fn </span>build_forward_with_ranker&lt;
+        <span class="lifetime">&#39;n</span>,
+        R: HeuristicFrequencyRank,
+        B: <span class="question-mark">?</span>Sized + AsRef&lt;[u8]&gt;,
+    &gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        ranker: R,
+        needle: <span class="kw-2">&amp;</span><span class="lifetime">&#39;n </span>B,
+    ) -&gt; Finder&lt;<span class="lifetime">&#39;n</span>&gt; {
+        <span class="kw">let </span>needle = needle.as_ref();
+        Finder {
+            needle: CowBytes::new(needle),
+            searcher: Searcher::new(<span class="self">self</span>.prefilter, ranker, needle),
+        }
     }
 
     <span class="doccomment">/// Build a reverse finder using the given needle from the current
@@ -1980,7 +1432,11 @@ assert_eq!(None, finder.find(b&quot;quux baz bar&quot;));
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         needle: <span class="kw-2">&amp;</span><span class="lifetime">&#39;n </span>B,
     ) -&gt; FinderRev&lt;<span class="lifetime">&#39;n</span>&gt; {
-        FinderRev { searcher: SearcherRev::new(needle.as_ref()) }
+        <span class="kw">let </span>needle = needle.as_ref();
+        FinderRev {
+            needle: CowBytes::new(needle),
+            searcher: SearcherRev::new(needle),
+        }
     }
 
     <span class="doccomment">/// Configure the prefilter setting for the finder.
@@ -1988,606 +1444,32 @@ assert_eq!(None, finder.find(b&quot;quux baz bar&quot;));
     /// See the documentation for [`Prefilter`] for more discussion on why
     /// you might want to configure this.
     </span><span class="kw">pub fn </span>prefilter(<span class="kw-2">&amp;mut </span><span class="self">self</span>, prefilter: Prefilter) -&gt; <span class="kw-2">&amp;mut </span>FinderBuilder {
-        <span class="self">self</span>.config.prefilter = prefilter;
+        <span class="self">self</span>.prefilter = prefilter;
         <span class="self">self
     </span>}
 }
 
-<span class="doccomment">/// The internal implementation of a forward substring searcher.
-///
-/// The reality is that this is a &quot;meta&quot; searcher. Namely, depending on a
-/// variety of parameters (CPU support, target, needle size, haystack size and
-/// even dynamic properties such as prefilter effectiveness), the actual
-/// algorithm employed to do substring search may change.
-</span><span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">struct </span>Searcher&lt;<span class="lifetime">&#39;n</span>&gt; {
-    <span class="doccomment">/// The actual needle we&#39;re searching for.
-    ///
-    /// A CowBytes is like a Cow&lt;[u8]&gt;, except in no_std environments, it is
-    /// specialized to a single variant (the borrowed form).
-    </span>needle: CowBytes&lt;<span class="lifetime">&#39;n</span>&gt;,
-    <span class="doccomment">/// A collection of facts computed on the needle that are useful for more
-    /// than one substring search algorithm.
-    </span>ninfo: NeedleInfo,
-    <span class="doccomment">/// A prefilter function, if it was deemed appropriate.
-    ///
-    /// Some substring search implementations (like Two-Way) benefit greatly
-    /// if we can quickly find candidate starting positions for a match.
-    </span>prefn: <span class="prelude-ty">Option</span>&lt;PrefilterFn&gt;,
-    <span class="doccomment">/// The actual substring implementation in use.
-    </span>kind: SearcherKind,
-}
+<span class="attr">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-<span class="doccomment">/// A collection of facts computed about a search needle.
-///
-/// We group these things together because it&#39;s useful to be able to hand them
-/// to prefilters or substring algorithms that want them.
-</span><span class="attr">#[derive(Clone, Copy, Debug)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>NeedleInfo {
-    <span class="doccomment">/// The offsets of &quot;rare&quot; bytes detected in the needle.
-    ///
-    /// This is meant to be a heuristic in order to maximize the effectiveness
-    /// of vectorized code. Namely, vectorized code tends to focus on only
-    /// one or two bytes. If we pick bytes from the needle that occur
-    /// infrequently, then more time will be spent in the vectorized code and
-    /// will likely make the overall search (much) faster.
-    ///
-    /// Of course, this is only a heuristic based on a background frequency
-    /// distribution of bytes. But it tends to work very well in practice.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) rarebytes: RareNeedleBytes,
-    <span class="doccomment">/// A Rabin-Karp hash of the needle.
-    ///
-    /// This is store here instead of in a more specific Rabin-Karp search
-    /// since Rabin-Karp may be used even if another SearchKind corresponds
-    /// to some other search implementation. e.g., If measurements suggest RK
-    /// is faster in some cases or if a search implementation can&#39;t handle
-    /// particularly small haystack. (Moreover, we cannot use RK *generally*,
-    /// since its worst case time is multiplicative. Instead, we only use it
-    /// some small haystacks, where &quot;small&quot; is a constant.)
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) nhash: NeedleHash,
-}
+    <span class="macro">define_substring_forward_quickcheck!</span>(|h, n| <span class="prelude-val">Some</span>(Finder::new(n).find(h)));
+    <span class="macro">define_substring_reverse_quickcheck!</span>(|h, n| <span class="prelude-val">Some</span>(
+        FinderRev::new(n).rfind(h)
+    ));
 
-<span class="doccomment">/// Configuration for substring search.
-</span><span class="attr">#[derive(Clone, Copy, Debug, Default)]
-</span><span class="kw">struct </span>SearcherConfig {
-    <span class="doccomment">/// This permits changing the behavior of the prefilter, since it can have
-    /// a variable impact on performance.
-    </span>prefilter: Prefilter,
-}
-
-<span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">enum </span>SearcherKind {
-    <span class="doccomment">/// A special case for empty needles. An empty needle always matches, even
-    /// in an empty haystack.
-    </span>Empty,
-    <span class="doccomment">/// This is used whenever the needle is a single byte. In this case, we
-    /// always use memchr.
-    </span>OneByte(u8),
-    <span class="doccomment">/// Two-Way is the generic work horse and is what provides our additive
-    /// linear time guarantee. In general, it&#39;s used when the needle is bigger
-    /// than 8 bytes or so.
-    </span>TwoWay(twoway::Forward),
-    <span class="attr">#[cfg(all(not(miri), target_arch = <span class="string">&quot;x86_64&quot;</span>, memchr_runtime_simd))]
-    </span>GenericSIMD128(x86::sse::Forward),
-    <span class="attr">#[cfg(all(not(miri), target_arch = <span class="string">&quot;x86_64&quot;</span>, memchr_runtime_simd))]
-    </span>GenericSIMD256(x86::avx::Forward),
-}
-
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;n</span>&gt; Searcher&lt;<span class="lifetime">&#39;n</span>&gt; {
-    <span class="attr">#[cfg(all(not(miri), target_arch = <span class="string">&quot;x86_64&quot;</span>, memchr_runtime_simd))]
-    </span><span class="kw">fn </span>new(config: SearcherConfig, needle: <span class="kw-2">&amp;</span><span class="lifetime">&#39;n </span>[u8]) -&gt; Searcher&lt;<span class="lifetime">&#39;n</span>&gt; {
-        <span class="kw">use </span><span class="self">self</span>::SearcherKind::<span class="kw-2">*</span>;
-
-        <span class="kw">let </span>ninfo = NeedleInfo::new(needle);
-        <span class="kw">let </span>prefn =
-            prefilter::forward(<span class="kw-2">&amp;</span>config.prefilter, <span class="kw-2">&amp;</span>ninfo.rarebytes, needle);
-        <span class="kw">let </span>kind = <span class="kw">if </span>needle.len() == <span class="number">0 </span>{
-            Empty
-        } <span class="kw">else if </span>needle.len() == <span class="number">1 </span>{
-            OneByte(needle[<span class="number">0</span>])
-        } <span class="kw">else if let </span><span class="prelude-val">Some</span>(fwd) = x86::avx::Forward::new(<span class="kw-2">&amp;</span>ninfo, needle) {
-            GenericSIMD256(fwd)
-        } <span class="kw">else if let </span><span class="prelude-val">Some</span>(fwd) = x86::sse::Forward::new(<span class="kw-2">&amp;</span>ninfo, needle) {
-            GenericSIMD128(fwd)
-        } <span class="kw">else </span>{
-            TwoWay(twoway::Forward::new(needle))
-        };
-        Searcher { needle: CowBytes::new(needle), ninfo, prefn, kind }
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>forward() {
+        <span class="kw">crate</span>::tests::substring::Runner::new()
+            .fwd(|h, n| <span class="prelude-val">Some</span>(Finder::new(n).find(h)))
+            .run();
     }
 
-    <span class="attr">#[cfg(not(all(not(miri), target_arch = <span class="string">&quot;x86_64&quot;</span>, memchr_runtime_simd)))]
-    </span><span class="kw">fn </span>new(config: SearcherConfig, needle: <span class="kw-2">&amp;</span><span class="lifetime">&#39;n </span>[u8]) -&gt; Searcher&lt;<span class="lifetime">&#39;n</span>&gt; {
-        <span class="kw">use </span><span class="self">self</span>::SearcherKind::<span class="kw-2">*</span>;
-
-        <span class="kw">let </span>ninfo = NeedleInfo::new(needle);
-        <span class="kw">let </span>prefn =
-            prefilter::forward(<span class="kw-2">&amp;</span>config.prefilter, <span class="kw-2">&amp;</span>ninfo.rarebytes, needle);
-        <span class="kw">let </span>kind = <span class="kw">if </span>needle.len() == <span class="number">0 </span>{
-            Empty
-        } <span class="kw">else if </span>needle.len() == <span class="number">1 </span>{
-            OneByte(needle[<span class="number">0</span>])
-        } <span class="kw">else </span>{
-            TwoWay(twoway::Forward::new(needle))
-        };
-        Searcher { needle: CowBytes::new(needle), ninfo, prefn, kind }
-    }
-
-    <span class="doccomment">/// Return a fresh prefilter state that can be used with this searcher.
-    /// A prefilter state is used to track the effectiveness of a searcher&#39;s
-    /// prefilter for speeding up searches. Therefore, the prefilter state
-    /// should generally be reused on subsequent searches (such as in an
-    /// iterator). For searches on a different haystack, then a new prefilter
-    /// state should be used.
-    ///
-    /// This always initializes a valid (but possibly inert) prefilter state
-    /// even if this searcher does not have a prefilter enabled.
-    </span><span class="kw">fn </span>prefilter_state(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; PrefilterState {
-        <span class="kw">if </span><span class="self">self</span>.prefn.is_none() {
-            PrefilterState::inert()
-        } <span class="kw">else </span>{
-            PrefilterState::new()
-        }
-    }
-
-    <span class="kw">fn </span>needle(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
-        <span class="self">self</span>.needle.as_slice()
-    }
-
-    <span class="kw">fn </span>as_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Searcher&lt;<span class="lifetime">&#39;_</span>&gt; {
-        <span class="kw">use </span><span class="self">self</span>::SearcherKind::<span class="kw-2">*</span>;
-
-        <span class="kw">let </span>kind = <span class="kw">match </span><span class="self">self</span>.kind {
-            Empty =&gt; Empty,
-            OneByte(b) =&gt; OneByte(b),
-            TwoWay(tw) =&gt; TwoWay(tw),
-            <span class="attr">#[cfg(all(
-                not(miri),
-                target_arch = <span class="string">&quot;x86_64&quot;</span>,
-                memchr_runtime_simd
-            ))]
-            </span>GenericSIMD128(gs) =&gt; GenericSIMD128(gs),
-            <span class="attr">#[cfg(all(
-                not(miri),
-                target_arch = <span class="string">&quot;x86_64&quot;</span>,
-                memchr_runtime_simd
-            ))]
-            </span>GenericSIMD256(gs) =&gt; GenericSIMD256(gs),
-        };
-        Searcher {
-            needle: CowBytes::new(<span class="self">self</span>.needle()),
-            ninfo: <span class="self">self</span>.ninfo,
-            prefn: <span class="self">self</span>.prefn,
-            kind,
-        }
-    }
-
-    <span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
-    </span><span class="kw">fn </span>into_owned(<span class="self">self</span>) -&gt; Searcher&lt;<span class="lifetime">&#39;static</span>&gt; {
-        <span class="kw">use </span><span class="self">self</span>::SearcherKind::<span class="kw-2">*</span>;
-
-        <span class="kw">let </span>kind = <span class="kw">match </span><span class="self">self</span>.kind {
-            Empty =&gt; Empty,
-            OneByte(b) =&gt; OneByte(b),
-            TwoWay(tw) =&gt; TwoWay(tw),
-            <span class="attr">#[cfg(all(
-                not(miri),
-                target_arch = <span class="string">&quot;x86_64&quot;</span>,
-                memchr_runtime_simd
-            ))]
-            </span>GenericSIMD128(gs) =&gt; GenericSIMD128(gs),
-            <span class="attr">#[cfg(all(
-                not(miri),
-                target_arch = <span class="string">&quot;x86_64&quot;</span>,
-                memchr_runtime_simd
-            ))]
-            </span>GenericSIMD256(gs) =&gt; GenericSIMD256(gs),
-        };
-        Searcher {
-            needle: <span class="self">self</span>.needle.into_owned(),
-            ninfo: <span class="self">self</span>.ninfo,
-            prefn: <span class="self">self</span>.prefn,
-            kind,
-        }
-    }
-
-    <span class="doccomment">/// Implements forward substring search by selecting the implementation
-    /// chosen at construction and executing it on the given haystack with the
-    /// prefilter&#39;s current state of effectiveness.
-    </span><span class="attr">#[inline(always)]
-    </span><span class="kw">fn </span>find(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        state: <span class="kw-2">&amp;mut </span>PrefilterState,
-        haystack: <span class="kw-2">&amp;</span>[u8],
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
-        <span class="kw">use </span><span class="self">self</span>::SearcherKind::<span class="kw-2">*</span>;
-
-        <span class="kw">let </span>needle = <span class="self">self</span>.needle();
-        <span class="kw">if </span>haystack.len() &lt; needle.len() {
-            <span class="kw">return </span><span class="prelude-val">None</span>;
-        }
-        <span class="kw">match </span><span class="self">self</span>.kind {
-            Empty =&gt; <span class="prelude-val">Some</span>(<span class="number">0</span>),
-            OneByte(b) =&gt; <span class="kw">crate</span>::memchr(b, haystack),
-            TwoWay(<span class="kw-2">ref </span>tw) =&gt; {
-                <span class="comment">// For very short haystacks (e.g., where the prefilter probably
-                // can&#39;t run), it&#39;s faster to just run RK.
-                </span><span class="kw">if </span>rabinkarp::is_fast(haystack, needle) {
-                    rabinkarp::find_with(<span class="kw-2">&amp;</span><span class="self">self</span>.ninfo.nhash, haystack, needle)
-                } <span class="kw">else </span>{
-                    <span class="self">self</span>.find_tw(tw, state, haystack, needle)
-                }
-            }
-            <span class="attr">#[cfg(all(
-                not(miri),
-                target_arch = <span class="string">&quot;x86_64&quot;</span>,
-                memchr_runtime_simd
-            ))]
-            </span>GenericSIMD128(<span class="kw-2">ref </span>gs) =&gt; {
-                <span class="comment">// The SIMD matcher can&#39;t handle particularly short haystacks,
-                // so we fall back to RK in these cases.
-                </span><span class="kw">if </span>haystack.len() &lt; gs.min_haystack_len() {
-                    rabinkarp::find_with(<span class="kw-2">&amp;</span><span class="self">self</span>.ninfo.nhash, haystack, needle)
-                } <span class="kw">else </span>{
-                    gs.find(haystack, needle)
-                }
-            }
-            <span class="attr">#[cfg(all(
-                not(miri),
-                target_arch = <span class="string">&quot;x86_64&quot;</span>,
-                memchr_runtime_simd
-            ))]
-            </span>GenericSIMD256(<span class="kw-2">ref </span>gs) =&gt; {
-                <span class="comment">// The SIMD matcher can&#39;t handle particularly short haystacks,
-                // so we fall back to RK in these cases.
-                </span><span class="kw">if </span>haystack.len() &lt; gs.min_haystack_len() {
-                    rabinkarp::find_with(<span class="kw-2">&amp;</span><span class="self">self</span>.ninfo.nhash, haystack, needle)
-                } <span class="kw">else </span>{
-                    gs.find(haystack, needle)
-                }
-            }
-        }
-    }
-
-    <span class="doccomment">/// Calls Two-Way on the given haystack/needle.
-    ///
-    /// This is marked as unlineable since it seems to have a better overall
-    /// effect on benchmarks. However, this is one of those cases where
-    /// inlining it results an improvement in other benchmarks too, so I
-    /// suspect we just don&#39;t have enough data yet to make the right call here.
-    ///
-    /// I suspect the main problem is that this function contains two different
-    /// inlined copies of Two-Way: one with and one without prefilters enabled.
-    </span><span class="attr">#[inline(never)]
-    </span><span class="kw">fn </span>find_tw(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        tw: <span class="kw-2">&amp;</span>twoway::Forward,
-        state: <span class="kw-2">&amp;mut </span>PrefilterState,
-        haystack: <span class="kw-2">&amp;</span>[u8],
-        needle: <span class="kw-2">&amp;</span>[u8],
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(prefn) = <span class="self">self</span>.prefn {
-            <span class="comment">// We used to look at the length of a haystack here. That is, if
-            // it was too small, then don&#39;t bother with the prefilter. But two
-            // things changed: the prefilter falls back to memchr for small
-            // haystacks, and, above, Rabin-Karp is employed for tiny haystacks
-            // anyway.
-            </span><span class="kw">if </span>state.is_effective() {
-                <span class="kw">let </span><span class="kw-2">mut </span>pre = Pre { state, prefn, ninfo: <span class="kw-2">&amp;</span><span class="self">self</span>.ninfo };
-                <span class="kw">return </span>tw.find(<span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span>pre), haystack, needle);
-            }
-        }
-        tw.find(<span class="prelude-val">None</span>, haystack, needle)
-    }
-}
-
-<span class="kw">impl </span>NeedleInfo {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(needle: <span class="kw-2">&amp;</span>[u8]) -&gt; NeedleInfo {
-        NeedleInfo {
-            rarebytes: RareNeedleBytes::forward(needle),
-            nhash: NeedleHash::forward(needle),
-        }
-    }
-}
-
-<span class="doccomment">/// The internal implementation of a reverse substring searcher.
-///
-/// See the forward searcher docs for more details. Currently, the reverse
-/// searcher is considerably simpler since it lacks prefilter support. This
-/// was done because it adds a lot of code, and more surface area to test. And
-/// in particular, it&#39;s not clear whether a prefilter on reverse searching is
-/// worth it. (If you have a compelling use case, please file an issue!)
-</span><span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">struct </span>SearcherRev&lt;<span class="lifetime">&#39;n</span>&gt; {
-    <span class="doccomment">/// The actual needle we&#39;re searching for.
-    </span>needle: CowBytes&lt;<span class="lifetime">&#39;n</span>&gt;,
-    <span class="doccomment">/// A Rabin-Karp hash of the needle.
-    </span>nhash: NeedleHash,
-    <span class="doccomment">/// The actual substring implementation in use.
-    </span>kind: SearcherRevKind,
-}
-
-<span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">enum </span>SearcherRevKind {
-    <span class="doccomment">/// A special case for empty needles. An empty needle always matches, even
-    /// in an empty haystack.
-    </span>Empty,
-    <span class="doccomment">/// This is used whenever the needle is a single byte. In this case, we
-    /// always use memchr.
-    </span>OneByte(u8),
-    <span class="doccomment">/// Two-Way is the generic work horse and is what provides our additive
-    /// linear time guarantee. In general, it&#39;s used when the needle is bigger
-    /// than 8 bytes or so.
-    </span>TwoWay(twoway::Reverse),
-}
-
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;n</span>&gt; SearcherRev&lt;<span class="lifetime">&#39;n</span>&gt; {
-    <span class="kw">fn </span>new(needle: <span class="kw-2">&amp;</span><span class="lifetime">&#39;n </span>[u8]) -&gt; SearcherRev&lt;<span class="lifetime">&#39;n</span>&gt; {
-        <span class="kw">use </span><span class="self">self</span>::SearcherRevKind::<span class="kw-2">*</span>;
-
-        <span class="kw">let </span>kind = <span class="kw">if </span>needle.len() == <span class="number">0 </span>{
-            Empty
-        } <span class="kw">else if </span>needle.len() == <span class="number">1 </span>{
-            OneByte(needle[<span class="number">0</span>])
-        } <span class="kw">else </span>{
-            TwoWay(twoway::Reverse::new(needle))
-        };
-        SearcherRev {
-            needle: CowBytes::new(needle),
-            nhash: NeedleHash::reverse(needle),
-            kind,
-        }
-    }
-
-    <span class="kw">fn </span>needle(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
-        <span class="self">self</span>.needle.as_slice()
-    }
-
-    <span class="kw">fn </span>as_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; SearcherRev&lt;<span class="lifetime">&#39;_</span>&gt; {
-        <span class="kw">use </span><span class="self">self</span>::SearcherRevKind::<span class="kw-2">*</span>;
-
-        <span class="kw">let </span>kind = <span class="kw">match </span><span class="self">self</span>.kind {
-            Empty =&gt; Empty,
-            OneByte(b) =&gt; OneByte(b),
-            TwoWay(tw) =&gt; TwoWay(tw),
-        };
-        SearcherRev {
-            needle: CowBytes::new(<span class="self">self</span>.needle()),
-            nhash: <span class="self">self</span>.nhash,
-            kind,
-        }
-    }
-
-    <span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
-    </span><span class="kw">fn </span>into_owned(<span class="self">self</span>) -&gt; SearcherRev&lt;<span class="lifetime">&#39;static</span>&gt; {
-        <span class="kw">use </span><span class="self">self</span>::SearcherRevKind::<span class="kw-2">*</span>;
-
-        <span class="kw">let </span>kind = <span class="kw">match </span><span class="self">self</span>.kind {
-            Empty =&gt; Empty,
-            OneByte(b) =&gt; OneByte(b),
-            TwoWay(tw) =&gt; TwoWay(tw),
-        };
-        SearcherRev {
-            needle: <span class="self">self</span>.needle.into_owned(),
-            nhash: <span class="self">self</span>.nhash,
-            kind,
-        }
-    }
-
-    <span class="doccomment">/// Implements reverse substring search by selecting the implementation
-    /// chosen at construction and executing it on the given haystack with the
-    /// prefilter&#39;s current state of effectiveness.
-    </span><span class="attr">#[inline(always)]
-    </span><span class="kw">fn </span>rfind(<span class="kw-2">&amp;</span><span class="self">self</span>, haystack: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
-        <span class="kw">use </span><span class="self">self</span>::SearcherRevKind::<span class="kw-2">*</span>;
-
-        <span class="kw">let </span>needle = <span class="self">self</span>.needle();
-        <span class="kw">if </span>haystack.len() &lt; needle.len() {
-            <span class="kw">return </span><span class="prelude-val">None</span>;
-        }
-        <span class="kw">match </span><span class="self">self</span>.kind {
-            Empty =&gt; <span class="prelude-val">Some</span>(haystack.len()),
-            OneByte(b) =&gt; <span class="kw">crate</span>::memrchr(b, haystack),
-            TwoWay(<span class="kw-2">ref </span>tw) =&gt; {
-                <span class="comment">// For very short haystacks (e.g., where the prefilter probably
-                // can&#39;t run), it&#39;s faster to just run RK.
-                </span><span class="kw">if </span>rabinkarp::is_fast(haystack, needle) {
-                    rabinkarp::rfind_with(<span class="kw-2">&amp;</span><span class="self">self</span>.nhash, haystack, needle)
-                } <span class="kw">else </span>{
-                    tw.rfind(haystack, needle)
-                }
-            }
-        }
-    }
-}
-
-<span class="doccomment">/// This module defines some generic quickcheck properties useful for testing
-/// any substring search algorithm. It also runs those properties for the
-/// top-level public API memmem routines. (The properties are also used to
-/// test various substring search implementations more granularly elsewhere as
-/// well.)
-</span><span class="attr">#[cfg(all(test, feature = <span class="string">&quot;std&quot;</span>, not(miri)))]
-</span><span class="kw">mod </span>proptests {
-    <span class="comment">// N.B. This defines the quickcheck tests using the properties defined
-    // below. Because of macro-visibility weirdness, the actual macro is
-    // defined at the top of this file.
-    </span><span class="macro">define_memmem_quickcheck_tests!</span>(<span class="kw">super</span>::find, <span class="kw">super</span>::rfind);
-
-    <span class="doccomment">/// Check that every prefix of the given byte string is a substring.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>prefix_is_substring(
-        reverse: bool,
-        bs: <span class="kw-2">&amp;</span>[u8],
-        <span class="kw-2">mut </span>search: <span class="kw">impl </span>FnMut(<span class="kw-2">&amp;</span>[u8], <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt;,
-    ) -&gt; bool {
-        <span class="kw">if </span>bs.is_empty() {
-            <span class="kw">return </span><span class="bool-val">true</span>;
-        }
-        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..(bs.len() - <span class="number">1</span>) {
-            <span class="kw">let </span>prefix = <span class="kw-2">&amp;</span>bs[..i];
-            <span class="kw">if </span>reverse {
-                <span class="macro">assert_eq!</span>(naive_rfind(bs, prefix), search(bs, prefix));
-            } <span class="kw">else </span>{
-                <span class="macro">assert_eq!</span>(naive_find(bs, prefix), search(bs, prefix));
-            }
-        }
-        <span class="bool-val">true
-    </span>}
-
-    <span class="doccomment">/// Check that every suffix of the given byte string is a substring.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>suffix_is_substring(
-        reverse: bool,
-        bs: <span class="kw-2">&amp;</span>[u8],
-        <span class="kw-2">mut </span>search: <span class="kw">impl </span>FnMut(<span class="kw-2">&amp;</span>[u8], <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt;,
-    ) -&gt; bool {
-        <span class="kw">if </span>bs.is_empty() {
-            <span class="kw">return </span><span class="bool-val">true</span>;
-        }
-        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..(bs.len() - <span class="number">1</span>) {
-            <span class="kw">let </span>suffix = <span class="kw-2">&amp;</span>bs[i..];
-            <span class="kw">if </span>reverse {
-                <span class="macro">assert_eq!</span>(naive_rfind(bs, suffix), search(bs, suffix));
-            } <span class="kw">else </span>{
-                <span class="macro">assert_eq!</span>(naive_find(bs, suffix), search(bs, suffix));
-            }
-        }
-        <span class="bool-val">true
-    </span>}
-
-    <span class="doccomment">/// Check that naive substring search matches the result of the given search
-    /// algorithm.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>matches_naive(
-        reverse: bool,
-        haystack: <span class="kw-2">&amp;</span>[u8],
-        needle: <span class="kw-2">&amp;</span>[u8],
-        <span class="kw-2">mut </span>search: <span class="kw">impl </span>FnMut(<span class="kw-2">&amp;</span>[u8], <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt;,
-    ) -&gt; bool {
-        <span class="kw">if </span>reverse {
-            naive_rfind(haystack, needle) == search(haystack, needle)
-        } <span class="kw">else </span>{
-            naive_find(haystack, needle) == search(haystack, needle)
-        }
-    }
-
-    <span class="doccomment">/// Naively search forwards for the given needle in the given haystack.
-    </span><span class="kw">fn </span>naive_find(haystack: <span class="kw-2">&amp;</span>[u8], needle: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
-        <span class="kw">if </span>needle.is_empty() {
-            <span class="kw">return </span><span class="prelude-val">Some</span>(<span class="number">0</span>);
-        } <span class="kw">else if </span>haystack.len() &lt; needle.len() {
-            <span class="kw">return </span><span class="prelude-val">None</span>;
-        }
-        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..(haystack.len() - needle.len() + <span class="number">1</span>) {
-            <span class="kw">if </span>needle == <span class="kw-2">&amp;</span>haystack[i..i + needle.len()] {
-                <span class="kw">return </span><span class="prelude-val">Some</span>(i);
-            }
-        }
-        <span class="prelude-val">None
-    </span>}
-
-    <span class="doccomment">/// Naively search in reverse for the given needle in the given haystack.
-    </span><span class="kw">fn </span>naive_rfind(haystack: <span class="kw-2">&amp;</span>[u8], needle: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
-        <span class="kw">if </span>needle.is_empty() {
-            <span class="kw">return </span><span class="prelude-val">Some</span>(haystack.len());
-        } <span class="kw">else if </span>haystack.len() &lt; needle.len() {
-            <span class="kw">return </span><span class="prelude-val">None</span>;
-        }
-        <span class="kw">for </span>i <span class="kw">in </span>(<span class="number">0</span>..(haystack.len() - needle.len() + <span class="number">1</span>)).rev() {
-            <span class="kw">if </span>needle == <span class="kw-2">&amp;</span>haystack[i..i + needle.len()] {
-                <span class="kw">return </span><span class="prelude-val">Some</span>(i);
-            }
-        }
-        <span class="prelude-val">None
-    </span>}
-}
-
-<span class="doccomment">/// This module defines some hand-written &quot;simple&quot; substring tests. It
-/// also provides routines for easily running them on any substring search
-/// implementation.
-</span><span class="attr">#[cfg(test)]
-</span><span class="kw">mod </span>testsimples {
-    <span class="macro">define_memmem_simple_tests!</span>(<span class="kw">super</span>::find, <span class="kw">super</span>::rfind);
-
-    <span class="doccomment">/// Each test is a (needle, haystack, expected_fwd, expected_rev) tuple.
-    </span><span class="kw">type </span>SearchTest =
-        (<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, <span class="prelude-ty">Option</span>&lt;usize&gt;, <span class="prelude-ty">Option</span>&lt;usize&gt;);
-
-    <span class="kw">const </span>SEARCH_TESTS: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[SearchTest] = <span class="kw-2">&amp;</span>[
-        (<span class="string">&quot;&quot;</span>, <span class="string">&quot;&quot;</span>, <span class="prelude-val">Some</span>(<span class="number">0</span>), <span class="prelude-val">Some</span>(<span class="number">0</span>)),
-        (<span class="string">&quot;&quot;</span>, <span class="string">&quot;a&quot;</span>, <span class="prelude-val">Some</span>(<span class="number">0</span>), <span class="prelude-val">Some</span>(<span class="number">1</span>)),
-        (<span class="string">&quot;&quot;</span>, <span class="string">&quot;ab&quot;</span>, <span class="prelude-val">Some</span>(<span class="number">0</span>), <span class="prelude-val">Some</span>(<span class="number">2</span>)),
-        (<span class="string">&quot;&quot;</span>, <span class="string">&quot;abc&quot;</span>, <span class="prelude-val">Some</span>(<span class="number">0</span>), <span class="prelude-val">Some</span>(<span class="number">3</span>)),
-        (<span class="string">&quot;a&quot;</span>, <span class="string">&quot;&quot;</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>),
-        (<span class="string">&quot;a&quot;</span>, <span class="string">&quot;a&quot;</span>, <span class="prelude-val">Some</span>(<span class="number">0</span>), <span class="prelude-val">Some</span>(<span class="number">0</span>)),
-        (<span class="string">&quot;a&quot;</span>, <span class="string">&quot;aa&quot;</span>, <span class="prelude-val">Some</span>(<span class="number">0</span>), <span class="prelude-val">Some</span>(<span class="number">1</span>)),
-        (<span class="string">&quot;a&quot;</span>, <span class="string">&quot;ba&quot;</span>, <span class="prelude-val">Some</span>(<span class="number">1</span>), <span class="prelude-val">Some</span>(<span class="number">1</span>)),
-        (<span class="string">&quot;a&quot;</span>, <span class="string">&quot;bba&quot;</span>, <span class="prelude-val">Some</span>(<span class="number">2</span>), <span class="prelude-val">Some</span>(<span class="number">2</span>)),
-        (<span class="string">&quot;a&quot;</span>, <span class="string">&quot;bbba&quot;</span>, <span class="prelude-val">Some</span>(<span class="number">3</span>), <span class="prelude-val">Some</span>(<span class="number">3</span>)),
-        (<span class="string">&quot;a&quot;</span>, <span class="string">&quot;bbbab&quot;</span>, <span class="prelude-val">Some</span>(<span class="number">3</span>), <span class="prelude-val">Some</span>(<span class="number">3</span>)),
-        (<span class="string">&quot;a&quot;</span>, <span class="string">&quot;bbbabb&quot;</span>, <span class="prelude-val">Some</span>(<span class="number">3</span>), <span class="prelude-val">Some</span>(<span class="number">3</span>)),
-        (<span class="string">&quot;a&quot;</span>, <span class="string">&quot;bbbabbb&quot;</span>, <span class="prelude-val">Some</span>(<span class="number">3</span>), <span class="prelude-val">Some</span>(<span class="number">3</span>)),
-        (<span class="string">&quot;a&quot;</span>, <span class="string">&quot;bbbbbb&quot;</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>),
-        (<span class="string">&quot;ab&quot;</span>, <span class="string">&quot;&quot;</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>),
-        (<span class="string">&quot;ab&quot;</span>, <span class="string">&quot;a&quot;</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>),
-        (<span class="string">&quot;ab&quot;</span>, <span class="string">&quot;b&quot;</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>),
-        (<span class="string">&quot;ab&quot;</span>, <span class="string">&quot;ab&quot;</span>, <span class="prelude-val">Some</span>(<span class="number">0</span>), <span class="prelude-val">Some</span>(<span class="number">0</span>)),
-        (<span class="string">&quot;ab&quot;</span>, <span class="string">&quot;aab&quot;</span>, <span class="prelude-val">Some</span>(<span class="number">1</span>), <span class="prelude-val">Some</span>(<span class="number">1</span>)),
-        (<span class="string">&quot;ab&quot;</span>, <span class="string">&quot;aaab&quot;</span>, <span class="prelude-val">Some</span>(<span class="number">2</span>), <span class="prelude-val">Some</span>(<span class="number">2</span>)),
-        (<span class="string">&quot;ab&quot;</span>, <span class="string">&quot;abaab&quot;</span>, <span class="prelude-val">Some</span>(<span class="number">0</span>), <span class="prelude-val">Some</span>(<span class="number">3</span>)),
-        (<span class="string">&quot;ab&quot;</span>, <span class="string">&quot;baaab&quot;</span>, <span class="prelude-val">Some</span>(<span class="number">3</span>), <span class="prelude-val">Some</span>(<span class="number">3</span>)),
-        (<span class="string">&quot;ab&quot;</span>, <span class="string">&quot;acb&quot;</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>),
-        (<span class="string">&quot;ab&quot;</span>, <span class="string">&quot;abba&quot;</span>, <span class="prelude-val">Some</span>(<span class="number">0</span>), <span class="prelude-val">Some</span>(<span class="number">0</span>)),
-        (<span class="string">&quot;abc&quot;</span>, <span class="string">&quot;ab&quot;</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>),
-        (<span class="string">&quot;abc&quot;</span>, <span class="string">&quot;abc&quot;</span>, <span class="prelude-val">Some</span>(<span class="number">0</span>), <span class="prelude-val">Some</span>(<span class="number">0</span>)),
-        (<span class="string">&quot;abc&quot;</span>, <span class="string">&quot;abcz&quot;</span>, <span class="prelude-val">Some</span>(<span class="number">0</span>), <span class="prelude-val">Some</span>(<span class="number">0</span>)),
-        (<span class="string">&quot;abc&quot;</span>, <span class="string">&quot;abczz&quot;</span>, <span class="prelude-val">Some</span>(<span class="number">0</span>), <span class="prelude-val">Some</span>(<span class="number">0</span>)),
-        (<span class="string">&quot;abc&quot;</span>, <span class="string">&quot;zabc&quot;</span>, <span class="prelude-val">Some</span>(<span class="number">1</span>), <span class="prelude-val">Some</span>(<span class="number">1</span>)),
-        (<span class="string">&quot;abc&quot;</span>, <span class="string">&quot;zzabc&quot;</span>, <span class="prelude-val">Some</span>(<span class="number">2</span>), <span class="prelude-val">Some</span>(<span class="number">2</span>)),
-        (<span class="string">&quot;abc&quot;</span>, <span class="string">&quot;azbc&quot;</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>),
-        (<span class="string">&quot;abc&quot;</span>, <span class="string">&quot;abzc&quot;</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>),
-        (<span class="string">&quot;abczdef&quot;</span>, <span class="string">&quot;abczdefzzzzzzzzzzzzzzzzzzzz&quot;</span>, <span class="prelude-val">Some</span>(<span class="number">0</span>), <span class="prelude-val">Some</span>(<span class="number">0</span>)),
-        (<span class="string">&quot;abczdef&quot;</span>, <span class="string">&quot;zzzzzzzzzzzzzzzzzzzzabczdef&quot;</span>, <span class="prelude-val">Some</span>(<span class="number">20</span>), <span class="prelude-val">Some</span>(<span class="number">20</span>)),
-        (<span class="string">&quot;xyz&quot;</span>, <span class="string">&quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaxyz&quot;</span>, <span class="prelude-val">Some</span>(<span class="number">32</span>), <span class="prelude-val">Some</span>(<span class="number">32</span>)),
-        <span class="comment">// Failures caught by quickcheck.
-        </span>(<span class="string">&quot;\u{0}\u{15}&quot;</span>, <span class="string">&quot;\u{0}\u{15}\u{15}\u{0}&quot;</span>, <span class="prelude-val">Some</span>(<span class="number">0</span>), <span class="prelude-val">Some</span>(<span class="number">0</span>)),
-        (<span class="string">&quot;\u{0}\u{1e}&quot;</span>, <span class="string">&quot;\u{1e}\u{0}&quot;</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>),
-    ];
-
-    <span class="doccomment">/// Run the substring search tests. `search` should be a closure that
-    /// accepts a haystack and a needle and returns the starting position
-    /// of the first occurrence of needle in the haystack, or `None` if one
-    /// doesn&#39;t exist.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>run_search_tests_fwd(
-        <span class="kw-2">mut </span>search: <span class="kw">impl </span>FnMut(<span class="kw-2">&amp;</span>[u8], <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt;,
-    ) {
-        <span class="kw">for </span><span class="kw-2">&amp;</span>(needle, haystack, expected_fwd, <span class="kw">_</span>) <span class="kw">in </span>SEARCH_TESTS {
-            <span class="kw">let </span>(n, h) = (needle.as_bytes(), haystack.as_bytes());
-            <span class="macro">assert_eq!</span>(
-                expected_fwd,
-                search(h, n),
-                <span class="string">&quot;needle: {:?}, haystack: {:?}, expected: {:?}&quot;</span>,
-                n,
-                h,
-                expected_fwd
-            );
-        }
-    }
-
-    <span class="doccomment">/// Run the substring search tests. `search` should be a closure that
-    /// accepts a haystack and a needle and returns the starting position of
-    /// the last occurrence of needle in the haystack, or `None` if one doesn&#39;t
-    /// exist.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>run_search_tests_rev(
-        <span class="kw-2">mut </span>search: <span class="kw">impl </span>FnMut(<span class="kw-2">&amp;</span>[u8], <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt;,
-    ) {
-        <span class="kw">for </span><span class="kw-2">&amp;</span>(needle, haystack, <span class="kw">_</span>, expected_rev) <span class="kw">in </span>SEARCH_TESTS {
-            <span class="kw">let </span>(n, h) = (needle.as_bytes(), haystack.as_bytes());
-            <span class="macro">assert_eq!</span>(
-                expected_rev,
-                search(h, n),
-                <span class="string">&quot;needle: {:?}, haystack: {:?}, expected: {:?}&quot;</span>,
-                n,
-                h,
-                expected_rev
-            );
-        }
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>reverse() {
+        <span class="kw">crate</span>::tests::substring::Runner::new()
+            .rev(|h, n| <span class="prelude-val">Some</span>(FinderRev::new(n).rfind(h)))
+            .run();
     }
 }
 </code></pre></div></section></main></body></html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hashbrown-0.12.3/src/raw/bitmask.rs`."><title>bitmask.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="hashbrown" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../hashbrown/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hashbrown-0.14.3/src/raw/bitmask.rs`."><title>bitmask.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="hashbrown" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../hashbrown/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -120,9 +120,20 @@
 <a href="#120" id="120">120</a>
 <a href="#121" id="121">121</a>
 <a href="#122" id="122">122</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::imp::{BitMaskWord, BITMASK_MASK, BITMASK_STRIDE};
-<span class="attr">#[cfg(feature = <span class="string">&quot;nightly&quot;</span>)]
-</span><span class="kw">use </span>core::intrinsics;
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::imp::{
+    BitMaskWord, NonZeroBitMaskWord, BITMASK_ITER_MASK, BITMASK_MASK, BITMASK_STRIDE,
+};
 
 <span class="doccomment">/// A bit mask which contains the result of a `Match` operation on a `Group` and
 /// allows iterating through them.
@@ -130,75 +141,55 @@
 /// The bit mask is arranged so that low-order bits represent lower memory
 /// addresses for group match results.
 ///
-/// For implementation reasons, the bits in the set may be sparsely packed, so
-/// that there is only one bit-per-byte used (the high bit, 7). If this is the
+/// For implementation reasons, the bits in the set may be sparsely packed with
+/// groups of 8 bits representing one element. If any of these bits are non-zero
+/// then this element is considered to true in the mask. If this is the
 /// case, `BITMASK_STRIDE` will be 8 to indicate a divide-by-8 should be
 /// performed on counts/indices to normalize this difference. `BITMASK_MASK` is
 /// similarly a mask of all the actually-used bits.
+///
+/// To iterate over a bit mask, it must be converted to a form where only 1 bit
+/// is set per element. This is done by applying `BITMASK_ITER_MASK` on the
+/// mask bits.
 </span><span class="attr">#[derive(Copy, Clone)]
-</span><span class="kw">pub struct </span>BitMask(<span class="kw">pub </span>BitMaskWord);
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>BitMask(<span class="kw">pub</span>(<span class="kw">crate</span>) BitMaskWord);
 
 <span class="attr">#[allow(clippy::use_self)]
 </span><span class="kw">impl </span>BitMask {
     <span class="doccomment">/// Returns a new `BitMask` with all bits inverted.
     </span><span class="attr">#[inline]
     #[must_use]
-    </span><span class="kw">pub fn </span>invert(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+    #[allow(dead_code)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>invert(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
         BitMask(<span class="self">self</span>.<span class="number">0 </span>^ BITMASK_MASK)
     }
-
-    <span class="doccomment">/// Flip the bit in the mask for the entry at the given index.
-    ///
-    /// Returns the bit&#39;s previous state.
-    </span><span class="attr">#[inline]
-    #[allow(clippy::cast_ptr_alignment)]
-    #[cfg(feature = <span class="string">&quot;raw&quot;</span>)]
-    </span><span class="kw">pub unsafe fn </span>flip(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize) -&gt; bool {
-        <span class="comment">// NOTE: The + BITMASK_STRIDE - 1 is to set the high bit.
-        </span><span class="kw">let </span>mask = <span class="number">1 </span>&lt;&lt; (index * BITMASK_STRIDE + BITMASK_STRIDE - <span class="number">1</span>);
-        <span class="self">self</span>.<span class="number">0 </span>^= mask;
-        <span class="comment">// The bit was set if the bit is now 0.
-        </span><span class="self">self</span>.<span class="number">0 </span>&amp; mask == <span class="number">0
-    </span>}
 
     <span class="doccomment">/// Returns a new `BitMask` with the lowest bit removed.
     </span><span class="attr">#[inline]
     #[must_use]
-    </span><span class="kw">pub fn </span>remove_lowest_bit(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">fn </span>remove_lowest_bit(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
         BitMask(<span class="self">self</span>.<span class="number">0 </span>&amp; (<span class="self">self</span>.<span class="number">0 </span>- <span class="number">1</span>))
     }
+
     <span class="doccomment">/// Returns whether the `BitMask` has at least one set bit.
     </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>any_bit_set(<span class="self">self</span>) -&gt; bool {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>any_bit_set(<span class="self">self</span>) -&gt; bool {
         <span class="self">self</span>.<span class="number">0 </span>!= <span class="number">0
     </span>}
 
     <span class="doccomment">/// Returns the first set bit in the `BitMask`, if there is one.
     </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>lowest_set_bit(<span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
-        <span class="kw">if </span><span class="self">self</span>.<span class="number">0 </span>== <span class="number">0 </span>{
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>lowest_set_bit(<span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(nonzero) = NonZeroBitMaskWord::new(<span class="self">self</span>.<span class="number">0</span>) {
+            <span class="prelude-val">Some</span>(<span class="self">Self</span>::nonzero_trailing_zeros(nonzero))
+        } <span class="kw">else </span>{
             <span class="prelude-val">None
-        </span>} <span class="kw">else </span>{
-            <span class="prelude-val">Some</span>(<span class="kw">unsafe </span>{ <span class="self">self</span>.lowest_set_bit_nonzero() })
-        }
-    }
-
-    <span class="doccomment">/// Returns the first set bit in the `BitMask`, if there is one. The
-    /// bitmask must not be empty.
-    </span><span class="attr">#[inline]
-    #[cfg(feature = <span class="string">&quot;nightly&quot;</span>)]
-    </span><span class="kw">pub unsafe fn </span>lowest_set_bit_nonzero(<span class="self">self</span>) -&gt; usize {
-        intrinsics::cttz_nonzero(<span class="self">self</span>.<span class="number">0</span>) <span class="kw">as </span>usize / BITMASK_STRIDE
-    }
-    <span class="attr">#[inline]
-    #[cfg(not(feature = <span class="string">&quot;nightly&quot;</span>))]
-    </span><span class="kw">pub unsafe fn </span>lowest_set_bit_nonzero(<span class="self">self</span>) -&gt; usize {
-        <span class="self">self</span>.trailing_zeros()
+        </span>}
     }
 
     <span class="doccomment">/// Returns the number of trailing zeroes in the `BitMask`.
     </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>trailing_zeros(<span class="self">self</span>) -&gt; usize {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>trailing_zeros(<span class="self">self</span>) -&gt; usize {
         <span class="comment">// ARM doesn&#39;t have a trailing_zeroes instruction, and instead uses
         // reverse_bits (RBIT) + leading_zeroes (CLZ). However older ARM
         // versions (pre-ARMv7) don&#39;t have RBIT and need to emulate it
@@ -211,9 +202,21 @@
         }
     }
 
+    <span class="doccomment">/// Same as above but takes a `NonZeroBitMaskWord`.
+    </span><span class="attr">#[inline]
+    </span><span class="kw">fn </span>nonzero_trailing_zeros(nonzero: NonZeroBitMaskWord) -&gt; usize {
+        <span class="kw">if </span><span class="macro">cfg!</span>(target_arch = <span class="string">&quot;arm&quot;</span>) &amp;&amp; BITMASK_STRIDE % <span class="number">8 </span>== <span class="number">0 </span>{
+            <span class="comment">// SAFETY: A byte-swapped non-zero value is still non-zero.
+            </span><span class="kw">let </span>swapped = <span class="kw">unsafe </span>{ NonZeroBitMaskWord::new_unchecked(nonzero.get().swap_bytes()) };
+            swapped.leading_zeros() <span class="kw">as </span>usize / BITMASK_STRIDE
+        } <span class="kw">else </span>{
+            nonzero.trailing_zeros() <span class="kw">as </span>usize / BITMASK_STRIDE
+        }
+    }
+
     <span class="doccomment">/// Returns the number of leading zeroes in the `BitMask`.
     </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>leading_zeros(<span class="self">self</span>) -&gt; usize {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>leading_zeros(<span class="self">self</span>) -&gt; usize {
         <span class="self">self</span>.<span class="number">0</span>.leading_zeros() <span class="kw">as </span>usize / BITMASK_STRIDE
     }
 }
@@ -224,13 +227,32 @@
 
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>into_iter(<span class="self">self</span>) -&gt; BitMaskIter {
-        BitMaskIter(<span class="self">self</span>)
+        <span class="comment">// A BitMask only requires each element (group of bits) to be non-zero.
+        // However for iteration we need each element to only contain 1 bit.
+        </span>BitMaskIter(BitMask(<span class="self">self</span>.<span class="number">0 </span>&amp; BITMASK_ITER_MASK))
     }
 }
 
 <span class="doccomment">/// Iterator over the contents of a `BitMask`, returning the indices of set
 /// bits.
-</span><span class="kw">pub struct </span>BitMaskIter(BitMask);
+</span><span class="attr">#[derive(Copy, Clone)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>BitMaskIter(<span class="kw">pub</span>(<span class="kw">crate</span>) BitMask);
+
+<span class="kw">impl </span>BitMaskIter {
+    <span class="doccomment">/// Flip the bit in the mask for the entry at the given index.
+    ///
+    /// Returns the bit&#39;s previous state.
+    </span><span class="attr">#[inline]
+    #[allow(clippy::cast_ptr_alignment)]
+    #[cfg(feature = <span class="string">&quot;raw&quot;</span>)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>flip(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize) -&gt; bool {
+        <span class="comment">// NOTE: The + BITMASK_STRIDE - 1 is to set the high bit.
+        </span><span class="kw">let </span>mask = <span class="number">1 </span>&lt;&lt; (index * BITMASK_STRIDE + BITMASK_STRIDE - <span class="number">1</span>);
+        <span class="self">self</span>.<span class="number">0 </span>.<span class="number">0 </span>^= mask;
+        <span class="comment">// The bit was set if the bit is now 0.
+        </span><span class="self">self</span>.<span class="number">0 </span>.<span class="number">0 </span>&amp; mask == <span class="number">0
+    </span>}
+}
 
 <span class="kw">impl </span>Iterator <span class="kw">for </span>BitMaskIter {
     <span class="kw">type </span>Item = usize;

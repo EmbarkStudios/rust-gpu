@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde_json-1.0.73/src/value/ser.rs`."><title>ser.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="serde_json" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../serde_json/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde_json-1.0.110/src/value/ser.rs`."><title>ser.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="serde_json" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../serde_json/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1017,15 +1017,49 @@
 <a href="#1017" id="1017">1017</a>
 <a href="#1018" id="1018">1018</a>
 <a href="#1019" id="1019">1019</a>
+<a href="#1020" id="1020">1020</a>
+<a href="#1021" id="1021">1021</a>
+<a href="#1022" id="1022">1022</a>
+<a href="#1023" id="1023">1023</a>
+<a href="#1024" id="1024">1024</a>
+<a href="#1025" id="1025">1025</a>
+<a href="#1026" id="1026">1026</a>
+<a href="#1027" id="1027">1027</a>
+<a href="#1028" id="1028">1028</a>
+<a href="#1029" id="1029">1029</a>
+<a href="#1030" id="1030">1030</a>
+<a href="#1031" id="1031">1031</a>
+<a href="#1032" id="1032">1032</a>
+<a href="#1033" id="1033">1033</a>
+<a href="#1034" id="1034">1034</a>
+<a href="#1035" id="1035">1035</a>
+<a href="#1036" id="1036">1036</a>
+<a href="#1037" id="1037">1037</a>
+<a href="#1038" id="1038">1038</a>
+<a href="#1039" id="1039">1039</a>
+<a href="#1040" id="1040">1040</a>
+<a href="#1041" id="1041">1041</a>
+<a href="#1042" id="1042">1042</a>
+<a href="#1043" id="1043">1043</a>
+<a href="#1044" id="1044">1044</a>
+<a href="#1045" id="1045">1045</a>
+<a href="#1046" id="1046">1046</a>
+<a href="#1047" id="1047">1047</a>
+<a href="#1048" id="1048">1048</a>
+<a href="#1049" id="1049">1049</a>
+<a href="#1050" id="1050">1050</a>
+<a href="#1051" id="1051">1051</a>
+<a href="#1052" id="1052">1052</a>
+<a href="#1053" id="1053">1053</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::error::{Error, ErrorCode, <span class="prelude-ty">Result</span>};
-<span class="kw">use </span><span class="kw">crate</span>::lib::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::map::Map;
-<span class="kw">use </span><span class="kw">crate</span>::number::Number;
 <span class="kw">use </span><span class="kw">crate</span>::value::{to_value, Value};
+<span class="kw">use </span>alloc::borrow::ToOwned;
+<span class="kw">use </span>alloc::string::{String, ToString};
+<span class="kw">use </span>alloc::vec::Vec;
+<span class="kw">use </span>core::fmt::Display;
+<span class="kw">use </span>core::result;
 <span class="kw">use </span>serde::ser::{Impossible, Serialize};
-
-<span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
-</span><span class="kw">use </span>serde::serde_if_integer128;
 
 <span class="kw">impl </span>Serialize <span class="kw">for </span>Value {
     <span class="attr">#[inline]
@@ -1033,14 +1067,14 @@
     <span class="kw">where
         </span>S: ::serde::Serializer,
     {
-        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+        <span class="kw">match </span><span class="self">self </span>{
             Value::Null =&gt; serializer.serialize_unit(),
-            Value::Bool(b) =&gt; serializer.serialize_bool(b),
-            Value::Number(<span class="kw-2">ref </span>n) =&gt; n.serialize(serializer),
-            Value::String(<span class="kw-2">ref </span>s) =&gt; serializer.serialize_str(s),
-            Value::Array(<span class="kw-2">ref </span>v) =&gt; v.serialize(serializer),
+            Value::Bool(b) =&gt; serializer.serialize_bool(<span class="kw-2">*</span>b),
+            Value::Number(n) =&gt; n.serialize(serializer),
+            Value::String(s) =&gt; serializer.serialize_str(s),
+            Value::Array(v) =&gt; v.serialize(serializer),
             <span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
-            </span>Value::Object(<span class="kw-2">ref </span>m) =&gt; {
+            </span>Value::Object(m) =&gt; {
                 <span class="kw">use </span>serde::ser::SerializeMap;
                 <span class="kw">let </span><span class="kw-2">mut </span>map = <span class="macro">tri!</span>(serializer.serialize_map(<span class="prelude-val">Some</span>(m.len())));
                 <span class="kw">for </span>(k, v) <span class="kw">in </span>m {
@@ -1110,10 +1144,21 @@
         <span class="prelude-val">Ok</span>(Value::Number(value.into()))
     }
 
-    <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
-    </span><span class="macro">serde_if_integer128! </span>{
-        <span class="kw">fn </span>serialize_i128(<span class="self">self</span>, value: i128) -&gt; <span class="prelude-ty">Result</span>&lt;Value&gt; {
+    <span class="kw">fn </span>serialize_i128(<span class="self">self</span>, value: i128) -&gt; <span class="prelude-ty">Result</span>&lt;Value&gt; {
+        <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+        </span>{
             <span class="prelude-val">Ok</span>(Value::Number(value.into()))
+        }
+
+        <span class="attr">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
+        </span>{
+            <span class="kw">if let </span><span class="prelude-val">Ok</span>(value) = u64::try_from(value) {
+                <span class="prelude-val">Ok</span>(Value::Number(value.into()))
+            } <span class="kw">else if let </span><span class="prelude-val">Ok</span>(value) = i64::try_from(value) {
+                <span class="prelude-val">Ok</span>(Value::Number(value.into()))
+            } <span class="kw">else </span>{
+                <span class="prelude-val">Err</span>(Error::syntax(ErrorCode::NumberOutOfRange, <span class="number">0</span>, <span class="number">0</span>))
+            }
         }
     }
 
@@ -1137,21 +1182,30 @@
         <span class="prelude-val">Ok</span>(Value::Number(value.into()))
     }
 
-    <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
-    </span><span class="macro">serde_if_integer128! </span>{
-        <span class="kw">fn </span>serialize_u128(<span class="self">self</span>, value: u128) -&gt; <span class="prelude-ty">Result</span>&lt;Value&gt; {
+    <span class="kw">fn </span>serialize_u128(<span class="self">self</span>, value: u128) -&gt; <span class="prelude-ty">Result</span>&lt;Value&gt; {
+        <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+        </span>{
             <span class="prelude-val">Ok</span>(Value::Number(value.into()))
+        }
+
+        <span class="attr">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
+        </span>{
+            <span class="kw">if let </span><span class="prelude-val">Ok</span>(value) = u64::try_from(value) {
+                <span class="prelude-val">Ok</span>(Value::Number(value.into()))
+            } <span class="kw">else </span>{
+                <span class="prelude-val">Err</span>(Error::syntax(ErrorCode::NumberOutOfRange, <span class="number">0</span>, <span class="number">0</span>))
+            }
         }
     }
 
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>serialize_f32(<span class="self">self</span>, value: f32) -&gt; <span class="prelude-ty">Result</span>&lt;Value&gt; {
-        <span class="self">self</span>.serialize_f64(value <span class="kw">as </span>f64)
+    </span><span class="kw">fn </span>serialize_f32(<span class="self">self</span>, float: f32) -&gt; <span class="prelude-ty">Result</span>&lt;Value&gt; {
+        <span class="prelude-val">Ok</span>(Value::from(float))
     }
 
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>serialize_f64(<span class="self">self</span>, value: f64) -&gt; <span class="prelude-ty">Result</span>&lt;Value&gt; {
-        <span class="prelude-val">Ok</span>(Number::from_f64(value).map_or(Value::Null, Value::Number))
+    </span><span class="kw">fn </span>serialize_f64(<span class="self">self</span>, float: f64) -&gt; <span class="prelude-ty">Result</span>&lt;Value&gt; {
+        <span class="prelude-val">Ok</span>(Value::from(float))
     }
 
     <span class="attr">#[inline]
@@ -1210,7 +1264,7 @@
         </span>T: <span class="question-mark">?</span>Sized + Serialize,
     {
         <span class="kw">let </span><span class="kw-2">mut </span>values = Map::new();
-        values.insert(String::from(variant), <span class="macro">tri!</span>(to_value(<span class="kw-2">&amp;</span>value)));
+        values.insert(String::from(variant), <span class="macro">tri!</span>(to_value(value)));
         <span class="prelude-val">Ok</span>(Value::Object(values))
     }
 
@@ -1288,9 +1342,9 @@
         })
     }
 
-    <span class="kw">fn </span>collect_str&lt;T: <span class="question-mark">?</span>Sized&gt;(<span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;Value&gt;
+    <span class="kw">fn </span>collect_str&lt;T&gt;(<span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;Value&gt;
     <span class="kw">where
-        </span>T: Display,
+        </span>T: <span class="question-mark">?</span>Sized + Display,
     {
         <span class="prelude-val">Ok</span>(Value::String(value.to_string()))
     }
@@ -1329,7 +1383,7 @@
     <span class="kw">where
         </span>T: <span class="question-mark">?</span>Sized + Serialize,
     {
-        <span class="self">self</span>.vec.push(<span class="macro">tri!</span>(to_value(<span class="kw-2">&amp;</span>value)));
+        <span class="self">self</span>.vec.push(<span class="macro">tri!</span>(to_value(value)));
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -1378,7 +1432,7 @@
     <span class="kw">where
         </span>T: <span class="question-mark">?</span>Sized + Serialize,
     {
-        <span class="self">self</span>.vec.push(<span class="macro">tri!</span>(to_value(<span class="kw-2">&amp;</span>value)));
+        <span class="self">self</span>.vec.push(<span class="macro">tri!</span>(to_value(value)));
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -1399,10 +1453,8 @@
     <span class="kw">where
         </span>T: <span class="question-mark">?</span>Sized + Serialize,
     {
-        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-            SerializeMap::Map {
-                <span class="kw-2">ref mut </span>next_key, ..
-            } =&gt; {
+        <span class="kw">match </span><span class="self">self </span>{
+            SerializeMap::Map { next_key, .. } =&gt; {
                 <span class="kw-2">*</span>next_key = <span class="prelude-val">Some</span>(<span class="macro">tri!</span>(key.serialize(MapKeySerializer)));
                 <span class="prelude-val">Ok</span>(())
             }
@@ -1417,16 +1469,13 @@
     <span class="kw">where
         </span>T: <span class="question-mark">?</span>Sized + Serialize,
     {
-        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-            SerializeMap::Map {
-                <span class="kw-2">ref mut </span>map,
-                <span class="kw-2">ref mut </span>next_key,
-            } =&gt; {
+        <span class="kw">match </span><span class="self">self </span>{
+            SerializeMap::Map { map, next_key } =&gt; {
                 <span class="kw">let </span>key = next_key.take();
                 <span class="comment">// Panic because this indicates a bug in the program rather than an
                 // expected failure.
                 </span><span class="kw">let </span>key = key.expect(<span class="string">&quot;serialize_value called before serialize_key&quot;</span>);
-                map.insert(key, <span class="macro">tri!</span>(to_value(<span class="kw-2">&amp;</span>value)));
+                map.insert(key, <span class="macro">tri!</span>(to_value(value)));
                 <span class="prelude-val">Ok</span>(())
             }
             <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
@@ -1451,6 +1500,10 @@
 
 <span class="kw">fn </span>key_must_be_a_string() -&gt; Error {
     Error::syntax(ErrorCode::KeyMustBeAString, <span class="number">0</span>, <span class="number">0</span>)
+}
+
+<span class="kw">fn </span>float_key_must_be_finite() -&gt; Error {
+    Error::syntax(ErrorCode::FloatKeyMustBeFinite, <span class="number">0</span>, <span class="number">0</span>)
 }
 
 <span class="kw">impl </span>serde::Serializer <span class="kw">for </span>MapKeySerializer {
@@ -1483,8 +1536,8 @@
         value.serialize(<span class="self">self</span>)
     }
 
-    <span class="kw">fn </span>serialize_bool(<span class="self">self</span>, _value: bool) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
-        <span class="prelude-val">Err</span>(key_must_be_a_string())
+    <span class="kw">fn </span>serialize_bool(<span class="self">self</span>, value: bool) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
+        <span class="prelude-val">Ok</span>(value.to_string())
     }
 
     <span class="kw">fn </span>serialize_i8(<span class="self">self</span>, value: i8) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
@@ -1519,12 +1572,20 @@
         <span class="prelude-val">Ok</span>(value.to_string())
     }
 
-    <span class="kw">fn </span>serialize_f32(<span class="self">self</span>, _value: f32) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
-        <span class="prelude-val">Err</span>(key_must_be_a_string())
+    <span class="kw">fn </span>serialize_f32(<span class="self">self</span>, value: f32) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
+        <span class="kw">if </span>value.is_finite() {
+            <span class="prelude-val">Ok</span>(ryu::Buffer::new().format_finite(value).to_owned())
+        } <span class="kw">else </span>{
+            <span class="prelude-val">Err</span>(float_key_must_be_finite())
+        }
     }
 
-    <span class="kw">fn </span>serialize_f64(<span class="self">self</span>, _value: f64) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
-        <span class="prelude-val">Err</span>(key_must_be_a_string())
+    <span class="kw">fn </span>serialize_f64(<span class="self">self</span>, value: f64) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
+        <span class="kw">if </span>value.is_finite() {
+            <span class="prelude-val">Ok</span>(ryu::Buffer::new().format_finite(value).to_owned())
+        } <span class="kw">else </span>{
+            <span class="prelude-val">Err</span>(float_key_must_be_finite())
+        }
     }
 
     <span class="attr">#[inline]
@@ -1621,9 +1682,9 @@
         <span class="prelude-val">Err</span>(key_must_be_a_string())
     }
 
-    <span class="kw">fn </span>collect_str&lt;T: <span class="question-mark">?</span>Sized&gt;(<span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt;
+    <span class="kw">fn </span>collect_str&lt;T&gt;(<span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt;
     <span class="kw">where
-        </span>T: Display,
+        </span>T: <span class="question-mark">?</span>Sized + Display,
     {
         <span class="prelude-val">Ok</span>(value.to_string())
     }
@@ -1637,21 +1698,21 @@
     <span class="kw">where
         </span>T: <span class="question-mark">?</span>Sized + Serialize,
     {
-        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+        <span class="kw">match </span><span class="self">self </span>{
             SerializeMap::Map { .. } =&gt; serde::ser::SerializeMap::serialize_entry(<span class="self">self</span>, key, value),
             <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
-            </span>SerializeMap::Number { <span class="kw-2">ref mut </span>out_value } =&gt; {
+            </span>SerializeMap::Number { out_value } =&gt; {
                 <span class="kw">if </span>key == <span class="kw">crate</span>::number::TOKEN {
-                    <span class="kw-2">*</span>out_value = <span class="prelude-val">Some</span>(value.serialize(NumberValueEmitter)<span class="question-mark">?</span>);
+                    <span class="kw-2">*</span>out_value = <span class="prelude-val">Some</span>(<span class="macro">tri!</span>(value.serialize(NumberValueEmitter)));
                     <span class="prelude-val">Ok</span>(())
                 } <span class="kw">else </span>{
                     <span class="prelude-val">Err</span>(invalid_number())
                 }
             }
             <span class="attr">#[cfg(feature = <span class="string">&quot;raw_value&quot;</span>)]
-            </span>SerializeMap::RawValue { <span class="kw-2">ref mut </span>out_value } =&gt; {
+            </span>SerializeMap::RawValue { out_value } =&gt; {
                 <span class="kw">if </span>key == <span class="kw">crate</span>::raw::TOKEN {
-                    <span class="kw-2">*</span>out_value = <span class="prelude-val">Some</span>(value.serialize(RawValueEmitter)<span class="question-mark">?</span>);
+                    <span class="kw-2">*</span>out_value = <span class="prelude-val">Some</span>(<span class="macro">tri!</span>(value.serialize(RawValueEmitter)));
                     <span class="prelude-val">Ok</span>(())
                 } <span class="kw">else </span>{
                     <span class="prelude-val">Err</span>(invalid_raw_value())
@@ -1683,7 +1744,7 @@
     <span class="kw">where
         </span>T: <span class="question-mark">?</span>Sized + Serialize,
     {
-        <span class="self">self</span>.map.insert(String::from(key), <span class="macro">tri!</span>(to_value(<span class="kw-2">&amp;</span>value)));
+        <span class="self">self</span>.map.insert(String::from(key), <span class="macro">tri!</span>(to_value(value)));
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -2034,6 +2095,13 @@
         _len: usize,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::SerializeStructVariant&gt; {
         <span class="prelude-val">Err</span>(invalid_raw_value())
+    }
+
+    <span class="kw">fn </span>collect_str&lt;T&gt;(<span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Ok&gt;
+    <span class="kw">where
+        </span>T: <span class="question-mark">?</span>Sized + Display,
+    {
+        <span class="self">self</span>.serialize_str(<span class="kw-2">&amp;</span>value.to_string())
     }
 }
 </code></pre></div></section></main></body></html>

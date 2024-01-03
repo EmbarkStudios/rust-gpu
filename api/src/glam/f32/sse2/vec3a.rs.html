@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/glam-0.24.0/src/f32/sse2/vec3a.rs`."><title>vec3a.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="glam" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../glam/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/glam-0.24.2/src/f32/sse2/vec3a.rs`."><title>vec3a.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="glam" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../glam/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1176,6 +1176,49 @@
 <a href="#1176" id="1176">1176</a>
 <a href="#1177" id="1177">1177</a>
 <a href="#1178" id="1178">1178</a>
+<a href="#1179" id="1179">1179</a>
+<a href="#1180" id="1180">1180</a>
+<a href="#1181" id="1181">1181</a>
+<a href="#1182" id="1182">1182</a>
+<a href="#1183" id="1183">1183</a>
+<a href="#1184" id="1184">1184</a>
+<a href="#1185" id="1185">1185</a>
+<a href="#1186" id="1186">1186</a>
+<a href="#1187" id="1187">1187</a>
+<a href="#1188" id="1188">1188</a>
+<a href="#1189" id="1189">1189</a>
+<a href="#1190" id="1190">1190</a>
+<a href="#1191" id="1191">1191</a>
+<a href="#1192" id="1192">1192</a>
+<a href="#1193" id="1193">1193</a>
+<a href="#1194" id="1194">1194</a>
+<a href="#1195" id="1195">1195</a>
+<a href="#1196" id="1196">1196</a>
+<a href="#1197" id="1197">1197</a>
+<a href="#1198" id="1198">1198</a>
+<a href="#1199" id="1199">1199</a>
+<a href="#1200" id="1200">1200</a>
+<a href="#1201" id="1201">1201</a>
+<a href="#1202" id="1202">1202</a>
+<a href="#1203" id="1203">1203</a>
+<a href="#1204" id="1204">1204</a>
+<a href="#1205" id="1205">1205</a>
+<a href="#1206" id="1206">1206</a>
+<a href="#1207" id="1207">1207</a>
+<a href="#1208" id="1208">1208</a>
+<a href="#1209" id="1209">1209</a>
+<a href="#1210" id="1210">1210</a>
+<a href="#1211" id="1211">1211</a>
+<a href="#1212" id="1212">1212</a>
+<a href="#1213" id="1213">1213</a>
+<a href="#1214" id="1214">1214</a>
+<a href="#1215" id="1215">1215</a>
+<a href="#1216" id="1216">1216</a>
+<a href="#1217" id="1217">1217</a>
+<a href="#1218" id="1218">1218</a>
+<a href="#1219" id="1219">1219</a>
+<a href="#1220" id="1220">1220</a>
+<a href="#1221" id="1221">1221</a>
 </pre></div><pre class="rust"><code><span class="comment">// Generated from vec.rs.tera template. Edit the template, not the generated file.
 
 </span><span class="kw">use crate</span>::{f32::math, sse2::<span class="kw-2">*</span>, BVec3A, Vec2, Vec3, Vec4};
@@ -1190,7 +1233,8 @@
 <span class="attr">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
 </span><span class="kw">use </span>core::arch::x86_64::<span class="kw-2">*</span>;
 
-<span class="kw">union </span>UnionCast {
+<span class="attr">#[repr(C)]
+</span><span class="kw">union </span>UnionCast {
     a: [f32; <span class="number">4</span>],
     v: Vec3A,
 }
@@ -1224,25 +1268,37 @@
     <span class="doccomment">/// All negative ones.
     </span><span class="kw">pub const </span>NEG_ONE: <span class="self">Self </span>= <span class="self">Self</span>::splat(-<span class="number">1.0</span>);
 
-    <span class="doccomment">/// All NAN.
+    <span class="doccomment">/// All `f32::MIN`.
+    </span><span class="kw">pub const </span>MIN: <span class="self">Self </span>= <span class="self">Self</span>::splat(f32::MIN);
+
+    <span class="doccomment">/// All `f32::MAX`.
+    </span><span class="kw">pub const </span>MAX: <span class="self">Self </span>= <span class="self">Self</span>::splat(f32::MAX);
+
+    <span class="doccomment">/// All `f32::NAN`.
     </span><span class="kw">pub const </span>NAN: <span class="self">Self </span>= <span class="self">Self</span>::splat(f32::NAN);
 
-    <span class="doccomment">/// A unit-length vector pointing along the positive X axis.
+    <span class="doccomment">/// All `f32::INFINITY`.
+    </span><span class="kw">pub const </span>INFINITY: <span class="self">Self </span>= <span class="self">Self</span>::splat(f32::INFINITY);
+
+    <span class="doccomment">/// All `f32::NEG_INFINITY`.
+    </span><span class="kw">pub const </span>NEG_INFINITY: <span class="self">Self </span>= <span class="self">Self</span>::splat(f32::NEG_INFINITY);
+
+    <span class="doccomment">/// A unit vector pointing along the positive X axis.
     </span><span class="kw">pub const </span>X: <span class="self">Self </span>= <span class="self">Self</span>::new(<span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>);
 
-    <span class="doccomment">/// A unit-length vector pointing along the positive Y axis.
+    <span class="doccomment">/// A unit vector pointing along the positive Y axis.
     </span><span class="kw">pub const </span>Y: <span class="self">Self </span>= <span class="self">Self</span>::new(<span class="number">0.0</span>, <span class="number">1.0</span>, <span class="number">0.0</span>);
 
-    <span class="doccomment">/// A unit-length vector pointing along the positive Z axis.
+    <span class="doccomment">/// A unit vector pointing along the positive Z axis.
     </span><span class="kw">pub const </span>Z: <span class="self">Self </span>= <span class="self">Self</span>::new(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>);
 
-    <span class="doccomment">/// A unit-length vector pointing along the negative X axis.
+    <span class="doccomment">/// A unit vector pointing along the negative X axis.
     </span><span class="kw">pub const </span>NEG_X: <span class="self">Self </span>= <span class="self">Self</span>::new(-<span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>);
 
-    <span class="doccomment">/// A unit-length vector pointing along the negative Y axis.
+    <span class="doccomment">/// A unit vector pointing along the negative Y axis.
     </span><span class="kw">pub const </span>NEG_Y: <span class="self">Self </span>= <span class="self">Self</span>::new(<span class="number">0.0</span>, -<span class="number">1.0</span>, <span class="number">0.0</span>);
 
-    <span class="doccomment">/// A unit-length vector pointing along the negative Z axis.
+    <span class="doccomment">/// A unit vector pointing along the negative Z axis.
     </span><span class="kw">pub const </span>NEG_Z: <span class="self">Self </span>= <span class="self">Self</span>::new(<span class="number">0.0</span>, <span class="number">0.0</span>, -<span class="number">1.0</span>);
 
     <span class="doccomment">/// The unit axes.
@@ -1580,6 +1636,28 @@
         (<span class="self">self </span>- rhs).length_squared()
     }
 
+    <span class="doccomment">/// Returns the element-wise quotient of [Euclidean division] of `self` by `rhs`.
+    </span><span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>div_euclid(<span class="self">self</span>, rhs: <span class="self">Self</span>) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::new(
+            math::div_euclid(<span class="self">self</span>.x, rhs.x),
+            math::div_euclid(<span class="self">self</span>.y, rhs.y),
+            math::div_euclid(<span class="self">self</span>.z, rhs.z),
+        )
+    }
+
+    <span class="doccomment">/// Returns the element-wise remainder of [Euclidean division] of `self` by `rhs`.
+    ///
+    /// [Euclidean division]: f32::rem_euclid
+    </span><span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>rem_euclid(<span class="self">self</span>, rhs: <span class="self">Self</span>) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::new(
+            math::rem_euclid(<span class="self">self</span>.x, rhs.x),
+            math::rem_euclid(<span class="self">self</span>.y, rhs.y),
+            math::rem_euclid(<span class="self">self</span>.z, rhs.z),
+        )
+    }
+
     <span class="doccomment">/// Returns `self` normalized to length 1.0.
     ///
     /// For valid results, `self` must _not_ be of length zero, nor very close to zero.
@@ -1726,6 +1804,13 @@
         <span class="self">Self</span>(<span class="kw">unsafe </span>{ m128_ceil(<span class="self">self</span>.<span class="number">0</span>) })
     }
 
+    <span class="doccomment">/// Returns a vector containing the integer part each element of `self`. This means numbers are
+    /// always truncated towards zero.
+    </span><span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>trunc(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>(<span class="kw">unsafe </span>{ m128_trunc(<span class="self">self</span>.<span class="number">0</span>) })
+    }
+
     <span class="doccomment">/// Returns a vector containing the fractional part of the vector, e.g. `self -
     /// self.floor()`.
     ///
@@ -1844,7 +1929,7 @@
 
     <span class="doccomment">/// Returns the angle (in radians) between two vectors.
     ///
-    /// The input vectors do not need to be unit length however they must be non-zero.
+    /// The inputs do not need to be unit vectors however they must be non-zero.
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>angle_between(<span class="self">self</span>, rhs: <span class="self">Self</span>) -&gt; f32 {
         math::acos_approx(
@@ -1857,8 +1942,8 @@
     ///
     /// The input vector must be finite and non-zero.
     ///
-    /// The output vector is not necessarily unit-length.
-    /// For that use [`Self::any_orthonormal_vector()`] instead.
+    /// The output vector is not necessarily unit length. For that use
+    /// [`Self::any_orthonormal_vector()`] instead.
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>any_orthogonal_vector(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
         <span class="comment">// This can probably be optimized
@@ -1869,8 +1954,9 @@
         </span>}
     }
 
-    <span class="doccomment">/// Returns any unit-length vector that is orthogonal to the given one.
-    /// The input vector must be finite and non-zero.
+    <span class="doccomment">/// Returns any unit vector that is orthogonal to the given one.
+    ///
+    /// The input vector must be unit length.
     ///
     /// # Panics
     ///
@@ -1885,8 +1971,8 @@
         <span class="self">Self</span>::new(b, sign + <span class="self">self</span>.y * <span class="self">self</span>.y * a, -<span class="self">self</span>.y)
     }
 
-    <span class="doccomment">/// Given a unit-length vector return two other vectors that together form an orthonormal
-    /// basis.  That is, all three vectors are orthogonal to each other and are normalized.
+    <span class="doccomment">/// Given a unit vector return two other vectors that together form an orthonormal
+    /// basis. That is, all three vectors are orthogonal to each other and are normalized.
     ///
     /// # Panics
     ///

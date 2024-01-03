@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde_json-1.0.73/src/ser.rs`."><title>ser.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="serde_json" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../serde_json/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde_json-1.0.110/src/ser.rs`."><title>ser.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="serde_json" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../serde_json/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -2245,21 +2245,15 @@
 <a href="#2245" id="2245">2245</a>
 <a href="#2246" id="2246">2246</a>
 <a href="#2247" id="2247">2247</a>
-<a href="#2248" id="2248">2248</a>
-<a href="#2249" id="2249">2249</a>
-<a href="#2250" id="2250">2250</a>
-<a href="#2251" id="2251">2251</a>
-<a href="#2252" id="2252">2252</a>
-<a href="#2253" id="2253">2253</a>
-<a href="#2254" id="2254">2254</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Serialize a Rust data structure into JSON data.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::error::{Error, ErrorCode, <span class="prelude-ty">Result</span>};
 <span class="kw">use </span><span class="kw">crate</span>::io;
-<span class="kw">use </span><span class="kw">crate</span>::lib::num::FpCategory;
-<span class="kw">use </span><span class="kw">crate</span>::lib::<span class="kw-2">*</span>;
+<span class="kw">use </span>alloc::string::{String, ToString};
+<span class="kw">use </span>alloc::vec::Vec;
+<span class="kw">use </span>core::fmt::{<span class="self">self</span>, Display};
+<span class="kw">use </span>core::num::FpCategory;
 <span class="kw">use </span>serde::ser::{<span class="self">self</span>, Impossible, Serialize};
-<span class="kw">use </span>serde::serde_if_integer128;
 
 <span class="doccomment">/// A structure for serializing Rust values into JSON.
 </span><span class="attr">#[cfg_attr(docsrs, doc(cfg(feature = <span class="string">&quot;std&quot;</span>)))]
@@ -2327,137 +2321,105 @@
 
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>serialize_bool(<span class="self">self</span>, value: bool) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="macro">tri!</span>(<span class="self">self
-            </span>.formatter
+        <span class="self">self</span>.formatter
             .write_bool(<span class="kw-2">&amp;mut </span><span class="self">self</span>.writer, value)
-            .map_err(Error::io));
-        <span class="prelude-val">Ok</span>(())
+            .map_err(Error::io)
     }
 
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>serialize_i8(<span class="self">self</span>, value: i8) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="macro">tri!</span>(<span class="self">self
-            </span>.formatter
+        <span class="self">self</span>.formatter
             .write_i8(<span class="kw-2">&amp;mut </span><span class="self">self</span>.writer, value)
-            .map_err(Error::io));
-        <span class="prelude-val">Ok</span>(())
+            .map_err(Error::io)
     }
 
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>serialize_i16(<span class="self">self</span>, value: i16) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="macro">tri!</span>(<span class="self">self
-            </span>.formatter
+        <span class="self">self</span>.formatter
             .write_i16(<span class="kw-2">&amp;mut </span><span class="self">self</span>.writer, value)
-            .map_err(Error::io));
-        <span class="prelude-val">Ok</span>(())
+            .map_err(Error::io)
     }
 
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>serialize_i32(<span class="self">self</span>, value: i32) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="macro">tri!</span>(<span class="self">self
-            </span>.formatter
+        <span class="self">self</span>.formatter
             .write_i32(<span class="kw-2">&amp;mut </span><span class="self">self</span>.writer, value)
-            .map_err(Error::io));
-        <span class="prelude-val">Ok</span>(())
+            .map_err(Error::io)
     }
 
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>serialize_i64(<span class="self">self</span>, value: i64) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="macro">tri!</span>(<span class="self">self
-            </span>.formatter
+        <span class="self">self</span>.formatter
             .write_i64(<span class="kw-2">&amp;mut </span><span class="self">self</span>.writer, value)
-            .map_err(Error::io));
-        <span class="prelude-val">Ok</span>(())
+            .map_err(Error::io)
     }
 
-    <span class="macro">serde_if_integer128! </span>{
-        <span class="kw">fn </span>serialize_i128(<span class="self">self</span>, value: i128) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-            <span class="self">self</span>.formatter
-                .write_number_str(<span class="kw-2">&amp;mut </span><span class="self">self</span>.writer, <span class="kw-2">&amp;</span>value.to_string())
-                .map_err(Error::io)
-        }
+    <span class="kw">fn </span>serialize_i128(<span class="self">self</span>, value: i128) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="self">self</span>.formatter
+            .write_i128(<span class="kw-2">&amp;mut </span><span class="self">self</span>.writer, value)
+            .map_err(Error::io)
     }
 
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>serialize_u8(<span class="self">self</span>, value: u8) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="macro">tri!</span>(<span class="self">self
-            </span>.formatter
+        <span class="self">self</span>.formatter
             .write_u8(<span class="kw-2">&amp;mut </span><span class="self">self</span>.writer, value)
-            .map_err(Error::io));
-        <span class="prelude-val">Ok</span>(())
+            .map_err(Error::io)
     }
 
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>serialize_u16(<span class="self">self</span>, value: u16) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="macro">tri!</span>(<span class="self">self
-            </span>.formatter
+        <span class="self">self</span>.formatter
             .write_u16(<span class="kw-2">&amp;mut </span><span class="self">self</span>.writer, value)
-            .map_err(Error::io));
-        <span class="prelude-val">Ok</span>(())
+            .map_err(Error::io)
     }
 
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>serialize_u32(<span class="self">self</span>, value: u32) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="macro">tri!</span>(<span class="self">self
-            </span>.formatter
+        <span class="self">self</span>.formatter
             .write_u32(<span class="kw-2">&amp;mut </span><span class="self">self</span>.writer, value)
-            .map_err(Error::io));
-        <span class="prelude-val">Ok</span>(())
+            .map_err(Error::io)
     }
 
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>serialize_u64(<span class="self">self</span>, value: u64) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="macro">tri!</span>(<span class="self">self
-            </span>.formatter
+        <span class="self">self</span>.formatter
             .write_u64(<span class="kw-2">&amp;mut </span><span class="self">self</span>.writer, value)
-            .map_err(Error::io));
-        <span class="prelude-val">Ok</span>(())
+            .map_err(Error::io)
     }
 
-    <span class="macro">serde_if_integer128! </span>{
-        <span class="kw">fn </span>serialize_u128(<span class="self">self</span>, value: u128) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-            <span class="self">self</span>.formatter
-                .write_number_str(<span class="kw-2">&amp;mut </span><span class="self">self</span>.writer, <span class="kw-2">&amp;</span>value.to_string())
-                .map_err(Error::io)
-        }
+    <span class="kw">fn </span>serialize_u128(<span class="self">self</span>, value: u128) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="self">self</span>.formatter
+            .write_u128(<span class="kw-2">&amp;mut </span><span class="self">self</span>.writer, value)
+            .map_err(Error::io)
     }
 
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>serialize_f32(<span class="self">self</span>, value: f32) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">match </span>value.classify() {
-            FpCategory::Nan | FpCategory::Infinite =&gt; {
-                <span class="macro">tri!</span>(<span class="self">self
-                    </span>.formatter
-                    .write_null(<span class="kw-2">&amp;mut </span><span class="self">self</span>.writer)
-                    .map_err(Error::io));
-            }
-            <span class="kw">_ </span>=&gt; {
-                <span class="macro">tri!</span>(<span class="self">self
-                    </span>.formatter
-                    .write_f32(<span class="kw-2">&amp;mut </span><span class="self">self</span>.writer, value)
-                    .map_err(Error::io));
-            }
+            FpCategory::Nan | FpCategory::Infinite =&gt; <span class="self">self
+                </span>.formatter
+                .write_null(<span class="kw-2">&amp;mut </span><span class="self">self</span>.writer)
+                .map_err(Error::io),
+            <span class="kw">_ </span>=&gt; <span class="self">self
+                </span>.formatter
+                .write_f32(<span class="kw-2">&amp;mut </span><span class="self">self</span>.writer, value)
+                .map_err(Error::io),
         }
-        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>serialize_f64(<span class="self">self</span>, value: f64) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">match </span>value.classify() {
-            FpCategory::Nan | FpCategory::Infinite =&gt; {
-                <span class="macro">tri!</span>(<span class="self">self
-                    </span>.formatter
-                    .write_null(<span class="kw-2">&amp;mut </span><span class="self">self</span>.writer)
-                    .map_err(Error::io));
-            }
-            <span class="kw">_ </span>=&gt; {
-                <span class="macro">tri!</span>(<span class="self">self
-                    </span>.formatter
-                    .write_f64(<span class="kw-2">&amp;mut </span><span class="self">self</span>.writer, value)
-                    .map_err(Error::io));
-            }
+            FpCategory::Nan | FpCategory::Infinite =&gt; <span class="self">self
+                </span>.formatter
+                .write_null(<span class="kw-2">&amp;mut </span><span class="self">self</span>.writer)
+                .map_err(Error::io),
+            <span class="kw">_ </span>=&gt; <span class="self">self
+                </span>.formatter
+                .write_f64(<span class="kw-2">&amp;mut </span><span class="self">self</span>.writer, value)
+                .map_err(Error::io),
         }
-        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="attr">#[inline]
@@ -2469,27 +2431,21 @@
 
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>serialize_str(<span class="self">self</span>, value: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="macro">tri!</span>(format_escaped_str(<span class="kw-2">&amp;mut </span><span class="self">self</span>.writer, <span class="kw-2">&amp;mut </span><span class="self">self</span>.formatter, value).map_err(Error::io));
-        <span class="prelude-val">Ok</span>(())
+        format_escaped_str(<span class="kw-2">&amp;mut </span><span class="self">self</span>.writer, <span class="kw-2">&amp;mut </span><span class="self">self</span>.formatter, value).map_err(Error::io)
     }
 
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>serialize_bytes(<span class="self">self</span>, value: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">use </span>serde::ser::SerializeSeq;
-        <span class="kw">let </span><span class="kw-2">mut </span>seq = <span class="macro">tri!</span>(<span class="self">self</span>.serialize_seq(<span class="prelude-val">Some</span>(value.len())));
-        <span class="kw">for </span>byte <span class="kw">in </span>value {
-            <span class="macro">tri!</span>(seq.serialize_element(byte));
-        }
-        seq.end()
+        <span class="self">self</span>.formatter
+            .write_byte_array(<span class="kw-2">&amp;mut </span><span class="self">self</span>.writer, value)
+            .map_err(Error::io)
     }
 
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>serialize_unit(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="macro">tri!</span>(<span class="self">self
-            </span>.formatter
+        <span class="self">self</span>.formatter
             .write_null(<span class="kw-2">&amp;mut </span><span class="self">self</span>.writer)
-            .map_err(Error::io));
-        <span class="prelude-val">Ok</span>(())
+            .map_err(Error::io)
     }
 
     <span class="attr">#[inline]
@@ -2549,11 +2505,9 @@
             </span>.formatter
             .end_object_value(<span class="kw-2">&amp;mut </span><span class="self">self</span>.writer)
             .map_err(Error::io));
-        <span class="macro">tri!</span>(<span class="self">self
-            </span>.formatter
+        <span class="self">self</span>.formatter
             .end_object(<span class="kw-2">&amp;mut </span><span class="self">self</span>.writer)
-            .map_err(Error::io));
-        <span class="prelude-val">Ok</span>(())
+            .map_err(Error::io)
     }
 
     <span class="attr">#[inline]
@@ -2729,24 +2683,20 @@
             </span>.formatter
             .begin_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>.writer)
             .map_err(Error::io));
-        {
-            <span class="kw">let </span><span class="kw-2">mut </span>adapter = Adapter {
-                writer: <span class="kw-2">&amp;mut </span><span class="self">self</span>.writer,
-                formatter: <span class="kw-2">&amp;mut </span><span class="self">self</span>.formatter,
-                error: <span class="prelude-val">None</span>,
-            };
-            <span class="kw">match </span><span class="macro">write!</span>(adapter, <span class="string">&quot;{}&quot;</span>, value) {
-                <span class="prelude-val">Ok</span>(()) =&gt; <span class="macro">debug_assert!</span>(adapter.error.is_none()),
-                <span class="prelude-val">Err</span>(fmt::Error) =&gt; {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::io(adapter.error.expect(<span class="string">&quot;there should be an error&quot;</span>)));
-                }
+        <span class="kw">let </span><span class="kw-2">mut </span>adapter = Adapter {
+            writer: <span class="kw-2">&amp;mut </span><span class="self">self</span>.writer,
+            formatter: <span class="kw-2">&amp;mut </span><span class="self">self</span>.formatter,
+            error: <span class="prelude-val">None</span>,
+        };
+        <span class="kw">match </span><span class="macro">write!</span>(adapter, <span class="string">&quot;{}&quot;</span>, value) {
+            <span class="prelude-val">Ok</span>(()) =&gt; <span class="macro">debug_assert!</span>(adapter.error.is_none()),
+            <span class="prelude-val">Err</span>(fmt::Error) =&gt; {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::io(adapter.error.expect(<span class="string">&quot;there should be an error&quot;</span>)));
             }
         }
-        <span class="macro">tri!</span>(<span class="self">self
-            </span>.formatter
+        <span class="self">self</span>.formatter
             .end_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>.writer)
-            .map_err(Error::io));
-        <span class="prelude-val">Ok</span>(())
+            .map_err(Error::io)
     }
 }
 
@@ -2785,22 +2735,17 @@
     <span class="kw">where
         </span>T: <span class="question-mark">?</span>Sized + Serialize,
     {
-        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-            Compound::Map {
-                <span class="kw-2">ref mut </span>ser,
-                <span class="kw-2">ref mut </span>state,
-            } =&gt; {
+        <span class="kw">match </span><span class="self">self </span>{
+            Compound::Map { ser, state } =&gt; {
                 <span class="macro">tri!</span>(ser
                     .formatter
                     .begin_array_value(<span class="kw-2">&amp;mut </span>ser.writer, <span class="kw-2">*</span>state == State::First)
                     .map_err(Error::io));
                 <span class="kw-2">*</span>state = State::Rest;
                 <span class="macro">tri!</span>(value.serialize(<span class="kw-2">&amp;mut **</span>ser));
-                <span class="macro">tri!</span>(ser
-                    .formatter
+                ser.formatter
                     .end_array_value(<span class="kw-2">&amp;mut </span>ser.writer)
-                    .map_err(Error::io));
-                <span class="prelude-val">Ok</span>(())
+                    .map_err(Error::io)
             }
             <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
             </span>Compound::Number { .. } =&gt; <span class="macro">unreachable!</span>(),
@@ -2812,13 +2757,10 @@
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>end(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">match </span><span class="self">self </span>{
-            Compound::Map { ser, state } =&gt; {
-                <span class="kw">match </span>state {
-                    State::Empty =&gt; {}
-                    <span class="kw">_ </span>=&gt; <span class="macro">tri!</span>(ser.formatter.end_array(<span class="kw-2">&amp;mut </span>ser.writer).map_err(Error::io)),
-                }
-                <span class="prelude-val">Ok</span>(())
-            }
+            Compound::Map { ser, state } =&gt; <span class="kw">match </span>state {
+                State::Empty =&gt; <span class="prelude-val">Ok</span>(()),
+                <span class="kw">_ </span>=&gt; ser.formatter.end_array(<span class="kw-2">&amp;mut </span>ser.writer).map_err(Error::io),
+            },
             <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
             </span>Compound::Number { .. } =&gt; <span class="macro">unreachable!</span>(),
             <span class="attr">#[cfg(feature = <span class="string">&quot;raw_value&quot;</span>)]
@@ -2899,8 +2841,7 @@
                     .formatter
                     .end_object_value(<span class="kw-2">&amp;mut </span>ser.writer)
                     .map_err(Error::io));
-                <span class="macro">tri!</span>(ser.formatter.end_object(<span class="kw-2">&amp;mut </span>ser.writer).map_err(Error::io));
-                <span class="prelude-val">Ok</span>(())
+                ser.formatter.end_object(<span class="kw-2">&amp;mut </span>ser.writer).map_err(Error::io)
             }
             <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
             </span>Compound::Number { .. } =&gt; <span class="macro">unreachable!</span>(),
@@ -2923,11 +2864,8 @@
     <span class="kw">where
         </span>T: <span class="question-mark">?</span>Sized + Serialize,
     {
-        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-            Compound::Map {
-                <span class="kw-2">ref mut </span>ser,
-                <span class="kw-2">ref mut </span>state,
-            } =&gt; {
+        <span class="kw">match </span><span class="self">self </span>{
+            Compound::Map { ser, state } =&gt; {
                 <span class="macro">tri!</span>(ser
                     .formatter
                     .begin_object_key(<span class="kw-2">&amp;mut </span>ser.writer, <span class="kw-2">*</span>state == State::First)
@@ -2936,11 +2874,9 @@
 
                 <span class="macro">tri!</span>(key.serialize(MapKeySerializer { ser: <span class="kw-2">*</span>ser }));
 
-                <span class="macro">tri!</span>(ser
-                    .formatter
+                ser.formatter
                     .end_object_key(<span class="kw-2">&amp;mut </span>ser.writer)
-                    .map_err(Error::io));
-                <span class="prelude-val">Ok</span>(())
+                    .map_err(Error::io)
             }
             <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
             </span>Compound::Number { .. } =&gt; <span class="macro">unreachable!</span>(),
@@ -2954,18 +2890,16 @@
     <span class="kw">where
         </span>T: <span class="question-mark">?</span>Sized + Serialize,
     {
-        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-            Compound::Map { <span class="kw-2">ref mut </span>ser, .. } =&gt; {
+        <span class="kw">match </span><span class="self">self </span>{
+            Compound::Map { ser, .. } =&gt; {
                 <span class="macro">tri!</span>(ser
                     .formatter
                     .begin_object_value(<span class="kw-2">&amp;mut </span>ser.writer)
                     .map_err(Error::io));
                 <span class="macro">tri!</span>(value.serialize(<span class="kw-2">&amp;mut **</span>ser));
-                <span class="macro">tri!</span>(ser
-                    .formatter
+                ser.formatter
                     .end_object_value(<span class="kw-2">&amp;mut </span>ser.writer)
-                    .map_err(Error::io));
-                <span class="prelude-val">Ok</span>(())
+                    .map_err(Error::io)
             }
             <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
             </span>Compound::Number { .. } =&gt; <span class="macro">unreachable!</span>(),
@@ -2977,13 +2911,10 @@
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>end(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">match </span><span class="self">self </span>{
-            Compound::Map { ser, state } =&gt; {
-                <span class="kw">match </span>state {
-                    State::Empty =&gt; {}
-                    <span class="kw">_ </span>=&gt; <span class="macro">tri!</span>(ser.formatter.end_object(<span class="kw-2">&amp;mut </span>ser.writer).map_err(Error::io)),
-                }
-                <span class="prelude-val">Ok</span>(())
-            }
+            Compound::Map { ser, state } =&gt; <span class="kw">match </span>state {
+                State::Empty =&gt; <span class="prelude-val">Ok</span>(()),
+                <span class="kw">_ </span>=&gt; ser.formatter.end_object(<span class="kw-2">&amp;mut </span>ser.writer).map_err(Error::io),
+            },
             <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
             </span>Compound::Number { .. } =&gt; <span class="macro">unreachable!</span>(),
             <span class="attr">#[cfg(feature = <span class="string">&quot;raw_value&quot;</span>)]
@@ -3005,22 +2936,20 @@
     <span class="kw">where
         </span>T: <span class="question-mark">?</span>Sized + Serialize,
     {
-        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+        <span class="kw">match </span><span class="self">self </span>{
             Compound::Map { .. } =&gt; ser::SerializeMap::serialize_entry(<span class="self">self</span>, key, value),
             <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
-            </span>Compound::Number { <span class="kw-2">ref mut </span>ser, .. } =&gt; {
+            </span>Compound::Number { ser, .. } =&gt; {
                 <span class="kw">if </span>key == <span class="kw">crate</span>::number::TOKEN {
-                    <span class="macro">tri!</span>(value.serialize(NumberStrEmitter(ser)));
-                    <span class="prelude-val">Ok</span>(())
+                    value.serialize(NumberStrEmitter(ser))
                 } <span class="kw">else </span>{
                     <span class="prelude-val">Err</span>(invalid_number())
                 }
             }
             <span class="attr">#[cfg(feature = <span class="string">&quot;raw_value&quot;</span>)]
-            </span>Compound::RawValue { <span class="kw-2">ref mut </span>ser, .. } =&gt; {
+            </span>Compound::RawValue { ser, .. } =&gt; {
                 <span class="kw">if </span>key == <span class="kw">crate</span>::raw::TOKEN {
-                    <span class="macro">tri!</span>(value.serialize(RawValueStrEmitter(ser)));
-                    <span class="prelude-val">Ok</span>(())
+                    value.serialize(RawValueStrEmitter(ser))
                 } <span class="kw">else </span>{
                     <span class="prelude-val">Err</span>(invalid_raw_value())
                 }
@@ -3074,8 +3003,7 @@
                     .formatter
                     .end_object_value(<span class="kw-2">&amp;mut </span>ser.writer)
                     .map_err(Error::io));
-                <span class="macro">tri!</span>(ser.formatter.end_object(<span class="kw-2">&amp;mut </span>ser.writer).map_err(Error::io));
-                <span class="prelude-val">Ok</span>(())
+                ser.formatter.end_object(<span class="kw-2">&amp;mut </span>ser.writer).map_err(Error::io)
             }
             <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
             </span>Compound::Number { .. } =&gt; <span class="macro">unreachable!</span>(),
@@ -3101,6 +3029,10 @@
 
 <span class="kw">fn </span>key_must_be_a_string() -&gt; Error {
     Error::syntax(ErrorCode::KeyMustBeAString, <span class="number">0</span>, <span class="number">0</span>)
+}
+
+<span class="kw">fn </span>float_key_must_be_finite() -&gt; Error {
+    Error::syntax(ErrorCode::FloatKeyMustBeFinite, <span class="number">0</span>, <span class="number">0</span>)
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, W, F&gt; ser::Serializer <span class="kw">for </span>MapKeySerializer&lt;<span class="lifetime">&#39;a</span>, W, F&gt;
@@ -3142,8 +3074,21 @@
     <span class="kw">type </span>SerializeStruct = Impossible&lt;(), Error&gt;;
     <span class="kw">type </span>SerializeStructVariant = Impossible&lt;(), Error&gt;;
 
-    <span class="kw">fn </span>serialize_bool(<span class="self">self</span>, _value: bool) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="prelude-val">Err</span>(key_must_be_a_string())
+    <span class="kw">fn </span>serialize_bool(<span class="self">self</span>, value: bool) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="macro">tri!</span>(<span class="self">self
+            </span>.ser
+            .formatter
+            .begin_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer)
+            .map_err(Error::io));
+        <span class="macro">tri!</span>(<span class="self">self
+            </span>.ser
+            .formatter
+            .write_bool(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer, value)
+            .map_err(Error::io));
+        <span class="self">self</span>.ser
+            .formatter
+            .end_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer)
+            .map_err(Error::io)
     }
 
     <span class="kw">fn </span>serialize_i8(<span class="self">self</span>, value: i8) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
@@ -3157,12 +3102,10 @@
             .formatter
             .write_i8(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer, value)
             .map_err(Error::io));
-        <span class="macro">tri!</span>(<span class="self">self
-            </span>.ser
+        <span class="self">self</span>.ser
             .formatter
             .end_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer)
-            .map_err(Error::io));
-        <span class="prelude-val">Ok</span>(())
+            .map_err(Error::io)
     }
 
     <span class="kw">fn </span>serialize_i16(<span class="self">self</span>, value: i16) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
@@ -3176,12 +3119,10 @@
             .formatter
             .write_i16(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer, value)
             .map_err(Error::io));
-        <span class="macro">tri!</span>(<span class="self">self
-            </span>.ser
+        <span class="self">self</span>.ser
             .formatter
             .end_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer)
-            .map_err(Error::io));
-        <span class="prelude-val">Ok</span>(())
+            .map_err(Error::io)
     }
 
     <span class="kw">fn </span>serialize_i32(<span class="self">self</span>, value: i32) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
@@ -3195,12 +3136,10 @@
             .formatter
             .write_i32(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer, value)
             .map_err(Error::io));
-        <span class="macro">tri!</span>(<span class="self">self
-            </span>.ser
+        <span class="self">self</span>.ser
             .formatter
             .end_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer)
-            .map_err(Error::io));
-        <span class="prelude-val">Ok</span>(())
+            .map_err(Error::io)
     }
 
     <span class="kw">fn </span>serialize_i64(<span class="self">self</span>, value: i64) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
@@ -3214,33 +3153,27 @@
             .formatter
             .write_i64(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer, value)
             .map_err(Error::io));
+        <span class="self">self</span>.ser
+            .formatter
+            .end_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer)
+            .map_err(Error::io)
+    }
+
+    <span class="kw">fn </span>serialize_i128(<span class="self">self</span>, value: i128) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="macro">tri!</span>(<span class="self">self
             </span>.ser
             .formatter
-            .end_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer)
+            .begin_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer)
             .map_err(Error::io));
-        <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="macro">serde_if_integer128! </span>{
-        <span class="kw">fn </span>serialize_i128(<span class="self">self</span>, value: i128) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-            <span class="macro">tri!</span>(<span class="self">self
-                </span>.ser
-                .formatter
-                .begin_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer)
-                .map_err(Error::io));
-            <span class="macro">tri!</span>(<span class="self">self
-                </span>.ser
-                .formatter
-                .write_number_str(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer, <span class="kw-2">&amp;</span>value.to_string())
-                .map_err(Error::io));
-            <span class="macro">tri!</span>(<span class="self">self
-                </span>.ser
-                .formatter
-                .end_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer)
-                .map_err(Error::io));
-            <span class="prelude-val">Ok</span>(())
-        }
+        <span class="macro">tri!</span>(<span class="self">self
+            </span>.ser
+            .formatter
+            .write_i128(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer, value)
+            .map_err(Error::io));
+        <span class="self">self</span>.ser
+            .formatter
+            .end_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer)
+            .map_err(Error::io)
     }
 
     <span class="kw">fn </span>serialize_u8(<span class="self">self</span>, value: u8) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
@@ -3254,12 +3187,10 @@
             .formatter
             .write_u8(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer, value)
             .map_err(Error::io));
-        <span class="macro">tri!</span>(<span class="self">self
-            </span>.ser
+        <span class="self">self</span>.ser
             .formatter
             .end_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer)
-            .map_err(Error::io));
-        <span class="prelude-val">Ok</span>(())
+            .map_err(Error::io)
     }
 
     <span class="kw">fn </span>serialize_u16(<span class="self">self</span>, value: u16) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
@@ -3273,12 +3204,10 @@
             .formatter
             .write_u16(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer, value)
             .map_err(Error::io));
-        <span class="macro">tri!</span>(<span class="self">self
-            </span>.ser
+        <span class="self">self</span>.ser
             .formatter
             .end_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer)
-            .map_err(Error::io));
-        <span class="prelude-val">Ok</span>(())
+            .map_err(Error::io)
     }
 
     <span class="kw">fn </span>serialize_u32(<span class="self">self</span>, value: u32) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
@@ -3292,12 +3221,10 @@
             .formatter
             .write_u32(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer, value)
             .map_err(Error::io));
-        <span class="macro">tri!</span>(<span class="self">self
-            </span>.ser
+        <span class="self">self</span>.ser
             .formatter
             .end_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer)
-            .map_err(Error::io));
-        <span class="prelude-val">Ok</span>(())
+            .map_err(Error::io)
     }
 
     <span class="kw">fn </span>serialize_u64(<span class="self">self</span>, value: u64) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
@@ -3311,41 +3238,69 @@
             .formatter
             .write_u64(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer, value)
             .map_err(Error::io));
+        <span class="self">self</span>.ser
+            .formatter
+            .end_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer)
+            .map_err(Error::io)
+    }
+
+    <span class="kw">fn </span>serialize_u128(<span class="self">self</span>, value: u128) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="macro">tri!</span>(<span class="self">self
             </span>.ser
             .formatter
-            .end_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer)
+            .begin_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer)
             .map_err(Error::io));
-        <span class="prelude-val">Ok</span>(())
+        <span class="macro">tri!</span>(<span class="self">self
+            </span>.ser
+            .formatter
+            .write_u128(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer, value)
+            .map_err(Error::io));
+        <span class="self">self</span>.ser
+            .formatter
+            .end_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer)
+            .map_err(Error::io)
     }
 
-    <span class="macro">serde_if_integer128! </span>{
-        <span class="kw">fn </span>serialize_u128(<span class="self">self</span>, value: u128) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-            <span class="macro">tri!</span>(<span class="self">self
-                </span>.ser
-                .formatter
-                .begin_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer)
-                .map_err(Error::io));
-            <span class="macro">tri!</span>(<span class="self">self
-                </span>.ser
-                .formatter
-                .write_number_str(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer, <span class="kw-2">&amp;</span>value.to_string())
-                .map_err(Error::io));
-            <span class="macro">tri!</span>(<span class="self">self
-                </span>.ser
-                .formatter
-                .end_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer)
-                .map_err(Error::io));
-            <span class="prelude-val">Ok</span>(())
+    <span class="kw">fn </span>serialize_f32(<span class="self">self</span>, value: f32) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">if </span>!value.is_finite() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(float_key_must_be_finite());
         }
+
+        <span class="macro">tri!</span>(<span class="self">self
+            </span>.ser
+            .formatter
+            .begin_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer)
+            .map_err(Error::io));
+        <span class="macro">tri!</span>(<span class="self">self
+            </span>.ser
+            .formatter
+            .write_f32(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer, value)
+            .map_err(Error::io));
+        <span class="self">self</span>.ser
+            .formatter
+            .end_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer)
+            .map_err(Error::io)
     }
 
-    <span class="kw">fn </span>serialize_f32(<span class="self">self</span>, _value: f32) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="prelude-val">Err</span>(key_must_be_a_string())
-    }
+    <span class="kw">fn </span>serialize_f64(<span class="self">self</span>, value: f64) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">if </span>!value.is_finite() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(float_key_must_be_finite());
+        }
 
-    <span class="kw">fn </span>serialize_f64(<span class="self">self</span>, _value: f64) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="prelude-val">Err</span>(key_must_be_a_string())
+        <span class="macro">tri!</span>(<span class="self">self
+            </span>.ser
+            .formatter
+            .begin_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer)
+            .map_err(Error::io));
+        <span class="macro">tri!</span>(<span class="self">self
+            </span>.ser
+            .formatter
+            .write_f64(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer, value)
+            .map_err(Error::io));
+        <span class="self">self</span>.ser
+            .formatter
+            .end_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ser.writer)
+            .map_err(Error::io)
     }
 
     <span class="kw">fn </span>serialize_char(<span class="self">self</span>, value: char) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
@@ -3381,11 +3336,11 @@
         <span class="prelude-val">Err</span>(key_must_be_a_string())
     }
 
-    <span class="kw">fn </span>serialize_some&lt;T&gt;(<span class="self">self</span>, _value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;
+    <span class="kw">fn </span>serialize_some&lt;T&gt;(<span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;
     <span class="kw">where
         </span>T: <span class="question-mark">?</span>Sized + Serialize,
     {
-        <span class="prelude-val">Err</span>(key_must_be_a_string())
+        value.serialize(<span class="self">self</span>)
     }
 
     <span class="kw">fn </span>serialize_seq(<span class="self">self</span>, _len: <span class="prelude-ty">Option</span>&lt;usize&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::SerializeSeq&gt; {
@@ -3476,10 +3431,8 @@
         <span class="prelude-val">Err</span>(invalid_number())
     }
 
-    <span class="macro">serde_if_integer128! </span>{
-        <span class="kw">fn </span>serialize_i128(<span class="self">self</span>, _v: i128) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-            <span class="prelude-val">Err</span>(invalid_number())
-        }
+    <span class="kw">fn </span>serialize_i128(<span class="self">self</span>, _v: i128) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="prelude-val">Err</span>(invalid_number())
     }
 
     <span class="kw">fn </span>serialize_u8(<span class="self">self</span>, _v: u8) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
@@ -3498,10 +3451,8 @@
         <span class="prelude-val">Err</span>(invalid_number())
     }
 
-    <span class="macro">serde_if_integer128! </span>{
-        <span class="kw">fn </span>serialize_u128(<span class="self">self</span>, _v: u128) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-            <span class="prelude-val">Err</span>(invalid_number())
-        }
+    <span class="kw">fn </span>serialize_u128(<span class="self">self</span>, _v: u128) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="prelude-val">Err</span>(invalid_number())
     }
 
     <span class="kw">fn </span>serialize_f32(<span class="self">self</span>, _v: f32) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
@@ -3657,10 +3608,8 @@
         <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">&quot;expected RawValue&quot;</span>))
     }
 
-    <span class="macro">serde_if_integer128! </span>{
-        <span class="kw">fn </span>serialize_i128(<span class="self">self</span>, _v: i128) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-            <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">&quot;expected RawValue&quot;</span>))
-        }
+    <span class="kw">fn </span>serialize_i128(<span class="self">self</span>, _v: i128) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">&quot;expected RawValue&quot;</span>))
     }
 
     <span class="kw">fn </span>serialize_u8(<span class="self">self</span>, _v: u8) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
@@ -3679,10 +3628,8 @@
         <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">&quot;expected RawValue&quot;</span>))
     }
 
-    <span class="macro">serde_if_integer128! </span>{
-        <span class="kw">fn </span>serialize_u128(<span class="self">self</span>, _v: u128) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-            <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">&quot;expected RawValue&quot;</span>))
-        }
+    <span class="kw">fn </span>serialize_u128(<span class="self">self</span>, _v: u128) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">&quot;expected RawValue&quot;</span>))
     }
 
     <span class="kw">fn </span>serialize_f32(<span class="self">self</span>, _v: f32) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
@@ -3800,6 +3747,13 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::SerializeStructVariant&gt; {
         <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">&quot;expected RawValue&quot;</span>))
     }
+
+    <span class="kw">fn </span>collect_str&lt;T&gt;(<span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Ok&gt;
+    <span class="kw">where
+        </span>T: <span class="question-mark">?</span>Sized + Display,
+    {
+        <span class="self">self</span>.serialize_str(<span class="kw-2">&amp;</span>value.to_string())
+    }
 }
 
 <span class="doccomment">/// Represents a character escape code in a type-safe manner.
@@ -3912,6 +3866,17 @@
         writer.write_all(s.as_bytes())
     }
 
+    <span class="doccomment">/// Writes an integer value like `-123` to the specified writer.
+    </span><span class="attr">#[inline]
+    </span><span class="kw">fn </span>write_i128&lt;W&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, writer: <span class="kw-2">&amp;mut </span>W, value: i128) -&gt; io::Result&lt;()&gt;
+    <span class="kw">where
+        </span>W: <span class="question-mark">?</span>Sized + io::Write,
+    {
+        <span class="kw">let </span><span class="kw-2">mut </span>buffer = itoa::Buffer::new();
+        <span class="kw">let </span>s = buffer.format(value);
+        writer.write_all(s.as_bytes())
+    }
+
     <span class="doccomment">/// Writes an integer value like `123` to the specified writer.
     </span><span class="attr">#[inline]
     </span><span class="kw">fn </span>write_u8&lt;W&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, writer: <span class="kw-2">&amp;mut </span>W, value: u8) -&gt; io::Result&lt;()&gt;
@@ -3948,6 +3913,17 @@
     <span class="doccomment">/// Writes an integer value like `123` to the specified writer.
     </span><span class="attr">#[inline]
     </span><span class="kw">fn </span>write_u64&lt;W&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, writer: <span class="kw-2">&amp;mut </span>W, value: u64) -&gt; io::Result&lt;()&gt;
+    <span class="kw">where
+        </span>W: <span class="question-mark">?</span>Sized + io::Write,
+    {
+        <span class="kw">let </span><span class="kw-2">mut </span>buffer = itoa::Buffer::new();
+        <span class="kw">let </span>s = buffer.format(value);
+        writer.write_all(s.as_bytes())
+    }
+
+    <span class="doccomment">/// Writes an integer value like `123` to the specified writer.
+    </span><span class="attr">#[inline]
+    </span><span class="kw">fn </span>write_u128&lt;W&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, writer: <span class="kw-2">&amp;mut </span>W, value: u128) -&gt; io::Result&lt;()&gt;
     <span class="kw">where
         </span>W: <span class="question-mark">?</span>Sized + io::Write,
     {
@@ -4049,6 +4025,24 @@
         };
 
         writer.write_all(s)
+    }
+
+    <span class="doccomment">/// Writes the representation of a byte array. Formatters can choose whether
+    /// to represent bytes as a JSON array of integers (the default), or some
+    /// JSON string encoding like hex or base64.
+    </span><span class="kw">fn </span>write_byte_array&lt;W&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, writer: <span class="kw-2">&amp;mut </span>W, value: <span class="kw-2">&amp;</span>[u8]) -&gt; io::Result&lt;()&gt;
+    <span class="kw">where
+        </span>W: <span class="question-mark">?</span>Sized + io::Write,
+    {
+        <span class="macro">tri!</span>(<span class="self">self</span>.begin_array(writer));
+        <span class="kw">let </span><span class="kw-2">mut </span>first = <span class="bool-val">true</span>;
+        <span class="kw">for </span>byte <span class="kw">in </span>value {
+            <span class="macro">tri!</span>(<span class="self">self</span>.begin_array_value(writer, first));
+            <span class="macro">tri!</span>(<span class="self">self</span>.write_u8(writer, <span class="kw-2">*</span>byte));
+            <span class="macro">tri!</span>(<span class="self">self</span>.end_array_value(writer));
+            first = <span class="bool-val">false</span>;
+        }
+        <span class="self">self</span>.end_array(writer)
     }
 
     <span class="doccomment">/// Called before every array.  Writes a `[` to the specified
@@ -4236,13 +4230,8 @@
     <span class="kw">where
         </span>W: <span class="question-mark">?</span>Sized + io::Write,
     {
-        <span class="kw">if </span>first {
-            <span class="macro">tri!</span>(writer.write_all(<span class="string">b&quot;\n&quot;</span>));
-        } <span class="kw">else </span>{
-            <span class="macro">tri!</span>(writer.write_all(<span class="string">b&quot;,\n&quot;</span>));
-        }
-        <span class="macro">tri!</span>(indent(writer, <span class="self">self</span>.current_indent, <span class="self">self</span>.indent));
-        <span class="prelude-val">Ok</span>(())
+        <span class="macro">tri!</span>(writer.write_all(<span class="kw">if </span>first { <span class="string">b&quot;\n&quot; </span>} <span class="kw">else </span>{ <span class="string">b&quot;,\n&quot; </span>}));
+        indent(writer, <span class="self">self</span>.current_indent, <span class="self">self</span>.indent)
     }
 
     <span class="attr">#[inline]
@@ -4284,11 +4273,7 @@
     <span class="kw">where
         </span>W: <span class="question-mark">?</span>Sized + io::Write,
     {
-        <span class="kw">if </span>first {
-            <span class="macro">tri!</span>(writer.write_all(<span class="string">b&quot;\n&quot;</span>));
-        } <span class="kw">else </span>{
-            <span class="macro">tri!</span>(writer.write_all(<span class="string">b&quot;,\n&quot;</span>));
-        }
+        <span class="macro">tri!</span>(writer.write_all(<span class="kw">if </span>first { <span class="string">b&quot;\n&quot; </span>} <span class="kw">else </span>{ <span class="string">b&quot;,\n&quot; </span>}));
         indent(writer, <span class="self">self</span>.current_indent, <span class="self">self</span>.indent)
     }
 
@@ -4317,8 +4302,7 @@
 {
     <span class="macro">tri!</span>(formatter.begin_string(writer));
     <span class="macro">tri!</span>(format_escaped_str_contents(writer, formatter, value));
-    <span class="macro">tri!</span>(formatter.end_string(writer));
-    <span class="prelude-val">Ok</span>(())
+    formatter.end_string(writer)
 }
 
 <span class="kw">fn </span>format_escaped_str_contents&lt;W, F&gt;(
@@ -4350,11 +4334,11 @@
         start = i + <span class="number">1</span>;
     }
 
-    <span class="kw">if </span>start != bytes.len() {
-        <span class="macro">tri!</span>(formatter.write_string_fragment(writer, <span class="kw-2">&amp;</span>value[start..]));
+    <span class="kw">if </span>start == bytes.len() {
+        <span class="kw">return </span><span class="prelude-val">Ok</span>(());
     }
 
-    <span class="prelude-val">Ok</span>(())
+    formatter.write_string_fragment(writer, <span class="kw-2">&amp;</span>value[start..])
 }
 
 <span class="kw">const </span>BB: u8 = <span class="string">b&#39;b&#39;</span>; <span class="comment">// \x08
@@ -4389,7 +4373,9 @@
     </span>__, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, <span class="comment">// F
 </span>];
 
-<span class="doccomment">/// Serialize the given data structure as JSON into the IO stream.
+<span class="doccomment">/// Serialize the given data structure as JSON into the I/O stream.
+///
+/// Serialization guarantees it only feeds valid UTF-8 sequences to the writer.
 ///
 /// # Errors
 ///
@@ -4403,12 +4389,13 @@
     T: <span class="question-mark">?</span>Sized + Serialize,
 {
     <span class="kw">let </span><span class="kw-2">mut </span>ser = Serializer::new(writer);
-    <span class="macro">tri!</span>(value.serialize(<span class="kw-2">&amp;mut </span>ser));
-    <span class="prelude-val">Ok</span>(())
+    value.serialize(<span class="kw-2">&amp;mut </span>ser)
 }
 
-<span class="doccomment">/// Serialize the given data structure as pretty-printed JSON into the IO
+<span class="doccomment">/// Serialize the given data structure as pretty-printed JSON into the I/O
 /// stream.
+///
+/// Serialization guarantees it only feeds valid UTF-8 sequences to the writer.
 ///
 /// # Errors
 ///
@@ -4422,8 +4409,7 @@
     T: <span class="question-mark">?</span>Sized + Serialize,
 {
     <span class="kw">let </span><span class="kw-2">mut </span>ser = Serializer::pretty(writer);
-    <span class="macro">tri!</span>(value.serialize(<span class="kw-2">&amp;mut </span>ser));
-    <span class="prelude-val">Ok</span>(())
+    value.serialize(<span class="kw-2">&amp;mut </span>ser)
 }
 
 <span class="doccomment">/// Serialize the given data structure as a JSON byte vector.

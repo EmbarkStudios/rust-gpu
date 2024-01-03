@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hashbrown-0.12.3/src/raw/sse2.rs`."><title>sse2.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="hashbrown" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../hashbrown/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hashbrown-0.14.3/src/raw/sse2.rs`."><title>sse2.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="hashbrown" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../hashbrown/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -144,31 +144,37 @@
 <a href="#144" id="144">144</a>
 <a href="#145" id="145">145</a>
 <a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::bitmask::BitMask;
 <span class="kw">use </span><span class="kw">super</span>::EMPTY;
 <span class="kw">use </span>core::mem;
+<span class="kw">use </span>core::num::NonZeroU16;
 
 <span class="attr">#[cfg(target_arch = <span class="string">&quot;x86&quot;</span>)]
 </span><span class="kw">use </span>core::arch::x86;
 <span class="attr">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
 </span><span class="kw">use </span>core::arch::x86_64 <span class="kw">as </span>x86;
 
-<span class="kw">pub type </span>BitMaskWord = u16;
-<span class="kw">pub const </span>BITMASK_STRIDE: usize = <span class="number">1</span>;
-<span class="kw">pub const </span>BITMASK_MASK: BitMaskWord = <span class="number">0xffff</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type </span>BitMaskWord = u16;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type </span>NonZeroBitMaskWord = NonZeroU16;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>BITMASK_STRIDE: usize = <span class="number">1</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>BITMASK_MASK: BitMaskWord = <span class="number">0xffff</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>BITMASK_ITER_MASK: BitMaskWord = !<span class="number">0</span>;
 
 <span class="doccomment">/// Abstraction over a group of control bytes which can be scanned in
 /// parallel.
 ///
 /// This implementation uses a 128-bit SSE value.
 </span><span class="attr">#[derive(Copy, Clone)]
-</span><span class="kw">pub struct </span>Group(x86::__m128i);
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Group(x86::__m128i);
 
 <span class="comment">// FIXME: https://github.com/rust-lang/rust-clippy/issues/3859
 </span><span class="attr">#[allow(clippy::use_self)]
 </span><span class="kw">impl </span>Group {
     <span class="doccomment">/// Number of bytes in the group.
-    </span><span class="kw">pub const </span>WIDTH: usize = mem::size_of::&lt;<span class="self">Self</span>&gt;();
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>WIDTH: usize = mem::size_of::&lt;<span class="self">Self</span>&gt;();
 
     <span class="doccomment">/// Returns a full group of empty bytes, suitable for use as the initial
     /// value for an empty hash table.
@@ -176,7 +182,7 @@
     /// This is guaranteed to be aligned to the group size.
     </span><span class="attr">#[inline]
     #[allow(clippy::items_after_statements)]
-    </span><span class="kw">pub const fn </span>static_empty() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8; Group::WIDTH] {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const fn </span>static_empty() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8; Group::WIDTH] {
         <span class="attr">#[repr(C)]
         </span><span class="kw">struct </span>AlignedBytes {
             _align: [Group; <span class="number">0</span>],
@@ -192,7 +198,7 @@
     <span class="doccomment">/// Loads a group of bytes starting at the given address.
     </span><span class="attr">#[inline]
     #[allow(clippy::cast_ptr_alignment)] </span><span class="comment">// unaligned load
-    </span><span class="kw">pub unsafe fn </span>load(ptr: <span class="kw-2">*const </span>u8) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>load(ptr: <span class="kw-2">*const </span>u8) -&gt; <span class="self">Self </span>{
         Group(x86::_mm_loadu_si128(ptr.cast()))
     }
 
@@ -200,7 +206,7 @@
     /// aligned to `mem::align_of::&lt;Group&gt;()`.
     </span><span class="attr">#[inline]
     #[allow(clippy::cast_ptr_alignment)]
-    </span><span class="kw">pub unsafe fn </span>load_aligned(ptr: <span class="kw-2">*const </span>u8) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>load_aligned(ptr: <span class="kw-2">*const </span>u8) -&gt; <span class="self">Self </span>{
         <span class="comment">// FIXME: use align_offset once it stabilizes
         </span><span class="macro">debug_assert_eq!</span>(ptr <span class="kw">as </span>usize &amp; (mem::align_of::&lt;<span class="self">Self</span>&gt;() - <span class="number">1</span>), <span class="number">0</span>);
         Group(x86::_mm_load_si128(ptr.cast()))
@@ -210,7 +216,7 @@
     /// aligned to `mem::align_of::&lt;Group&gt;()`.
     </span><span class="attr">#[inline]
     #[allow(clippy::cast_ptr_alignment)]
-    </span><span class="kw">pub unsafe fn </span>store_aligned(<span class="self">self</span>, ptr: <span class="kw-2">*mut </span>u8) {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>store_aligned(<span class="self">self</span>, ptr: <span class="kw-2">*mut </span>u8) {
         <span class="comment">// FIXME: use align_offset once it stabilizes
         </span><span class="macro">debug_assert_eq!</span>(ptr <span class="kw">as </span>usize &amp; (mem::align_of::&lt;<span class="self">Self</span>&gt;() - <span class="number">1</span>), <span class="number">0</span>);
         x86::_mm_store_si128(ptr.cast(), <span class="self">self</span>.<span class="number">0</span>);
@@ -219,7 +225,7 @@
     <span class="doccomment">/// Returns a `BitMask` indicating all bytes in the group which have
     /// the given value.
     </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>match_byte(<span class="self">self</span>, byte: u8) -&gt; BitMask {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>match_byte(<span class="self">self</span>, byte: u8) -&gt; BitMask {
         <span class="attr">#[allow(
             clippy::cast_possible_wrap, <span class="comment">// byte: u8 as i8
             // byte: i32 as u16
@@ -237,14 +243,14 @@
     <span class="doccomment">/// Returns a `BitMask` indicating all bytes in the group which are
     /// `EMPTY`.
     </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>match_empty(<span class="self">self</span>) -&gt; BitMask {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>match_empty(<span class="self">self</span>) -&gt; BitMask {
         <span class="self">self</span>.match_byte(EMPTY)
     }
 
     <span class="doccomment">/// Returns a `BitMask` indicating all bytes in the group which are
     /// `EMPTY` or `DELETED`.
     </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>match_empty_or_deleted(<span class="self">self</span>) -&gt; BitMask {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>match_empty_or_deleted(<span class="self">self</span>) -&gt; BitMask {
         <span class="attr">#[allow(
             <span class="comment">// byte: i32 as u16
             //   note: _mm_movemask_epi8 returns a 16-bit mask in a i32, the
@@ -260,7 +266,7 @@
 
     <span class="doccomment">/// Returns a `BitMask` indicating all bytes in the group which are full.
     </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>match_full(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BitMask {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>match_full(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BitMask {
         <span class="self">self</span>.match_empty_or_deleted().invert()
     }
 
@@ -269,7 +275,7 @@
     /// - `DELETED =&gt; EMPTY`
     /// - `FULL =&gt; DELETED`
     </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>convert_special_to_empty_and_full_to_deleted(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>convert_special_to_empty_and_full_to_deleted(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
         <span class="comment">// Map high_bit = 1 (EMPTY or DELETED) to 1111_1111
         // and high_bit = 0 (FULL) to 1000_0000
         //

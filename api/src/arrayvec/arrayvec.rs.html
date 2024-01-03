@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/arrayvec-0.7.2/src/arrayvec.rs`."><title>arrayvec.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="arrayvec" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../arrayvec/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/arrayvec-0.7.4/src/arrayvec.rs`."><title>arrayvec.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="arrayvec" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../arrayvec/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1265,6 +1265,39 @@
 <a href="#1265" id="1265">1265</a>
 <a href="#1266" id="1266">1266</a>
 <a href="#1267" id="1267">1267</a>
+<a href="#1268" id="1268">1268</a>
+<a href="#1269" id="1269">1269</a>
+<a href="#1270" id="1270">1270</a>
+<a href="#1271" id="1271">1271</a>
+<a href="#1272" id="1272">1272</a>
+<a href="#1273" id="1273">1273</a>
+<a href="#1274" id="1274">1274</a>
+<a href="#1275" id="1275">1275</a>
+<a href="#1276" id="1276">1276</a>
+<a href="#1277" id="1277">1277</a>
+<a href="#1278" id="1278">1278</a>
+<a href="#1279" id="1279">1279</a>
+<a href="#1280" id="1280">1280</a>
+<a href="#1281" id="1281">1281</a>
+<a href="#1282" id="1282">1282</a>
+<a href="#1283" id="1283">1283</a>
+<a href="#1284" id="1284">1284</a>
+<a href="#1285" id="1285">1285</a>
+<a href="#1286" id="1286">1286</a>
+<a href="#1287" id="1287">1287</a>
+<a href="#1288" id="1288">1288</a>
+<a href="#1289" id="1289">1289</a>
+<a href="#1290" id="1290">1290</a>
+<a href="#1291" id="1291">1291</a>
+<a href="#1292" id="1292">1292</a>
+<a href="#1293" id="1293">1293</a>
+<a href="#1294" id="1294">1294</a>
+<a href="#1295" id="1295">1295</a>
+<a href="#1296" id="1296">1296</a>
+<a href="#1297" id="1297">1297</a>
+<a href="#1298" id="1298">1298</a>
+<a href="#1299" id="1299">1299</a>
+<a href="#1300" id="1300">1300</a>
 </pre></div><pre class="rust"><code>
 <span class="kw">use </span>std::cmp;
 <span class="kw">use </span>std::iter;
@@ -1344,6 +1377,8 @@
     /// assert_eq!(&amp;array[..], &amp;[1, 2]);
     /// assert_eq!(array.capacity(), 16);
     /// ```
+    </span><span class="attr">#[inline]
+    #[track_caller]
     </span><span class="kw">pub fn </span>new() -&gt; ArrayVec&lt;T, CAP&gt; {
         <span class="macro">assert_capacity_limit!</span>(CAP);
         <span class="kw">unsafe </span>{
@@ -1439,6 +1474,7 @@
     ///
     /// assert_eq!(&amp;array[..], &amp;[1, 2]);
     /// ```
+    </span><span class="attr">#[track_caller]
     </span><span class="kw">pub fn </span>push(<span class="kw-2">&amp;mut </span><span class="self">self</span>, element: T) {
         ArrayVecImpl::push(<span class="self">self</span>, element)
     }
@@ -1544,6 +1580,7 @@
     /// assert_eq!(&amp;array[..], &amp;[&quot;y&quot;, &quot;x&quot;]);
     ///
     /// ```
+    </span><span class="attr">#[track_caller]
     </span><span class="kw">pub fn </span>insert(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize, element: T) {
         <span class="self">self</span>.try_insert(index, element).unwrap()
     }
@@ -1774,7 +1811,7 @@
             }
             <span class="kw">if </span>DELETED {
                 <span class="kw">unsafe </span>{
-                    <span class="kw">let </span>hole_slot = g.v.as_mut_ptr().add(g.processed_len - g.deleted_cnt);
+                    <span class="kw">let </span>hole_slot = cur.sub(g.deleted_cnt);
                     ptr::copy_nonoverlapping(cur, hole_slot, <span class="number">1</span>);
                 }
             }
@@ -2015,7 +2052,8 @@
 /// assert_eq!(array.capacity(), 3);
 /// ```
 </span><span class="kw">impl</span>&lt;T, <span class="kw">const </span>CAP: usize&gt; From&lt;[T; CAP]&gt; <span class="kw">for </span>ArrayVec&lt;T, CAP&gt; {
-    <span class="kw">fn </span>from(array: [T; CAP]) -&gt; <span class="self">Self </span>{
+    <span class="attr">#[track_caller]
+    </span><span class="kw">fn </span>from(array: [T; CAP]) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>array = ManuallyDrop::new(array);
         <span class="kw">let </span><span class="kw-2">mut </span>vec = &lt;ArrayVec&lt;T, CAP&gt;&gt;::new();
         <span class="kw">unsafe </span>{
@@ -2109,6 +2147,32 @@
     }
 }
 
+
+<span class="attr">#[cfg(feature = <span class="string">&quot;zeroize&quot;</span>)]
+</span><span class="doccomment">/// &quot;Best efforts&quot; zeroing of the `ArrayVec`&#39;s buffer when the `zeroize` feature is enabled.
+///
+/// The length is set to 0, and the buffer is dropped and zeroized.
+/// Cannot ensure that previous moves of the `ArrayVec` did not leave values on the stack.
+///
+/// ```
+/// use arrayvec::ArrayVec;
+/// use zeroize::Zeroize;
+/// let mut array = ArrayVec::from([1, 2, 3]);
+/// array.zeroize();
+/// assert_eq!(array.len(), 0);
+/// let data = unsafe { core::slice::from_raw_parts(array.as_ptr(), array.capacity()) };
+/// assert_eq!(data, [0, 0, 0]);
+/// ```
+</span><span class="kw">impl</span>&lt;Z: zeroize::Zeroize, <span class="kw">const </span>CAP: usize&gt; zeroize::Zeroize <span class="kw">for </span>ArrayVec&lt;Z, CAP&gt; {
+    <span class="kw">fn </span>zeroize(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="comment">// Zeroize all the contained elements.
+        </span><span class="self">self</span>.iter_mut().zeroize();
+        <span class="comment">// Drop all the elements and set the length to 0.
+        </span><span class="self">self</span>.clear();
+        <span class="comment">// Zeroize the backing array.
+        </span><span class="self">self</span>.xs.zeroize();
+    }
+}
 
 <span class="doccomment">/// By-value iterator for `ArrayVec`.
 </span><span class="kw">pub struct </span>IntoIter&lt;T, <span class="kw">const </span>CAP: usize&gt; {
@@ -2245,9 +2309,8 @@
                 <span class="comment">// memmove back untouched tail, update to new length
                 </span><span class="kw">let </span>start = source_vec.len();
                 <span class="kw">let </span>tail = <span class="self">self</span>.tail_start;
-                <span class="kw">let </span>src = source_vec.as_ptr().add(tail);
-                <span class="kw">let </span>dst = source_vec.as_mut_ptr().add(start);
-                ptr::copy(src, dst, <span class="self">self</span>.tail_len);
+                <span class="kw">let </span>ptr = source_vec.as_mut_ptr();
+                ptr::copy(ptr.add(tail), ptr.add(start), <span class="self">self</span>.tail_len);
                 source_vec.set_len(start + <span class="self">self</span>.tail_len);
             }
         }
@@ -2279,6 +2342,7 @@
     <span class="doccomment">/// Extend the `ArrayVec` with an iterator.
     /// 
     /// ***Panics*** if extending the vector exceeds its capacity.
+    </span><span class="attr">#[track_caller]
     </span><span class="kw">fn </span>extend&lt;I: IntoIterator&lt;Item=T&gt;&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, iter: I) {
         <span class="kw">unsafe </span>{
             <span class="self">self</span>.extend_from_iter::&lt;<span class="kw">_</span>, <span class="bool-val">true</span>&gt;(iter)
@@ -2288,6 +2352,7 @@
 
 <span class="attr">#[inline(never)]
 #[cold]
+#[track_caller]
 </span><span class="kw">fn </span>extend_panic() {
     <span class="macro">panic!</span>(<span class="string">&quot;ArrayVec: capacity exceeded in extend/from_iter&quot;</span>);
 }
@@ -2299,6 +2364,7 @@
     ///
     /// Unsafe because if CHECK is false, the length of the input is not checked.
     /// The caller must ensure the length of the input fits in the capacity.
+    </span><span class="attr">#[track_caller]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>extend_from_iter&lt;I, <span class="kw">const </span>CHECK: bool&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, iterable: I)
         <span class="kw">where </span>I: IntoIterator&lt;Item = T&gt;
     {
@@ -2349,8 +2415,8 @@
 </span><span class="kw">unsafe fn </span>raw_ptr_add&lt;T&gt;(ptr: <span class="kw-2">*mut </span>T, offset: usize) -&gt; <span class="kw-2">*mut </span>T {
     <span class="kw">if </span>mem::size_of::&lt;T&gt;() == <span class="number">0 </span>{
         <span class="comment">// Special case for ZST
-        </span>(ptr <span class="kw">as </span>usize).wrapping_add(offset) <span class="kw">as _
-    </span>} <span class="kw">else </span>{
+        </span>ptr.cast::&lt;u8&gt;().wrapping_add(offset).cast()
+    } <span class="kw">else </span>{
         ptr.add(offset)
     }
 }

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/rustix-0.36.9/src/backend/libc/io/syscalls.rs`."><title>syscalls.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="rustix" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../../src-files.js"></script><script defer src="../../../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../../rustix/index.html"><img class="rust-logo" src="../../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/rustix-0.38.28/src/backend/libc/io/syscalls.rs`."><title>syscalls.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="rustix" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../../src-files.js"></script><script defer src="../../../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../../rustix/index.html"><img class="rust-logo" src="../../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -338,293 +338,64 @@
 <a href="#338" id="338">338</a>
 <a href="#339" id="339">339</a>
 <a href="#340" id="340">340</a>
-<a href="#341" id="341">341</a>
-<a href="#342" id="342">342</a>
-<a href="#343" id="343">343</a>
-<a href="#344" id="344">344</a>
-<a href="#345" id="345">345</a>
-<a href="#346" id="346">346</a>
-<a href="#347" id="347">347</a>
-<a href="#348" id="348">348</a>
-<a href="#349" id="349">349</a>
-<a href="#350" id="350">350</a>
-<a href="#351" id="351">351</a>
-<a href="#352" id="352">352</a>
-<a href="#353" id="353">353</a>
-<a href="#354" id="354">354</a>
-<a href="#355" id="355">355</a>
-<a href="#356" id="356">356</a>
-<a href="#357" id="357">357</a>
-<a href="#358" id="358">358</a>
-<a href="#359" id="359">359</a>
-<a href="#360" id="360">360</a>
-<a href="#361" id="361">361</a>
-<a href="#362" id="362">362</a>
-<a href="#363" id="363">363</a>
-<a href="#364" id="364">364</a>
-<a href="#365" id="365">365</a>
-<a href="#366" id="366">366</a>
-<a href="#367" id="367">367</a>
-<a href="#368" id="368">368</a>
-<a href="#369" id="369">369</a>
-<a href="#370" id="370">370</a>
-<a href="#371" id="371">371</a>
-<a href="#372" id="372">372</a>
-<a href="#373" id="373">373</a>
-<a href="#374" id="374">374</a>
-<a href="#375" id="375">375</a>
-<a href="#376" id="376">376</a>
-<a href="#377" id="377">377</a>
-<a href="#378" id="378">378</a>
-<a href="#379" id="379">379</a>
-<a href="#380" id="380">380</a>
-<a href="#381" id="381">381</a>
-<a href="#382" id="382">382</a>
-<a href="#383" id="383">383</a>
-<a href="#384" id="384">384</a>
-<a href="#385" id="385">385</a>
-<a href="#386" id="386">386</a>
-<a href="#387" id="387">387</a>
-<a href="#388" id="388">388</a>
-<a href="#389" id="389">389</a>
-<a href="#390" id="390">390</a>
-<a href="#391" id="391">391</a>
-<a href="#392" id="392">392</a>
-<a href="#393" id="393">393</a>
-<a href="#394" id="394">394</a>
-<a href="#395" id="395">395</a>
-<a href="#396" id="396">396</a>
-<a href="#397" id="397">397</a>
-<a href="#398" id="398">398</a>
-<a href="#399" id="399">399</a>
-<a href="#400" id="400">400</a>
-<a href="#401" id="401">401</a>
-<a href="#402" id="402">402</a>
-<a href="#403" id="403">403</a>
-<a href="#404" id="404">404</a>
-<a href="#405" id="405">405</a>
-<a href="#406" id="406">406</a>
-<a href="#407" id="407">407</a>
-<a href="#408" id="408">408</a>
-<a href="#409" id="409">409</a>
-<a href="#410" id="410">410</a>
-<a href="#411" id="411">411</a>
-<a href="#412" id="412">412</a>
-<a href="#413" id="413">413</a>
-<a href="#414" id="414">414</a>
-<a href="#415" id="415">415</a>
-<a href="#416" id="416">416</a>
-<a href="#417" id="417">417</a>
-<a href="#418" id="418">418</a>
-<a href="#419" id="419">419</a>
-<a href="#420" id="420">420</a>
-<a href="#421" id="421">421</a>
-<a href="#422" id="422">422</a>
-<a href="#423" id="423">423</a>
-<a href="#424" id="424">424</a>
-<a href="#425" id="425">425</a>
-<a href="#426" id="426">426</a>
-<a href="#427" id="427">427</a>
-<a href="#428" id="428">428</a>
-<a href="#429" id="429">429</a>
-<a href="#430" id="430">430</a>
-<a href="#431" id="431">431</a>
-<a href="#432" id="432">432</a>
-<a href="#433" id="433">433</a>
-<a href="#434" id="434">434</a>
-<a href="#435" id="435">435</a>
-<a href="#436" id="436">436</a>
-<a href="#437" id="437">437</a>
-<a href="#438" id="438">438</a>
-<a href="#439" id="439">439</a>
-<a href="#440" id="440">440</a>
-<a href="#441" id="441">441</a>
-<a href="#442" id="442">442</a>
-<a href="#443" id="443">443</a>
-<a href="#444" id="444">444</a>
-<a href="#445" id="445">445</a>
-<a href="#446" id="446">446</a>
-<a href="#447" id="447">447</a>
-<a href="#448" id="448">448</a>
-<a href="#449" id="449">449</a>
-<a href="#450" id="450">450</a>
-<a href="#451" id="451">451</a>
-<a href="#452" id="452">452</a>
-<a href="#453" id="453">453</a>
-<a href="#454" id="454">454</a>
-<a href="#455" id="455">455</a>
-<a href="#456" id="456">456</a>
-<a href="#457" id="457">457</a>
-<a href="#458" id="458">458</a>
-<a href="#459" id="459">459</a>
-<a href="#460" id="460">460</a>
-<a href="#461" id="461">461</a>
-<a href="#462" id="462">462</a>
-<a href="#463" id="463">463</a>
-<a href="#464" id="464">464</a>
-<a href="#465" id="465">465</a>
-<a href="#466" id="466">466</a>
-<a href="#467" id="467">467</a>
-<a href="#468" id="468">468</a>
-<a href="#469" id="469">469</a>
-<a href="#470" id="470">470</a>
-<a href="#471" id="471">471</a>
-<a href="#472" id="472">472</a>
-<a href="#473" id="473">473</a>
-<a href="#474" id="474">474</a>
-<a href="#475" id="475">475</a>
-<a href="#476" id="476">476</a>
-<a href="#477" id="477">477</a>
-<a href="#478" id="478">478</a>
-<a href="#479" id="479">479</a>
-<a href="#480" id="480">480</a>
-<a href="#481" id="481">481</a>
-<a href="#482" id="482">482</a>
-<a href="#483" id="483">483</a>
-<a href="#484" id="484">484</a>
-<a href="#485" id="485">485</a>
-<a href="#486" id="486">486</a>
-<a href="#487" id="487">487</a>
-<a href="#488" id="488">488</a>
-<a href="#489" id="489">489</a>
-<a href="#490" id="490">490</a>
-<a href="#491" id="491">491</a>
-<a href="#492" id="492">492</a>
-<a href="#493" id="493">493</a>
-<a href="#494" id="494">494</a>
-<a href="#495" id="495">495</a>
-<a href="#496" id="496">496</a>
-<a href="#497" id="497">497</a>
-<a href="#498" id="498">498</a>
-<a href="#499" id="499">499</a>
-<a href="#500" id="500">500</a>
-<a href="#501" id="501">501</a>
-<a href="#502" id="502">502</a>
-<a href="#503" id="503">503</a>
-<a href="#504" id="504">504</a>
-<a href="#505" id="505">505</a>
-<a href="#506" id="506">506</a>
-<a href="#507" id="507">507</a>
-<a href="#508" id="508">508</a>
-<a href="#509" id="509">509</a>
-<a href="#510" id="510">510</a>
-<a href="#511" id="511">511</a>
-<a href="#512" id="512">512</a>
-<a href="#513" id="513">513</a>
-<a href="#514" id="514">514</a>
-<a href="#515" id="515">515</a>
-<a href="#516" id="516">516</a>
-<a href="#517" id="517">517</a>
-<a href="#518" id="518">518</a>
-<a href="#519" id="519">519</a>
-<a href="#520" id="520">520</a>
-<a href="#521" id="521">521</a>
-<a href="#522" id="522">522</a>
-<a href="#523" id="523">523</a>
-<a href="#524" id="524">524</a>
-<a href="#525" id="525">525</a>
-<a href="#526" id="526">526</a>
-<a href="#527" id="527">527</a>
-<a href="#528" id="528">528</a>
-<a href="#529" id="529">529</a>
-<a href="#530" id="530">530</a>
-<a href="#531" id="531">531</a>
-<a href="#532" id="532">532</a>
-<a href="#533" id="533">533</a>
-<a href="#534" id="534">534</a>
-<a href="#535" id="535">535</a>
-<a href="#536" id="536">536</a>
-<a href="#537" id="537">537</a>
-<a href="#538" id="538">538</a>
-<a href="#539" id="539">539</a>
-<a href="#540" id="540">540</a>
-<a href="#541" id="541">541</a>
-<a href="#542" id="542">542</a>
-<a href="#543" id="543">543</a>
-<a href="#544" id="544">544</a>
-<a href="#545" id="545">545</a>
-<a href="#546" id="546">546</a>
-<a href="#547" id="547">547</a>
-<a href="#548" id="548">548</a>
-<a href="#549" id="549">549</a>
-<a href="#550" id="550">550</a>
-<a href="#551" id="551">551</a>
-<a href="#552" id="552">552</a>
-<a href="#553" id="553">553</a>
-<a href="#554" id="554">554</a>
-<a href="#555" id="555">555</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! libc syscalls supporting `rustix::io`.
 
-</span><span class="kw">use </span><span class="kw">super</span>::<span class="kw">super</span>::c;
-<span class="attr">#[cfg(any(target_os = <span class="string">&quot;android&quot;</span>, target_os = <span class="string">&quot;linux&quot;</span>))]
-</span><span class="kw">use </span><span class="kw">super</span>::<span class="kw">super</span>::conv::syscall_ret_owned_fd;
-<span class="kw">use </span><span class="kw">super</span>::<span class="kw">super</span>::conv::{
-    borrowed_fd, ret, ret_c_int, ret_discarded_fd, ret_owned_fd, ret_ssize_t,
-};
-<span class="kw">use </span><span class="kw">super</span>::<span class="kw">super</span>::offset::{libc_pread, libc_pwrite};
-<span class="attr">#[cfg(not(any(target_os = <span class="string">&quot;haiku&quot;</span>, target_os = <span class="string">&quot;redox&quot;</span>, target_os = <span class="string">&quot;solaris&quot;</span>)))]
-</span><span class="kw">use </span><span class="kw">super</span>::<span class="kw">super</span>::offset::{libc_preadv, libc_pwritev};
-<span class="attr">#[cfg(all(target_os = <span class="string">&quot;linux&quot;</span>, target_env = <span class="string">&quot;gnu&quot;</span>))]
-</span><span class="kw">use </span><span class="kw">super</span>::<span class="kw">super</span>::offset::{libc_preadv2, libc_pwritev2};
+</span><span class="kw">use </span><span class="kw">crate</span>::backend::c;
+<span class="attr">#[cfg(not(target_os = <span class="string">&quot;wasi&quot;</span>))]
+</span><span class="kw">use </span><span class="kw">crate</span>::backend::conv::ret_discarded_fd;
+<span class="kw">use </span><span class="kw">crate</span>::backend::conv::{borrowed_fd, ret, ret_c_int, ret_owned_fd, ret_usize};
 <span class="kw">use </span><span class="kw">crate</span>::fd::{AsFd, BorrowedFd, OwnedFd, RawFd};
-<span class="attr">#[cfg(not(any(target_os = <span class="string">&quot;aix&quot;</span>, target_os = <span class="string">&quot;wasi&quot;</span>)))]
-</span><span class="kw">use </span><span class="kw">crate</span>::io::DupFlags;
 <span class="attr">#[cfg(not(any(
     target_os = <span class="string">&quot;aix&quot;</span>,
-    target_os = <span class="string">&quot;haiku&quot;</span>,
-    target_os = <span class="string">&quot;ios&quot;</span>,
-    target_os = <span class="string">&quot;macos&quot;</span>,
+    target_os = <span class="string">&quot;espidf&quot;</span>,
+    target_os = <span class="string">&quot;nto&quot;</span>,
+    target_os = <span class="string">&quot;vita&quot;</span>,
     target_os = <span class="string">&quot;wasi&quot;
 </span>)))]
-</span><span class="kw">use </span><span class="kw">crate</span>::io::PipeFlags;
-<span class="kw">use </span><span class="kw">crate</span>::io::{<span class="self">self</span>, FdFlags, IoSlice, IoSliceMut, PollFd};
-<span class="attr">#[cfg(any(target_os = <span class="string">&quot;android&quot;</span>, target_os = <span class="string">&quot;linux&quot;</span>))]
-</span><span class="kw">use </span><span class="kw">crate</span>::io::{EventfdFlags, IoSliceRaw, ReadWriteFlags, SpliceFlags};
+</span><span class="kw">use </span><span class="kw">crate</span>::io::DupFlags;
+<span class="attr">#[cfg(linux_kernel)]
+</span><span class="kw">use </span><span class="kw">crate</span>::io::ReadWriteFlags;
+<span class="kw">use </span><span class="kw">crate</span>::io::{<span class="self">self</span>, FdFlags};
+<span class="kw">use </span><span class="kw">crate</span>::ioctl::{IoctlOutput, RawOpcode};
 <span class="kw">use </span>core::cmp::min;
-<span class="kw">use </span>core::convert::TryInto;
-<span class="kw">use </span>core::mem::MaybeUninit;
-<span class="attr">#[cfg(any(target_os = <span class="string">&quot;android&quot;</span>, target_os = <span class="string">&quot;linux&quot;</span>))]
-</span><span class="kw">use </span>core::ptr;
 <span class="attr">#[cfg(all(feature = <span class="string">&quot;fs&quot;</span>, feature = <span class="string">&quot;net&quot;</span>))]
 </span><span class="kw">use </span>libc_errno::errno;
+<span class="attr">#[cfg(not(target_os = <span class="string">&quot;espidf&quot;</span>))]
+</span><span class="kw">use </span>{
+    <span class="kw">crate</span>::backend::MAX_IOV,
+    <span class="kw">crate</span>::io::{IoSlice, IoSliceMut},
+};
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>read(fd: BorrowedFd&lt;<span class="lifetime">&#39;_</span>&gt;, buf: <span class="kw-2">&amp;mut </span>[u8]) -&gt; io::Result&lt;usize&gt; {
-    <span class="kw">let </span>nread = <span class="kw">unsafe </span>{
-        ret_ssize_t(c::read(
-            borrowed_fd(fd),
-            buf.as_mut_ptr().cast(),
-            min(buf.len(), READ_LIMIT),
-        ))<span class="question-mark">?
-    </span>};
-    <span class="prelude-val">Ok</span>(nread <span class="kw">as </span>usize)
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>read(fd: BorrowedFd&lt;<span class="lifetime">&#39;_</span>&gt;, buf: <span class="kw-2">*mut </span>u8, len: usize) -&gt; io::Result&lt;usize&gt; {
+    ret_usize(c::read(borrowed_fd(fd), buf.cast(), min(len, READ_LIMIT)))
 }
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>write(fd: BorrowedFd&lt;<span class="lifetime">&#39;_</span>&gt;, buf: <span class="kw-2">&amp;</span>[u8]) -&gt; io::Result&lt;usize&gt; {
-    <span class="kw">let </span>nwritten = <span class="kw">unsafe </span>{
-        ret_ssize_t(c::write(
+    <span class="kw">unsafe </span>{
+        ret_usize(c::write(
             borrowed_fd(fd),
             buf.as_ptr().cast(),
             min(buf.len(), READ_LIMIT),
-        ))<span class="question-mark">?
-    </span>};
-    <span class="prelude-val">Ok</span>(nwritten <span class="kw">as </span>usize)
+        ))
+    }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>pread(fd: BorrowedFd&lt;<span class="lifetime">&#39;_</span>&gt;, buf: <span class="kw-2">&amp;mut </span>[u8], offset: u64) -&gt; io::Result&lt;usize&gt; {
-    <span class="kw">let </span>len = min(buf.len(), READ_LIMIT);
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>pread(
+    fd: BorrowedFd&lt;<span class="lifetime">&#39;_</span>&gt;,
+    buf: <span class="kw-2">*mut </span>u8,
+    len: usize,
+    offset: u64,
+) -&gt; io::Result&lt;usize&gt; {
+    <span class="kw">let </span>len = min(len, READ_LIMIT);
 
     <span class="comment">// Silently cast; we&#39;ll get `EINVAL` if the value is negative.
     </span><span class="kw">let </span>offset = offset <span class="kw">as </span>i64;
 
-    <span class="kw">let </span>nread = <span class="kw">unsafe </span>{
-        ret_ssize_t(libc_pread(
-            borrowed_fd(fd),
-            buf.as_mut_ptr().cast(),
-            len,
-            offset,
-        ))<span class="question-mark">?
-    </span>};
-    <span class="prelude-val">Ok</span>(nread <span class="kw">as </span>usize)
+    <span class="comment">// ESP-IDF and Vita don&#39;t support 64-bit offsets.
+    </span><span class="attr">#[cfg(any(target_os = <span class="string">&quot;espidf&quot;</span>, target_os = <span class="string">&quot;vita&quot;</span>))]
+    </span><span class="kw">let </span>offset: i32 = offset.try_into().map_err(|<span class="kw">_</span>| io::Errno::OVERFLOW)<span class="question-mark">?</span>;
+
+    ret_usize(c::pread(borrowed_fd(fd), buf.cast(), len, offset))
 }
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>pwrite(fd: BorrowedFd&lt;<span class="lifetime">&#39;_</span>&gt;, buf: <span class="kw-2">&amp;</span>[u8], offset: u64) -&gt; io::Result&lt;usize&gt; {
@@ -633,177 +404,127 @@
     <span class="comment">// Silently cast; we&#39;ll get `EINVAL` if the value is negative.
     </span><span class="kw">let </span>offset = offset <span class="kw">as </span>i64;
 
-    <span class="kw">let </span>nwritten = <span class="kw">unsafe </span>{
-        ret_ssize_t(libc_pwrite(
-            borrowed_fd(fd),
-            buf.as_ptr().cast(),
-            len,
-            offset,
-        ))<span class="question-mark">?
-    </span>};
-    <span class="prelude-val">Ok</span>(nwritten <span class="kw">as </span>usize)
+    <span class="comment">// ESP-IDF and Vita don&#39;t support 64-bit offsets.
+    </span><span class="attr">#[cfg(any(target_os = <span class="string">&quot;espidf&quot;</span>, target_os = <span class="string">&quot;vita&quot;</span>))]
+    </span><span class="kw">let </span>offset: i32 = offset.try_into().map_err(|<span class="kw">_</span>| io::Errno::OVERFLOW)<span class="question-mark">?</span>;
+
+    <span class="kw">unsafe </span>{ ret_usize(c::pwrite(borrowed_fd(fd), buf.as_ptr().cast(), len, offset)) }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>readv(fd: BorrowedFd&lt;<span class="lifetime">&#39;_</span>&gt;, bufs: <span class="kw-2">&amp;mut </span>[IoSliceMut]) -&gt; io::Result&lt;usize&gt; {
-    <span class="kw">let </span>nread = <span class="kw">unsafe </span>{
-        ret_ssize_t(c::readv(
+<span class="attr">#[cfg(not(target_os = <span class="string">&quot;espidf&quot;</span>))]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>readv(fd: BorrowedFd&lt;<span class="lifetime">&#39;_</span>&gt;, bufs: <span class="kw-2">&amp;mut </span>[IoSliceMut&lt;<span class="lifetime">&#39;_</span>&gt;]) -&gt; io::Result&lt;usize&gt; {
+    <span class="kw">unsafe </span>{
+        ret_usize(c::readv(
             borrowed_fd(fd),
             bufs.as_ptr().cast::&lt;c::iovec&gt;(),
-            min(bufs.len(), max_iov()) <span class="kw">as </span>c::c_int,
-        ))<span class="question-mark">?
-    </span>};
-    <span class="prelude-val">Ok</span>(nread <span class="kw">as </span>usize)
+            min(bufs.len(), MAX_IOV) <span class="kw">as </span>c::c_int,
+        ))
+    }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>writev(fd: BorrowedFd&lt;<span class="lifetime">&#39;_</span>&gt;, bufs: <span class="kw-2">&amp;</span>[IoSlice]) -&gt; io::Result&lt;usize&gt; {
-    <span class="kw">let </span>nwritten = <span class="kw">unsafe </span>{
-        ret_ssize_t(c::writev(
+<span class="attr">#[cfg(not(target_os = <span class="string">&quot;espidf&quot;</span>))]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>writev(fd: BorrowedFd&lt;<span class="lifetime">&#39;_</span>&gt;, bufs: <span class="kw-2">&amp;</span>[IoSlice&lt;<span class="lifetime">&#39;_</span>&gt;]) -&gt; io::Result&lt;usize&gt; {
+    <span class="kw">unsafe </span>{
+        ret_usize(c::writev(
             borrowed_fd(fd),
             bufs.as_ptr().cast::&lt;c::iovec&gt;(),
-            min(bufs.len(), max_iov()) <span class="kw">as </span>c::c_int,
-        ))<span class="question-mark">?
-    </span>};
-    <span class="prelude-val">Ok</span>(nwritten <span class="kw">as </span>usize)
+            min(bufs.len(), MAX_IOV) <span class="kw">as </span>c::c_int,
+        ))
+    }
 }
 
-<span class="attr">#[cfg(not(any(target_os = <span class="string">&quot;haiku&quot;</span>, target_os = <span class="string">&quot;redox&quot;</span>, target_os = <span class="string">&quot;solaris&quot;</span>)))]
+<span class="attr">#[cfg(not(any(
+    target_os = <span class="string">&quot;espidf&quot;</span>,
+    target_os = <span class="string">&quot;haiku&quot;</span>,
+    target_os = <span class="string">&quot;nto&quot;</span>,
+    target_os = <span class="string">&quot;redox&quot;</span>,
+    target_os = <span class="string">&quot;solaris&quot;</span>,
+    target_os = <span class="string">&quot;vita&quot;
+</span>)))]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>preadv(
     fd: BorrowedFd&lt;<span class="lifetime">&#39;_</span>&gt;,
-    bufs: <span class="kw-2">&amp;mut </span>[IoSliceMut],
+    bufs: <span class="kw-2">&amp;mut </span>[IoSliceMut&lt;<span class="lifetime">&#39;_</span>&gt;],
     offset: u64,
 ) -&gt; io::Result&lt;usize&gt; {
     <span class="comment">// Silently cast; we&#39;ll get `EINVAL` if the value is negative.
     </span><span class="kw">let </span>offset = offset <span class="kw">as </span>i64;
-    <span class="kw">let </span>nread = <span class="kw">unsafe </span>{
-        ret_ssize_t(libc_preadv(
+    <span class="kw">unsafe </span>{
+        ret_usize(c::preadv(
             borrowed_fd(fd),
             bufs.as_ptr().cast::&lt;c::iovec&gt;(),
-            min(bufs.len(), max_iov()) <span class="kw">as </span>c::c_int,
+            min(bufs.len(), MAX_IOV) <span class="kw">as </span>c::c_int,
             offset,
-        ))<span class="question-mark">?
-    </span>};
-    <span class="prelude-val">Ok</span>(nread <span class="kw">as </span>usize)
+        ))
+    }
 }
 
-<span class="attr">#[cfg(not(any(target_os = <span class="string">&quot;haiku&quot;</span>, target_os = <span class="string">&quot;redox&quot;</span>, target_os = <span class="string">&quot;solaris&quot;</span>)))]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>pwritev(fd: BorrowedFd&lt;<span class="lifetime">&#39;_</span>&gt;, bufs: <span class="kw-2">&amp;</span>[IoSlice], offset: u64) -&gt; io::Result&lt;usize&gt; {
+<span class="attr">#[cfg(not(any(
+    target_os = <span class="string">&quot;espidf&quot;</span>,
+    target_os = <span class="string">&quot;haiku&quot;</span>,
+    target_os = <span class="string">&quot;nto&quot;</span>,
+    target_os = <span class="string">&quot;redox&quot;</span>,
+    target_os = <span class="string">&quot;solaris&quot;</span>,
+    target_os = <span class="string">&quot;vita&quot;
+</span>)))]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>pwritev(fd: BorrowedFd&lt;<span class="lifetime">&#39;_</span>&gt;, bufs: <span class="kw-2">&amp;</span>[IoSlice&lt;<span class="lifetime">&#39;_</span>&gt;], offset: u64) -&gt; io::Result&lt;usize&gt; {
     <span class="comment">// Silently cast; we&#39;ll get `EINVAL` if the value is negative.
     </span><span class="kw">let </span>offset = offset <span class="kw">as </span>i64;
-    <span class="kw">let </span>nwritten = <span class="kw">unsafe </span>{
-        ret_ssize_t(libc_pwritev(
+    <span class="kw">unsafe </span>{
+        ret_usize(c::pwritev(
             borrowed_fd(fd),
             bufs.as_ptr().cast::&lt;c::iovec&gt;(),
-            min(bufs.len(), max_iov()) <span class="kw">as </span>c::c_int,
+            min(bufs.len(), MAX_IOV) <span class="kw">as </span>c::c_int,
             offset,
-        ))<span class="question-mark">?
-    </span>};
-    <span class="prelude-val">Ok</span>(nwritten <span class="kw">as </span>usize)
+        ))
+    }
 }
 
-<span class="attr">#[cfg(all(target_os = <span class="string">&quot;linux&quot;</span>, target_env = <span class="string">&quot;gnu&quot;</span>))]
+<span class="attr">#[cfg(linux_kernel)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>preadv2(
     fd: BorrowedFd&lt;<span class="lifetime">&#39;_</span>&gt;,
-    bufs: <span class="kw-2">&amp;mut </span>[IoSliceMut],
+    bufs: <span class="kw-2">&amp;mut </span>[IoSliceMut&lt;<span class="lifetime">&#39;_</span>&gt;],
     offset: u64,
     flags: ReadWriteFlags,
 ) -&gt; io::Result&lt;usize&gt; {
     <span class="comment">// Silently cast; we&#39;ll get `EINVAL` if the value is negative.
     </span><span class="kw">let </span>offset = offset <span class="kw">as </span>i64;
-    <span class="kw">let </span>nread = <span class="kw">unsafe </span>{
-        ret_ssize_t(libc_preadv2(
+    <span class="kw">unsafe </span>{
+        ret_usize(c::preadv2(
             borrowed_fd(fd),
             bufs.as_ptr().cast::&lt;c::iovec&gt;(),
-            min(bufs.len(), max_iov()) <span class="kw">as </span>c::c_int,
+            min(bufs.len(), MAX_IOV) <span class="kw">as </span>c::c_int,
             offset,
-            flags.bits(),
-        ))<span class="question-mark">?
-    </span>};
-    <span class="prelude-val">Ok</span>(nread <span class="kw">as </span>usize)
+            <span class="macro">bitflags_bits!</span>(flags),
+        ))
+    }
 }
 
-<span class="doccomment">/// At present, `libc` only has `preadv2` defined for glibc. On other
-/// ABIs, use `libc::syscall`.
-</span><span class="attr">#[cfg(any(
-    target_os = <span class="string">&quot;android&quot;</span>,
-    all(target_os = <span class="string">&quot;linux&quot;</span>, not(target_env = <span class="string">&quot;gnu&quot;</span>)),
-))]
-#[inline]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>preadv2(
-    fd: BorrowedFd&lt;<span class="lifetime">&#39;_</span>&gt;,
-    bufs: <span class="kw-2">&amp;mut </span>[IoSliceMut],
-    offset: u64,
-    flags: ReadWriteFlags,
-) -&gt; io::Result&lt;usize&gt; {
-    <span class="comment">// Silently cast; we&#39;ll get `EINVAL` if the value is negative.
-    </span><span class="kw">let </span>offset = offset <span class="kw">as </span>i64;
-    <span class="kw">let </span>nread = <span class="kw">unsafe </span>{
-        ret_ssize_t(libc::syscall(
-            libc::SYS_preadv2,
-            borrowed_fd(fd),
-            bufs.as_ptr().cast::&lt;c::iovec&gt;(),
-            min(bufs.len(), max_iov()) <span class="kw">as </span>c::c_int,
-            offset,
-            flags.bits(),
-        ) <span class="kw">as </span>c::ssize_t)<span class="question-mark">?
-    </span>};
-    <span class="prelude-val">Ok</span>(nread <span class="kw">as </span>usize)
-}
-
-<span class="attr">#[cfg(all(target_os = <span class="string">&quot;linux&quot;</span>, target_env = <span class="string">&quot;gnu&quot;</span>))]
+<span class="attr">#[cfg(linux_kernel)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>pwritev2(
     fd: BorrowedFd&lt;<span class="lifetime">&#39;_</span>&gt;,
-    bufs: <span class="kw-2">&amp;</span>[IoSlice],
+    bufs: <span class="kw-2">&amp;</span>[IoSlice&lt;<span class="lifetime">&#39;_</span>&gt;],
     offset: u64,
     flags: ReadWriteFlags,
 ) -&gt; io::Result&lt;usize&gt; {
     <span class="comment">// Silently cast; we&#39;ll get `EINVAL` if the value is negative.
     </span><span class="kw">let </span>offset = offset <span class="kw">as </span>i64;
-    <span class="kw">let </span>nwritten = <span class="kw">unsafe </span>{
-        ret_ssize_t(libc_pwritev2(
+    <span class="kw">unsafe </span>{
+        ret_usize(c::pwritev2(
             borrowed_fd(fd),
             bufs.as_ptr().cast::&lt;c::iovec&gt;(),
-            min(bufs.len(), max_iov()) <span class="kw">as </span>c::c_int,
+            min(bufs.len(), MAX_IOV) <span class="kw">as </span>c::c_int,
             offset,
-            flags.bits(),
-        ))<span class="question-mark">?
-    </span>};
-    <span class="prelude-val">Ok</span>(nwritten <span class="kw">as </span>usize)
-}
-
-<span class="doccomment">/// At present, `libc` only has `pwritev2` defined for glibc. On other
-/// ABIs, use `libc::syscall`.
-</span><span class="attr">#[cfg(any(
-    target_os = <span class="string">&quot;android&quot;</span>,
-    all(target_os = <span class="string">&quot;linux&quot;</span>, not(target_env = <span class="string">&quot;gnu&quot;</span>)),
-))]
-#[inline]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>pwritev2(
-    fd: BorrowedFd&lt;<span class="lifetime">&#39;_</span>&gt;,
-    bufs: <span class="kw-2">&amp;</span>[IoSlice],
-    offset: u64,
-    flags: ReadWriteFlags,
-) -&gt; io::Result&lt;usize&gt; {
-    <span class="comment">// Silently cast; we&#39;ll get `EINVAL` if the value is negative.
-    </span><span class="kw">let </span>offset = offset <span class="kw">as </span>i64;
-    <span class="kw">let </span>nwritten = <span class="kw">unsafe </span>{
-        ret_ssize_t(libc::syscall(
-            libc::SYS_pwritev2,
-            borrowed_fd(fd),
-            bufs.as_ptr().cast::&lt;c::iovec&gt;(),
-            min(bufs.len(), max_iov()) <span class="kw">as </span>c::c_int,
-            offset,
-            flags.bits(),
-        ) <span class="kw">as </span>c::ssize_t)<span class="question-mark">?
-    </span>};
-    <span class="prelude-val">Ok</span>(nwritten <span class="kw">as </span>usize)
+            <span class="macro">bitflags_bits!</span>(flags),
+        ))
+    }
 }
 
 <span class="comment">// These functions are derived from Rust&#39;s library/std/src/sys/unix/fd.rs at
-// revision a77da2d454e6caa227a85b16410b95f93495e7e0.
+// revision 326ef470a8b379a180d6dc4bbef08990698a737a.
 
 // The maximum read limit on most POSIX-like systems is `SSIZE_MAX`, with the
-// man page quoting that if the count of bytes to read is greater than
-// `SSIZE_MAX` the result is &quot;unspecified&quot;.
+// manual page quoting that if the count of bytes to read is greater than
+// `SSIZE_MAX` the result is “unspecified”.
 //
 // On macOS, however, apparently the 64-bit libc is either buggy or
 // intentionally showing odd behavior by rejecting any read with a size larger
@@ -814,93 +535,33 @@
 <span class="attr">#[cfg(not(target_os = <span class="string">&quot;macos&quot;</span>))]
 </span><span class="kw">const </span>READ_LIMIT: usize = c::ssize_t::MAX <span class="kw">as </span>usize;
 
-<span class="attr">#[cfg(any(
-    target_os = <span class="string">&quot;dragonfly&quot;</span>,
-    target_os = <span class="string">&quot;freebsd&quot;</span>,
-    target_os = <span class="string">&quot;ios&quot;</span>,
-    target_os = <span class="string">&quot;macos&quot;</span>,
-    target_os = <span class="string">&quot;netbsd&quot;</span>,
-    target_os = <span class="string">&quot;openbsd&quot;</span>,
-))]
-</span><span class="kw">const fn </span>max_iov() -&gt; usize {
-    c::IOV_MAX <span class="kw">as </span>usize
-}
-
-<span class="attr">#[cfg(any(target_os = <span class="string">&quot;android&quot;</span>, target_os = <span class="string">&quot;emscripten&quot;</span>, target_os = <span class="string">&quot;linux&quot;</span>))]
-</span><span class="kw">const fn </span>max_iov() -&gt; usize {
-    c::UIO_MAXIOV <span class="kw">as </span>usize
-}
-
-<span class="attr">#[cfg(not(any(
-    target_os = <span class="string">&quot;android&quot;</span>,
-    target_os = <span class="string">&quot;dragonfly&quot;</span>,
-    target_os = <span class="string">&quot;emscripten&quot;</span>,
-    target_os = <span class="string">&quot;freebsd&quot;</span>,
-    target_os = <span class="string">&quot;ios&quot;</span>,
-    target_os = <span class="string">&quot;linux&quot;</span>,
-    target_os = <span class="string">&quot;macos&quot;</span>,
-    target_os = <span class="string">&quot;netbsd&quot;</span>,
-    target_os = <span class="string">&quot;openbsd&quot;</span>,
-)))]
-</span><span class="kw">const fn </span>max_iov() -&gt; usize {
-    <span class="number">16 </span><span class="comment">// The minimum value required by POSIX.
-</span>}
-
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>close(raw_fd: RawFd) {
     <span class="kw">let _ </span>= c::close(raw_fd <span class="kw">as </span>c::c_int);
 }
 
-<span class="attr">#[cfg(any(target_os = <span class="string">&quot;android&quot;</span>, target_os = <span class="string">&quot;linux&quot;</span>))]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>eventfd(initval: u32, flags: EventfdFlags) -&gt; io::Result&lt;OwnedFd&gt; {
-    <span class="kw">unsafe </span>{ syscall_ret_owned_fd(c::syscall(c::SYS_eventfd2, initval, flags.bits())) }
+<span class="attr">#[inline]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>ioctl(
+    fd: BorrowedFd&lt;<span class="lifetime">&#39;_</span>&gt;,
+    request: RawOpcode,
+    arg: <span class="kw-2">*mut </span>c::c_void,
+) -&gt; io::Result&lt;IoctlOutput&gt; {
+    ret_c_int(c::ioctl(borrowed_fd(fd), request, arg))
 }
 
-<span class="attr">#[cfg(any(target_os = <span class="string">&quot;android&quot;</span>, target_os = <span class="string">&quot;linux&quot;</span>))]
-#[inline]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>ioctl_blksszget(fd: BorrowedFd) -&gt; io::Result&lt;u32&gt; {
-    <span class="kw">let </span><span class="kw-2">mut </span>result = MaybeUninit::&lt;c::c_uint&gt;::uninit();
-    <span class="kw">unsafe </span>{
-        ret(c::ioctl(borrowed_fd(fd), c::BLKSSZGET, result.as_mut_ptr()))<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(result.assume_init() <span class="kw">as </span>u32)
-    }
-}
-
-<span class="attr">#[cfg(any(target_os = <span class="string">&quot;android&quot;</span>, target_os = <span class="string">&quot;linux&quot;</span>))]
-#[inline]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>ioctl_blkpbszget(fd: BorrowedFd) -&gt; io::Result&lt;u32&gt; {
-    <span class="kw">let </span><span class="kw-2">mut </span>result = MaybeUninit::&lt;c::c_uint&gt;::uninit();
-    <span class="kw">unsafe </span>{
-        ret(c::ioctl(
-            borrowed_fd(fd),
-            c::BLKPBSZGET,
-            result.as_mut_ptr(),
-        ))<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(result.assume_init() <span class="kw">as </span>u32)
-    }
-}
-
-<span class="attr">#[cfg(not(target_os = <span class="string">&quot;redox&quot;</span>))]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>ioctl_fionread(fd: BorrowedFd&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; io::Result&lt;u64&gt; {
-    <span class="kw">let </span><span class="kw-2">mut </span>nread = MaybeUninit::&lt;c::c_int&gt;::uninit();
-    <span class="kw">unsafe </span>{
-        ret(c::ioctl(borrowed_fd(fd), c::FIONREAD, nread.as_mut_ptr()))<span class="question-mark">?</span>;
-        <span class="comment">// `FIONREAD` returns the number of bytes silently casted to a `c_int`,
-        // even when this is lossy. The best we can do is convert it back to a
-        // `u64` without sign-extending it back first.
-        </span><span class="prelude-val">Ok</span>(u64::from(nread.assume_init() <span class="kw">as </span>c::c_uint))
-    }
-}
-
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>ioctl_fionbio(fd: BorrowedFd&lt;<span class="lifetime">&#39;_</span>&gt;, value: bool) -&gt; io::Result&lt;()&gt; {
-    <span class="kw">unsafe </span>{
-        <span class="kw">let </span>data = value <span class="kw">as </span>c::c_int;
-        ret(c::ioctl(borrowed_fd(fd), c::FIONBIO, <span class="kw-2">&amp;</span>data))
-    }
+<span class="attr">#[inline]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>ioctl_readonly(
+    fd: BorrowedFd&lt;<span class="lifetime">&#39;_</span>&gt;,
+    request: RawOpcode,
+    arg: <span class="kw-2">*mut </span>c::c_void,
+) -&gt; io::Result&lt;IoctlOutput&gt; {
+    ioctl(fd, request, arg)
 }
 
 <span class="attr">#[cfg(not(any(target_os = <span class="string">&quot;redox&quot;</span>, target_os = <span class="string">&quot;wasi&quot;</span>)))]
 #[cfg(all(feature = <span class="string">&quot;fs&quot;</span>, feature = <span class="string">&quot;net&quot;</span>))]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>is_read_write(fd: BorrowedFd&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; io::Result&lt;(bool, bool)&gt; {
+    <span class="kw">use </span>core::mem::MaybeUninit;
+
     <span class="kw">let </span>(<span class="kw-2">mut </span>read, <span class="kw-2">mut </span>write) = <span class="kw">crate</span>::fs::fd::_is_file_read_write(fd)<span class="question-mark">?</span>;
     <span class="kw">let </span><span class="kw-2">mut </span>not_socket = <span class="bool-val">false</span>;
     <span class="kw">if </span>read {
@@ -935,8 +596,7 @@
         </span><span class="kw">if unsafe </span>{ c::send(borrowed_fd(fd), [].as_ptr(), <span class="number">0</span>, c::MSG_DONTWAIT) } == -<span class="number">1 </span>{
             <span class="attr">#[allow(unreachable_patterns)] </span><span class="comment">// `EAGAIN` may equal `EWOULDBLOCK`
             </span><span class="kw">match </span>errno().<span class="number">0 </span>{
-                c::EAGAIN | c::EWOULDBLOCK =&gt; (),
-                c::ENOTSOCK =&gt; (),
+                c::EAGAIN | c::EWOULDBLOCK | c::ENOTSOCK =&gt; (),
                 c::EPIPE =&gt; write = <span class="bool-val">false</span>,
                 err =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(io::Errno(err)),
             }
@@ -952,16 +612,22 @@
 }
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>fcntl_getfd(fd: BorrowedFd&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; io::Result&lt;FdFlags&gt; {
-    <span class="kw">unsafe </span>{ ret_c_int(c::fcntl(borrowed_fd(fd), c::F_GETFD)).map(FdFlags::from_bits_truncate) }
+    <span class="kw">let </span>flags = <span class="kw">unsafe </span>{ ret_c_int(c::fcntl(borrowed_fd(fd), c::F_GETFD))<span class="question-mark">? </span>};
+    <span class="prelude-val">Ok</span>(FdFlags::from_bits_retain(<span class="macro">bitcast!</span>(flags)))
 }
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>fcntl_setfd(fd: BorrowedFd&lt;<span class="lifetime">&#39;_</span>&gt;, flags: FdFlags) -&gt; io::Result&lt;()&gt; {
     <span class="kw">unsafe </span>{ ret(c::fcntl(borrowed_fd(fd), c::F_SETFD, flags.bits())) }
 }
 
-<span class="attr">#[cfg(not(target_os = <span class="string">&quot;wasi&quot;</span>))]
+<span class="attr">#[cfg(not(any(target_os = <span class="string">&quot;espidf&quot;</span>, target_os = <span class="string">&quot;wasi&quot;</span>)))]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>fcntl_dupfd_cloexec(fd: BorrowedFd&lt;<span class="lifetime">&#39;_</span>&gt;, min: RawFd) -&gt; io::Result&lt;OwnedFd&gt; {
     <span class="kw">unsafe </span>{ ret_owned_fd(c::fcntl(borrowed_fd(fd), c::F_DUPFD_CLOEXEC, min)) }
+}
+
+<span class="attr">#[cfg(target_os = <span class="string">&quot;espidf&quot;</span>)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>fcntl_dupfd(fd: BorrowedFd&lt;<span class="lifetime">&#39;_</span>&gt;, min: RawFd) -&gt; io::Result&lt;OwnedFd&gt; {
+    <span class="kw">unsafe </span>{ ret_owned_fd(c::fcntl(borrowed_fd(fd), c::F_DUPFD, min)) }
 }
 
 <span class="attr">#[cfg(not(target_os = <span class="string">&quot;wasi&quot;</span>))]
@@ -969,19 +635,23 @@
     <span class="kw">unsafe </span>{ ret_owned_fd(c::dup(borrowed_fd(fd))) }
 }
 
-<span class="attr">#[cfg(not(target_os = <span class="string">&quot;wasi&quot;</span>))]
+<span class="attr">#[allow(clippy::needless_pass_by_ref_mut)]
+#[cfg(not(target_os = <span class="string">&quot;wasi&quot;</span>))]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>dup2(fd: BorrowedFd&lt;<span class="lifetime">&#39;_</span>&gt;, new: <span class="kw-2">&amp;mut </span>OwnedFd) -&gt; io::Result&lt;()&gt; {
     <span class="kw">unsafe </span>{ ret_discarded_fd(c::dup2(borrowed_fd(fd), borrowed_fd(new.as_fd()))) }
 }
 
-<span class="attr">#[cfg(not(any(
+<span class="attr">#[allow(clippy::needless_pass_by_ref_mut)]
+#[cfg(not(any(
+    apple,
     target_os = <span class="string">&quot;aix&quot;</span>,
     target_os = <span class="string">&quot;android&quot;</span>,
     target_os = <span class="string">&quot;dragonfly&quot;</span>,
+    target_os = <span class="string">&quot;espidf&quot;</span>,
     target_os = <span class="string">&quot;haiku&quot;</span>,
-    target_os = <span class="string">&quot;ios&quot;</span>,
-    target_os = <span class="string">&quot;macos&quot;</span>,
+    target_os = <span class="string">&quot;nto&quot;</span>,
     target_os = <span class="string">&quot;redox&quot;</span>,
+    target_os = <span class="string">&quot;vita&quot;</span>,
     target_os = <span class="string">&quot;wasi&quot;</span>,
 )))]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>dup3(fd: BorrowedFd&lt;<span class="lifetime">&#39;_</span>&gt;, new: <span class="kw-2">&amp;mut </span>OwnedFd, flags: DupFlags) -&gt; io::Result&lt;()&gt; {
@@ -989,17 +659,16 @@
         ret_discarded_fd(c::dup3(
             borrowed_fd(fd),
             borrowed_fd(new.as_fd()),
-            flags.bits(),
+            <span class="macro">bitflags_bits!</span>(flags),
         ))
     }
 }
 
 <span class="attr">#[cfg(any(
+    apple,
     target_os = <span class="string">&quot;android&quot;</span>,
     target_os = <span class="string">&quot;dragonfly&quot;</span>,
     target_os = <span class="string">&quot;haiku&quot;</span>,
-    target_os = <span class="string">&quot;ios&quot;</span>,
-    target_os = <span class="string">&quot;macos&quot;</span>,
     target_os = <span class="string">&quot;redox&quot;</span>,
 ))]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>dup3(fd: BorrowedFd&lt;<span class="lifetime">&#39;_</span>&gt;, new: <span class="kw-2">&amp;mut </span>OwnedFd, _flags: DupFlags) -&gt; io::Result&lt;()&gt; {
@@ -1008,104 +677,5 @@
     // `dup2` and `dup3` when the file descriptors are equal because we
     // have an `&amp;mut OwnedFd` which means `fd` doesn&#39;t alias it.
     </span>dup2(fd, new)
-}
-
-<span class="attr">#[cfg(any(target_os = <span class="string">&quot;ios&quot;</span>, target_os = <span class="string">&quot;macos&quot;</span>))]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>ioctl_fioclex(fd: BorrowedFd&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; io::Result&lt;()&gt; {
-    <span class="kw">unsafe </span>{ ret(c::ioctl(borrowed_fd(fd), c::FIOCLEX)) }
-}
-
-<span class="attr">#[cfg(not(any(target_os = <span class="string">&quot;haiku&quot;</span>, target_os = <span class="string">&quot;redox&quot;</span>, target_os = <span class="string">&quot;wasi&quot;</span>)))]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>ioctl_tiocexcl(fd: BorrowedFd) -&gt; io::Result&lt;()&gt; {
-    <span class="kw">unsafe </span>{ ret(c::ioctl(borrowed_fd(fd), c::TIOCEXCL <span class="kw">as _</span>)) }
-}
-
-<span class="attr">#[cfg(not(any(target_os = <span class="string">&quot;haiku&quot;</span>, target_os = <span class="string">&quot;redox&quot;</span>, target_os = <span class="string">&quot;wasi&quot;</span>)))]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>ioctl_tiocnxcl(fd: BorrowedFd) -&gt; io::Result&lt;()&gt; {
-    <span class="kw">unsafe </span>{ ret(c::ioctl(borrowed_fd(fd), c::TIOCNXCL <span class="kw">as _</span>)) }
-}
-
-<span class="attr">#[cfg(not(target_os = <span class="string">&quot;wasi&quot;</span>))]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>pipe() -&gt; io::Result&lt;(OwnedFd, OwnedFd)&gt; {
-    <span class="kw">unsafe </span>{
-        <span class="kw">let </span><span class="kw-2">mut </span>result = MaybeUninit::&lt;[OwnedFd; <span class="number">2</span>]&gt;::uninit();
-        ret(c::pipe(result.as_mut_ptr().cast::&lt;i32&gt;()))<span class="question-mark">?</span>;
-        <span class="kw">let </span>[p0, p1] = result.assume_init();
-        <span class="prelude-val">Ok</span>((p0, p1))
-    }
-}
-
-<span class="attr">#[cfg(not(any(
-    target_os = <span class="string">&quot;aix&quot;</span>,
-    target_os = <span class="string">&quot;haiku&quot;</span>,
-    target_os = <span class="string">&quot;ios&quot;</span>,
-    target_os = <span class="string">&quot;macos&quot;</span>,
-    target_os = <span class="string">&quot;wasi&quot;
-</span>)))]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>pipe_with(flags: PipeFlags) -&gt; io::Result&lt;(OwnedFd, OwnedFd)&gt; {
-    <span class="kw">unsafe </span>{
-        <span class="kw">let </span><span class="kw-2">mut </span>result = MaybeUninit::&lt;[OwnedFd; <span class="number">2</span>]&gt;::uninit();
-        ret(c::pipe2(result.as_mut_ptr().cast::&lt;i32&gt;(), flags.bits()))<span class="question-mark">?</span>;
-        <span class="kw">let </span>[p0, p1] = result.assume_init();
-        <span class="prelude-val">Ok</span>((p0, p1))
-    }
-}
-
-<span class="attr">#[inline]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>poll(fds: <span class="kw-2">&amp;mut </span>[PollFd&lt;<span class="lifetime">&#39;_</span>&gt;], timeout: c::c_int) -&gt; io::Result&lt;usize&gt; {
-    <span class="kw">let </span>nfds = fds
-        .len()
-        .try_into()
-        .map_err(|_convert_err| io::Errno::INVAL)<span class="question-mark">?</span>;
-
-    ret_c_int(<span class="kw">unsafe </span>{ c::poll(fds.as_mut_ptr().cast(), nfds, timeout) })
-        .map(|nready| nready <span class="kw">as </span>usize)
-}
-
-<span class="attr">#[cfg(any(target_os = <span class="string">&quot;android&quot;</span>, target_os = <span class="string">&quot;linux&quot;</span>))]
-#[inline]
-</span><span class="kw">pub fn </span>splice(
-    fd_in: BorrowedFd,
-    off_in: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>u64&gt;,
-    fd_out: BorrowedFd,
-    off_out: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>u64&gt;,
-    len: usize,
-    flags: SpliceFlags,
-) -&gt; io::Result&lt;usize&gt; {
-    <span class="kw">let </span>off_in = off_in
-        .map(|off| (off <span class="kw">as </span><span class="kw-2">*mut </span>u64).cast())
-        .unwrap_or(ptr::null_mut());
-
-    <span class="kw">let </span>off_out = off_out
-        .map(|off| (off <span class="kw">as </span><span class="kw-2">*mut </span>u64).cast())
-        .unwrap_or(ptr::null_mut());
-
-    ret_ssize_t(<span class="kw">unsafe </span>{
-        c::splice(
-            borrowed_fd(fd_in),
-            off_in,
-            borrowed_fd(fd_out),
-            off_out,
-            len,
-            flags.bits(),
-        )
-    })
-    .map(|spliced| spliced <span class="kw">as </span>usize)
-}
-
-<span class="attr">#[cfg(any(target_os = <span class="string">&quot;android&quot;</span>, target_os = <span class="string">&quot;linux&quot;</span>))]
-#[inline]
-</span><span class="kw">pub unsafe fn </span>vmsplice(
-    fd: BorrowedFd,
-    bufs: <span class="kw-2">&amp;</span>[IoSliceRaw],
-    flags: SpliceFlags,
-) -&gt; io::Result&lt;usize&gt; {
-    ret_ssize_t(c::vmsplice(
-        borrowed_fd(fd),
-        bufs.as_ptr().cast::&lt;c::iovec&gt;(),
-        min(bufs.len(), max_iov()),
-        flags.bits(),
-    ))
-    .map(|spliced| spliced <span class="kw">as </span>usize)
 }
 </code></pre></div></section></main></body></html>

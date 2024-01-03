@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde_derive-1.0.156/src/internals/check.rs`."><title>check.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="serde_derive" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../serde_derive/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde_derive-1.0.194/src/internals/check.rs`."><title>check.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="serde_derive" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../serde_derive/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -441,14 +441,49 @@
 <a href="#441" id="441">441</a>
 <a href="#442" id="442">442</a>
 <a href="#443" id="443">443</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>internals::ast::{Container, Data, Field, Style};
-<span class="kw">use </span>internals::attr::{Identifier, TagType};
-<span class="kw">use </span>internals::{ungroup, Ctxt, Derive};
+<a href="#444" id="444">444</a>
+<a href="#445" id="445">445</a>
+<a href="#446" id="446">446</a>
+<a href="#447" id="447">447</a>
+<a href="#448" id="448">448</a>
+<a href="#449" id="449">449</a>
+<a href="#450" id="450">450</a>
+<a href="#451" id="451">451</a>
+<a href="#452" id="452">452</a>
+<a href="#453" id="453">453</a>
+<a href="#454" id="454">454</a>
+<a href="#455" id="455">455</a>
+<a href="#456" id="456">456</a>
+<a href="#457" id="457">457</a>
+<a href="#458" id="458">458</a>
+<a href="#459" id="459">459</a>
+<a href="#460" id="460">460</a>
+<a href="#461" id="461">461</a>
+<a href="#462" id="462">462</a>
+<a href="#463" id="463">463</a>
+<a href="#464" id="464">464</a>
+<a href="#465" id="465">465</a>
+<a href="#466" id="466">466</a>
+<a href="#467" id="467">467</a>
+<a href="#468" id="468">468</a>
+<a href="#469" id="469">469</a>
+<a href="#470" id="470">470</a>
+<a href="#471" id="471">471</a>
+<a href="#472" id="472">472</a>
+<a href="#473" id="473">473</a>
+<a href="#474" id="474">474</a>
+<a href="#475" id="475">475</a>
+<a href="#476" id="476">476</a>
+<a href="#477" id="477">477</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::internals::ast::{Container, Data, Field, Style};
+<span class="kw">use </span><span class="kw">crate</span>::internals::attr::{Default, Identifier, TagType};
+<span class="kw">use </span><span class="kw">crate</span>::internals::{ungroup, Ctxt, Derive};
 <span class="kw">use </span>syn::{Member, Type};
 
-<span class="doccomment">/// Cross-cutting checks that require looking at more than a single attrs
-/// object. Simpler checks should happen when parsing and building the attrs.
+<span class="comment">// Cross-cutting checks that require looking at more than a single attrs object.
+// Simpler checks should happen when parsing and building the attrs.
 </span><span class="kw">pub fn </span>check(cx: <span class="kw-2">&amp;</span>Ctxt, cont: <span class="kw-2">&amp;mut </span>Container, derive: Derive) {
+    check_default_on_tuple(cx, cont);
     check_remote_generic(cx, cont);
     check_getter(cx, cont);
     check_flatten(cx, cont);
@@ -460,18 +495,51 @@
     check_from_and_try_from(cx, cont);
 }
 
-<span class="doccomment">/// Remote derive definition type must have either all of the generics of the
-/// remote type:
-///
-///     #[serde(remote = &quot;Generic&quot;)]
-///     struct Generic&lt;T&gt; {…}
-///
-/// or none of them, i.e. defining impls for one concrete instantiation of the
-/// remote type only:
-///
-///     #[serde(remote = &quot;Generic&lt;T&gt;&quot;)]
-///     struct ConcreteDef {…}
-///
+<span class="comment">// If some field of a tuple struct is marked #[serde(default)] then all fields
+// after it must also be marked with that attribute, or the struct must have a
+// container-level serde(default) attribute. A field&#39;s default value is only
+// used for tuple fields if the sequence is exhausted at that point; that means
+// all subsequent fields will fail to deserialize if they don&#39;t have their own
+// default.
+</span><span class="kw">fn </span>check_default_on_tuple(cx: <span class="kw-2">&amp;</span>Ctxt, cont: <span class="kw-2">&amp;</span>Container) {
+    <span class="kw">if let </span>Default::None = cont.attrs.default() {
+        <span class="kw">if let </span>Data::Struct(Style::Tuple, fields) = <span class="kw-2">&amp;</span>cont.data {
+            <span class="kw">let </span><span class="kw-2">mut </span>first_default_index = <span class="prelude-val">None</span>;
+            <span class="kw">for </span>(i, field) <span class="kw">in </span>fields.iter().enumerate() {
+                <span class="comment">// Skipped fields automatically get the #[serde(default)]
+                // attribute. We are interested only on non-skipped fields here.
+                </span><span class="kw">if </span>field.attrs.skip_deserializing() {
+                    <span class="kw">continue</span>;
+                }
+                <span class="kw">if let </span>Default::None = field.attrs.default() {
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(first) = first_default_index {
+                        cx.error_spanned_by(
+                            field.ty,
+                            <span class="macro">format!</span>(<span class="string">&quot;field must have #[serde(default)] because previous field {} has #[serde(default)]&quot;</span>, first),
+                        );
+                    }
+                    <span class="kw">continue</span>;
+                }
+                <span class="kw">if </span>first_default_index.is_none() {
+                    first_default_index = <span class="prelude-val">Some</span>(i);
+                }
+            }
+        }
+    }
+}
+
+<span class="comment">// Remote derive definition type must have either all of the generics of the
+// remote type:
+//
+//     #[serde(remote = &quot;Generic&quot;)]
+//     struct Generic&lt;T&gt; {…}
+//
+// or none of them, i.e. defining impls for one concrete instantiation of the
+// remote type only:
+//
+//     #[serde(remote = &quot;Generic&lt;T&gt;&quot;)]
+//     struct ConcreteDef {…}
+//
 </span><span class="kw">fn </span>check_remote_generic(cx: <span class="kw-2">&amp;</span>Ctxt, cont: <span class="kw-2">&amp;</span>Container) {
     <span class="kw">if let </span><span class="prelude-val">Some</span>(remote) = cont.attrs.remote() {
         <span class="kw">let </span>local_has_generic = !cont.generics.params.is_empty();
@@ -482,8 +550,8 @@
     }
 }
 
-<span class="doccomment">/// Getters are only allowed inside structs (not enums) with the `remote`
-/// attribute.
+<span class="comment">// Getters are only allowed inside structs (not enums) with the `remote`
+// attribute.
 </span><span class="kw">fn </span>check_getter(cx: <span class="kw-2">&amp;</span>Ctxt, cont: <span class="kw-2">&amp;</span>Container) {
     <span class="kw">match </span>cont.data {
         Data::Enum(<span class="kw">_</span>) =&gt; {
@@ -505,7 +573,7 @@
     }
 }
 
-<span class="doccomment">/// Flattening has some restrictions we can test.
+<span class="comment">// Flattening has some restrictions we can test.
 </span><span class="kw">fn </span>check_flatten(cx: <span class="kw-2">&amp;</span>Ctxt, cont: <span class="kw-2">&amp;</span>Container) {
     <span class="kw">match </span><span class="kw-2">&amp;</span>cont.data {
         Data::Enum(variants) =&gt; {
@@ -544,18 +612,16 @@
     }
 }
 
-<span class="doccomment">/// The `other` attribute must be used at most once and it must be the last
-/// variant of an enum.
-///
-/// Inside a `variant_identifier` all variants must be unit variants. Inside a
-/// `field_identifier` all but possibly one variant must be unit variants. The
-/// last variant may be a newtype variant which is an implicit &quot;other&quot; case.
+<span class="comment">// The `other` attribute must be used at most once and it must be the last
+// variant of an enum.
+//
+// Inside a `variant_identifier` all variants must be unit variants. Inside a
+// `field_identifier` all but possibly one variant must be unit variants. The
+// last variant may be a newtype variant which is an implicit &quot;other&quot; case.
 </span><span class="kw">fn </span>check_identifier(cx: <span class="kw-2">&amp;</span>Ctxt, cont: <span class="kw-2">&amp;</span>Container) {
     <span class="kw">let </span>variants = <span class="kw">match </span><span class="kw-2">&amp;</span>cont.data {
         Data::Enum(variants) =&gt; variants,
-        Data::Struct(<span class="kw">_</span>, <span class="kw">_</span>) =&gt; {
-            <span class="kw">return</span>;
-        }
+        Data::Struct(<span class="kw">_</span>, <span class="kw">_</span>) =&gt; <span class="kw">return</span>,
     };
 
     <span class="kw">for </span>(i, variant) <span class="kw">in </span>variants.iter().enumerate() {
@@ -632,17 +698,15 @@
     }
 }
 
-<span class="doccomment">/// Skip-(de)serializing attributes are not allowed on variants marked
-/// (de)serialize_with.
+<span class="comment">// Skip-(de)serializing attributes are not allowed on variants marked
+// (de)serialize_with.
 </span><span class="kw">fn </span>check_variant_skip_attrs(cx: <span class="kw-2">&amp;</span>Ctxt, cont: <span class="kw-2">&amp;</span>Container) {
     <span class="kw">let </span>variants = <span class="kw">match </span><span class="kw-2">&amp;</span>cont.data {
         Data::Enum(variants) =&gt; variants,
-        Data::Struct(<span class="kw">_</span>, <span class="kw">_</span>) =&gt; {
-            <span class="kw">return</span>;
-        }
+        Data::Struct(<span class="kw">_</span>, <span class="kw">_</span>) =&gt; <span class="kw">return</span>,
     };
 
-    <span class="kw">for </span>variant <span class="kw">in </span>variants.iter() {
+    <span class="kw">for </span>variant <span class="kw">in </span>variants {
         <span class="kw">if </span>variant.attrs.serialize_with().is_some() {
             <span class="kw">if </span>variant.attrs.skip_serializing() {
                 cx.error_spanned_by(
@@ -707,10 +771,9 @@
     }
 }
 
-<span class="doccomment">/// The tag of an internally-tagged struct variant must not be
-/// the same as either one of its fields, as this would result in
-/// duplicate keys in the serialized output and/or ambiguity in
-/// the to-be-deserialized input.
+<span class="comment">// The tag of an internally-tagged struct variant must not be the same as either
+// one of its fields, as this would result in duplicate keys in the serialized
+// output and/or ambiguity in the to-be-deserialized input.
 </span><span class="kw">fn </span>check_internal_tag_field_name_conflict(cx: <span class="kw-2">&amp;</span>Ctxt, cont: <span class="kw-2">&amp;</span>Container) {
     <span class="kw">let </span>variants = <span class="kw">match </span><span class="kw-2">&amp;</span>cont.data {
         Data::Enum(variants) =&gt; variants,
@@ -732,9 +795,14 @@
     <span class="kw">for </span>variant <span class="kw">in </span>variants {
         <span class="kw">match </span>variant.style {
             Style::Struct =&gt; {
+                <span class="kw">if </span>variant.attrs.untagged() {
+                    <span class="kw">continue</span>;
+                }
                 <span class="kw">for </span>field <span class="kw">in </span><span class="kw-2">&amp;</span>variant.fields {
-                    <span class="kw">let </span>check_ser = !field.attrs.skip_serializing();
-                    <span class="kw">let </span>check_de = !field.attrs.skip_deserializing();
+                    <span class="kw">let </span>check_ser =
+                        !(field.attrs.skip_serializing() || variant.attrs.skip_serializing());
+                    <span class="kw">let </span>check_de =
+                        !(field.attrs.skip_deserializing() || variant.attrs.skip_deserializing());
                     <span class="kw">let </span>name = field.attrs.name();
                     <span class="kw">let </span>ser_name = name.serialize_name();
 
@@ -756,8 +824,8 @@
     }
 }
 
-<span class="doccomment">/// In the case of adjacently-tagged enums, the type and the
-/// contents tag must differ, for the same reason.
+<span class="comment">// In the case of adjacently-tagged enums, the type and the contents tag must
+// differ, for the same reason.
 </span><span class="kw">fn </span>check_adjacent_tag_conflict(cx: <span class="kw-2">&amp;</span>Ctxt, cont: <span class="kw-2">&amp;</span>Container) {
     <span class="kw">let </span>(type_tag, content_tag) = <span class="kw">match </span>cont.attrs.tag() {
         TagType::Adjacent { tag, content } =&gt; (tag, content),
@@ -775,7 +843,7 @@
     }
 }
 
-<span class="doccomment">/// Enums and unit structs cannot be transparent.
+<span class="comment">// Enums and unit structs cannot be transparent.
 </span><span class="kw">fn </span>check_transparent(cx: <span class="kw-2">&amp;</span>Ctxt, cont: <span class="kw-2">&amp;mut </span>Container, derive: Derive) {
     <span class="kw">if </span>!cont.attrs.transparent() {
         <span class="kw">return</span>;

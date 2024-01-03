@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["Literal","Literals"]};
+window.SIDEBAR_ITEMS = {"enum":["ExtractKind"],"fn":["rank"],"struct":["Extractor","Literal","Seq"]};

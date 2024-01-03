@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde_json-1.0.73/src/read.rs`."><title>read.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="serde_json" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../serde_json/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde_json-1.0.110/src/read.rs`."><title>read.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="serde_json" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../serde_json/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1002,25 +1002,12 @@
 <a href="#1002" id="1002">1002</a>
 <a href="#1003" id="1003">1003</a>
 <a href="#1004" id="1004">1004</a>
-<a href="#1005" id="1005">1005</a>
-<a href="#1006" id="1006">1006</a>
-<a href="#1007" id="1007">1007</a>
-<a href="#1008" id="1008">1008</a>
-<a href="#1009" id="1009">1009</a>
-<a href="#1010" id="1010">1010</a>
-<a href="#1011" id="1011">1011</a>
-<a href="#1012" id="1012">1012</a>
-<a href="#1013" id="1013">1013</a>
-<a href="#1014" id="1014">1014</a>
-<a href="#1015" id="1015">1015</a>
-<a href="#1016" id="1016">1016</a>
-<a href="#1017" id="1017">1017</a>
-<a href="#1018" id="1018">1018</a>
-<a href="#1019" id="1019">1019</a>
-<a href="#1020" id="1020">1020</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::error::{Error, ErrorCode, <span class="prelude-ty">Result</span>};
-<span class="kw">use </span><span class="kw">crate</span>::lib::ops::Deref;
-<span class="kw">use </span><span class="kw">crate</span>::lib::<span class="kw-2">*</span>;
+<span class="kw">use </span>alloc::vec::Vec;
+<span class="kw">use </span>core::char;
+<span class="kw">use </span>core::cmp;
+<span class="kw">use </span>core::ops::Deref;
+<span class="kw">use </span>core::str;
 
 <span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::io;
@@ -1098,7 +1085,7 @@
     </span><span class="attr">#[doc(hidden)]
     </span><span class="kw">fn </span>ignore_str(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
 
-    <span class="doccomment">/// Assumes the previous byte was a hex escape sequnce (&#39;\u&#39;) in a string.
+    <span class="doccomment">/// Assumes the previous byte was a hex escape sequence (&#39;\u&#39;) in a string.
     /// Parses next hexadecimal sequence.
     </span><span class="attr">#[doc(hidden)]
     </span><span class="kw">fn </span>decode_hex_escape(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;u16&gt;;
@@ -1269,7 +1256,7 @@
             <span class="prelude-val">Some</span>(ch) =&gt; {
                 <span class="attr">#[cfg(feature = <span class="string">&quot;raw_value&quot;</span>)]
                 </span>{
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>buf) = <span class="self">self</span>.raw_buffer {
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(buf) = <span class="kw-2">&amp;mut </span><span class="self">self</span>.raw_buffer {
                         buf.push(ch);
                     }
                 }
@@ -1280,7 +1267,7 @@
                 <span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(ch)) =&gt; {
                     <span class="attr">#[cfg(feature = <span class="string">&quot;raw_value&quot;</span>)]
                     </span>{
-                        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>buf) = <span class="self">self</span>.raw_buffer {
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(buf) = <span class="kw-2">&amp;mut </span><span class="self">self</span>.raw_buffer {
                             buf.push(ch);
                         }
                     }
@@ -1315,7 +1302,7 @@
     <span class="attr">#[cfg(feature = <span class="string">&quot;raw_value&quot;</span>)]
     </span><span class="kw">fn </span>discard(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(ch) = <span class="self">self</span>.ch.take() {
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>buf) = <span class="self">self</span>.raw_buffer {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(buf) = <span class="kw-2">&amp;mut </span><span class="self">self</span>.raw_buffer {
                 buf.push(ch);
             }
         }
@@ -1971,34 +1958,15 @@
 
     <span class="kw">match </span>ch {
         <span class="string">b&#39;&quot;&#39; </span>| <span class="string">b&#39;\\&#39; </span>| <span class="string">b&#39;/&#39; </span>| <span class="string">b&#39;b&#39; </span>| <span class="string">b&#39;f&#39; </span>| <span class="string">b&#39;n&#39; </span>| <span class="string">b&#39;r&#39; </span>| <span class="string">b&#39;t&#39; </span>=&gt; {}
-        <span class="string">b&#39;u&#39; </span>=&gt; <span class="kw">match </span><span class="macro">tri!</span>(read.decode_hex_escape()) {
-            <span class="number">0xDC00</span>..=<span class="number">0xDFFF </span>=&gt; {
-                <span class="kw">return </span>error(read, ErrorCode::LoneLeadingSurrogateInHexEscape);
-            }
+        <span class="string">b&#39;u&#39; </span>=&gt; {
+            <span class="comment">// At this point we don&#39;t care if the codepoint is valid. We just
+            // want to consume it. We don&#39;t actually know what is valid or not
+            // at this point, because that depends on if this string will
+            // ultimately be parsed into a string or a byte buffer in the &quot;real&quot;
+            // parse.
 
-            <span class="comment">// Non-BMP characters are encoded as a sequence of
-            // two hex escapes, representing UTF-16 surrogates.
-            </span>n1 @ <span class="number">0xD800</span>..=<span class="number">0xDBFF </span>=&gt; {
-                <span class="kw">if </span><span class="macro">tri!</span>(next_or_eof(read)) != <span class="string">b&#39;\\&#39; </span>{
-                    <span class="kw">return </span>error(read, ErrorCode::UnexpectedEndOfHexEscape);
-                }
-                <span class="kw">if </span><span class="macro">tri!</span>(next_or_eof(read)) != <span class="string">b&#39;u&#39; </span>{
-                    <span class="kw">return </span>error(read, ErrorCode::UnexpectedEndOfHexEscape);
-                }
-
-                <span class="kw">let </span>n2 = <span class="macro">tri!</span>(read.decode_hex_escape());
-                <span class="kw">if </span>n2 &lt; <span class="number">0xDC00 </span>|| n2 &gt; <span class="number">0xDFFF </span>{
-                    <span class="kw">return </span>error(read, ErrorCode::LoneLeadingSurrogateInHexEscape);
-                }
-
-                <span class="kw">let </span>n = (((n1 - <span class="number">0xD800</span>) <span class="kw">as </span>u32) &lt;&lt; <span class="number">10 </span>| (n2 - <span class="number">0xDC00</span>) <span class="kw">as </span>u32) + <span class="number">0x1_0000</span>;
-                <span class="kw">if </span>char::from_u32(n).is_none() {
-                    <span class="kw">return </span>error(read, ErrorCode::InvalidUnicodeCodePoint);
-                }
-            }
-
-            <span class="kw">_ </span>=&gt; {}
-        },
+            </span><span class="macro">tri!</span>(read.decode_hex_escape());
+        }
         <span class="kw">_ </span>=&gt; {
             <span class="kw">return </span>error(read, ErrorCode::InvalidEscape);
         }

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/regex-syntax-0.6.27/src/utf8.rs`."><title>utf8.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="regex_syntax" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../regex_syntax/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/regex-syntax-0.8.2/src/utf8.rs`."><title>utf8.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="regex_syntax" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../regex_syntax/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -585,12 +585,17 @@
 <a href="#585" id="585">585</a>
 <a href="#586" id="586">586</a>
 <a href="#587" id="587">587</a>
+<a href="#588" id="588">588</a>
+<a href="#589" id="589">589</a>
+<a href="#590" id="590">590</a>
+<a href="#591" id="591">591</a>
+<a href="#592" id="592">592</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Converts ranges of Unicode scalar values to equivalent ranges of UTF-8 bytes.
 
 This is sub-module is useful for constructing byte based automatons that need
 to embed UTF-8 decoding. The most common use of this module is in conjunction
-with the [`hir::ClassUnicodeRange`](../hir/struct.ClassUnicodeRange.html) type.
+with the [`hir::ClassUnicodeRange`](crate::hir::ClassUnicodeRange) type.
 
 See the documentation on the `Utf8Sequences` iterator for more details and
 an example.
@@ -667,12 +672,9 @@ I also got the idea from
 which uses it for executing automata on their term index.
 */
 
-</span><span class="attr">#![deny(missing_docs)]
+</span><span class="kw">use </span>core::{char, fmt, iter::FusedIterator, slice};
 
-</span><span class="kw">use </span>std::char;
-<span class="kw">use </span>std::fmt;
-<span class="kw">use </span>std::iter::FusedIterator;
-<span class="kw">use </span>std::slice;
+<span class="kw">use </span>alloc::{vec, vec::Vec};
 
 <span class="kw">const </span>MAX_UTF8_BYTES: usize = <span class="number">4</span>;
 
@@ -893,7 +895,7 @@ which uses it for executing automata on their term index.
     /// given.
     </span><span class="kw">pub fn </span>new(start: char, end: char) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>it = Utf8Sequences { range_stack: <span class="macro">vec!</span>[] };
-        it.push(start <span class="kw">as </span>u32, end <span class="kw">as </span>u32);
+        it.push(u32::from(start), u32::from(end));
         it
     }
 
@@ -904,7 +906,7 @@ which uses it for executing automata on their term index.
     </span><span class="attr">#[doc(hidden)]
     </span><span class="kw">pub fn </span>reset(<span class="kw-2">&amp;mut </span><span class="self">self</span>, start: char, end: char) {
         <span class="self">self</span>.range_stack.clear();
-        <span class="self">self</span>.push(start <span class="kw">as </span>u32, end <span class="kw">as </span>u32);
+        <span class="self">self</span>.push(u32::from(start), u32::from(end));
     }
 
     <span class="kw">fn </span>push(<span class="kw-2">&amp;mut </span><span class="self">self</span>, start: u32, end: u32) {
@@ -1003,7 +1005,9 @@ which uses it for executing automata on their term index.
     /// values in this range can be encoded as a single byte.
     </span><span class="kw">fn </span>as_ascii(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Utf8Range&gt; {
         <span class="kw">if </span><span class="self">self</span>.is_ascii() {
-            <span class="prelude-val">Some</span>(Utf8Range::new(<span class="self">self</span>.start <span class="kw">as </span>u8, <span class="self">self</span>.end <span class="kw">as </span>u8))
+            <span class="kw">let </span>start = u8::try_from(<span class="self">self</span>.start).unwrap();
+            <span class="kw">let </span>end = u8::try_from(<span class="self">self</span>.end).unwrap();
+            <span class="prelude-val">Some</span>(Utf8Range::new(start, end))
         } <span class="kw">else </span>{
             <span class="prelude-val">None
         </span>}
@@ -1042,7 +1046,9 @@ which uses it for executing automata on their term index.
 
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
-    <span class="kw">use </span>std::char;
+    <span class="kw">use </span>core::char;
+
+    <span class="kw">use </span>alloc::{vec, vec::Vec};
 
     <span class="kw">use </span><span class="kw">crate</span>::utf8::{Utf8Range, Utf8Sequences};
 
@@ -1059,7 +1065,11 @@ which uses it for executing automata on their term index.
                         <span class="string">&quot;Sequence ({:X}, {:X}) contains range {:?}, \
                          which matches surrogate code point {:X} \
                          with encoded bytes {:?}&quot;</span>,
-                        start <span class="kw">as </span>u32, end <span class="kw">as </span>u32, r, cp, buf,
+                        u32::from(start),
+                        u32::from(end),
+                        r,
+                        cp,
+                        buf,
                     );
                 }
             }
@@ -1166,9 +1176,9 @@ which uses it for executing automata on their term index.
 
         <span class="macro">assert!</span>(<span class="number">0xD800 </span>&lt;= cp &amp;&amp; cp &lt; <span class="number">0xE000</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>dst = [<span class="number">0</span>; <span class="number">3</span>];
-        dst[<span class="number">0</span>] = (cp &gt;&gt; <span class="number">12 </span>&amp; <span class="number">0x0F</span>) <span class="kw">as </span>u8 | TAG_THREE_B;
-        dst[<span class="number">1</span>] = (cp &gt;&gt; <span class="number">6 </span>&amp; <span class="number">0x3F</span>) <span class="kw">as </span>u8 | TAG_CONT;
-        dst[<span class="number">2</span>] = (cp &amp; <span class="number">0x3F</span>) <span class="kw">as </span>u8 | TAG_CONT;
+        dst[<span class="number">0</span>] = u8::try_from(cp &gt;&gt; <span class="number">12 </span>&amp; <span class="number">0x0F</span>).unwrap() | TAG_THREE_B;
+        dst[<span class="number">1</span>] = u8::try_from(cp &gt;&gt; <span class="number">6 </span>&amp; <span class="number">0x3F</span>).unwrap() | TAG_CONT;
+        dst[<span class="number">2</span>] = u8::try_from(cp &amp; <span class="number">0x3F</span>).unwrap() | TAG_CONT;
         dst
     }
 }

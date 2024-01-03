@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/libm-0.2.1/src/math/pow.rs`."><title>pow.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="libm" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../libm/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/libm-0.2.8/src/math/pow.rs`."><title>pow.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="libm" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../libm/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -631,6 +631,10 @@
 <a href="#631" id="631">631</a>
 <a href="#632" id="632">632</a>
 <a href="#633" id="633">633</a>
+<a href="#634" id="634">634</a>
+<a href="#635" id="635">635</a>
+<a href="#636" id="636">636</a>
+<a href="#637" id="637">637</a>
 </pre></div><pre class="rust"><code><span class="comment">/* origin: FreeBSD /usr/src/lib/msun/src/e_pow.c */
 /*
  * ====================================================
@@ -932,8 +936,8 @@
         ax = with_set_high_word(ax, ix <span class="kw">as </span>u32);
 
         <span class="comment">/* compute ss = s_h+s_l = (x-1)/(x+1) or (x-1.5)/(x+1.5) */
-        </span><span class="kw">let </span>u: f64 = ax - BP[k <span class="kw">as </span>usize]; <span class="comment">/* bp[0]=1.0, bp[1]=1.5 */
-        </span><span class="kw">let </span>v: f64 = <span class="number">1.0 </span>/ (ax + BP[k <span class="kw">as </span>usize]);
+        </span><span class="kw">let </span>u: f64 = ax - <span class="macro">i!</span>(BP, k <span class="kw">as </span>usize); <span class="comment">/* bp[0]=1.0, bp[1]=1.5 */
+        </span><span class="kw">let </span>v: f64 = <span class="number">1.0 </span>/ (ax + <span class="macro">i!</span>(BP, k <span class="kw">as </span>usize));
         <span class="kw">let </span>ss: f64 = u * v;
         <span class="kw">let </span>s_h = with_set_low_word(ss, <span class="number">0</span>);
 
@@ -942,7 +946,7 @@
             <span class="number">0.0</span>,
             ((ix <span class="kw">as </span>u32 &gt;&gt; <span class="number">1</span>) | <span class="number">0x20000000</span>) + <span class="number">0x00080000 </span>+ ((k <span class="kw">as </span>u32) &lt;&lt; <span class="number">18</span>),
         );
-        <span class="kw">let </span>t_l: f64 = ax - (t_h - BP[k <span class="kw">as </span>usize]);
+        <span class="kw">let </span>t_l: f64 = ax - (t_h - <span class="macro">i!</span>(BP, k <span class="kw">as </span>usize));
         <span class="kw">let </span>s_l: f64 = v * ((u - s_h * t_h) - s_h * t_l);
 
         <span class="comment">/* compute log(ax) */
@@ -961,12 +965,12 @@
         </span><span class="kw">let </span>p_h: f64 = with_set_low_word(u + v, <span class="number">0</span>);
         <span class="kw">let </span>p_l = v - (p_h - u);
         <span class="kw">let </span>z_h: f64 = CP_H * p_h; <span class="comment">/* cp_h+cp_l = 2/(3*log2) */
-        </span><span class="kw">let </span>z_l: f64 = CP_L * p_h + p_l * CP + DP_L[k <span class="kw">as </span>usize];
+        </span><span class="kw">let </span>z_l: f64 = CP_L * p_h + p_l * CP + <span class="macro">i!</span>(DP_L, k <span class="kw">as </span>usize);
 
         <span class="comment">/* log2(ax) = (ss+..)*2/(3*log2) = n + dp_h + z_h + z_l */
         </span><span class="kw">let </span>t: f64 = n <span class="kw">as </span>f64;
-        t1 = with_set_low_word(((z_h + z_l) + DP_H[k <span class="kw">as </span>usize]) + t, <span class="number">0</span>);
-        t2 = z_l - (((t1 - t) - DP_H[k <span class="kw">as </span>usize]) - z_h);
+        t1 = with_set_low_word(((z_h + z_l) + <span class="macro">i!</span>(DP_H, k <span class="kw">as </span>usize)) + t, <span class="number">0</span>);
+        t2 = z_l - (((t1 - t) - <span class="macro">i!</span>(DP_H, k <span class="kw">as </span>usize)) - z_h);
     }
 
     <span class="comment">/* split up y into y1+y2 and compute (y1+y2)*(t1+t2) */
@@ -1117,6 +1121,10 @@
                 <span class="kw">let </span>exp = expected(<span class="kw-2">*</span>val);
                 <span class="kw">let </span>res = computed(<span class="kw-2">*</span>val);
 
+                <span class="attr">#[cfg(all(target_arch = <span class="string">&quot;x86&quot;</span>, not(target_feature = <span class="string">&quot;sse2&quot;</span>)))]
+                </span><span class="kw">let </span>exp = <span class="macro">force_eval!</span>(exp);
+                <span class="attr">#[cfg(all(target_arch = <span class="string">&quot;x86&quot;</span>, not(target_feature = <span class="string">&quot;sse2&quot;</span>)))]
+                </span><span class="kw">let </span>res = <span class="macro">force_eval!</span>(res);
                 <span class="macro">assert!</span>(
                     <span class="kw">if </span>exp.is_nan() {
                         res.is_nan()
@@ -1237,7 +1245,7 @@
 
         <span class="comment">// Factoring -1 out:
         // (negative anything ^ integer should be (-1 ^ integer) * (positive anything ^ integer))
-        </span><span class="kw-2">&amp;</span>[POS_ZERO, NEG_ZERO, POS_ONE, NEG_ONE, POS_EVENS, NEG_EVENS]
+        </span>(<span class="kw-2">&amp;</span>[POS_ZERO, NEG_ZERO, POS_ONE, NEG_ONE, POS_EVENS, NEG_EVENS])
             .iter()
             .for_each(|int_set| {
                 int_set.iter().for_each(|int| {
@@ -1249,7 +1257,7 @@
 
         <span class="comment">// Negative base (imaginary results):
         // (-anything except 0 and Infinity ^ non-integer should be NAN)
-        </span><span class="kw-2">&amp;</span>NEG[<span class="number">1</span>..(NEG.len() - <span class="number">1</span>)].iter().for_each(|set| {
+        </span>(<span class="kw-2">&amp;</span>NEG[<span class="number">1</span>..(NEG.len() - <span class="number">1</span>)]).iter().for_each(|set| {
             set.iter().for_each(|val| {
                 test_sets(<span class="kw-2">&amp;</span>ALL[<span class="number">3</span>..<span class="number">7</span>], <span class="kw-2">&amp;</span>|v: f64| pow(<span class="kw-2">*</span>val, v), <span class="kw-2">&amp;</span>|<span class="kw">_</span>| NAN);
             })

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["FrozenBTreeMap","FrozenMap","FrozenVec"]};
+window.SIDEBAR_ITEMS = {"struct":["FrozenBTreeMap","FrozenMap","FrozenVec","Iter","LockFreeFrozenVec"]};

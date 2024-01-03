@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/libm-0.2.1/src/math/fma.rs`."><title>fma.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="libm" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../libm/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/libm-0.2.8/src/math/fma.rs`."><title>fma.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="libm" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../libm/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -221,6 +221,15 @@
 <a href="#221" id="221">221</a>
 <a href="#222" id="222">222</a>
 <a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
+<a href="#230" id="230">230</a>
+<a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::{f32, f64};
 
 <span class="kw">use </span><span class="kw">super</span>::scalbn;
@@ -252,21 +261,10 @@
     Num { m: ix, e, sign }
 }
 
-<span class="kw">fn </span>mul(x: u64, y: u64) -&gt; (u64, u64) {
-    <span class="kw">let </span>t1: u64;
-    <span class="kw">let </span>t2: u64;
-    <span class="kw">let </span>t3: u64;
-    <span class="kw">let </span>xlo: u64 = x <span class="kw">as </span>u32 <span class="kw">as </span>u64;
-    <span class="kw">let </span>xhi: u64 = x &gt;&gt; <span class="number">32</span>;
-    <span class="kw">let </span>ylo: u64 = y <span class="kw">as </span>u32 <span class="kw">as </span>u64;
-    <span class="kw">let </span>yhi: u64 = y &gt;&gt; <span class="number">32</span>;
-
-    t1 = xlo * ylo;
-    t2 = xlo * yhi + xhi * ylo;
-    t3 = xhi * yhi;
-    <span class="kw">let </span>lo = t1.wrapping_add(t2 &lt;&lt; <span class="number">32</span>);
-    <span class="kw">let </span>hi = t3 + (t2 &gt;&gt; <span class="number">32</span>) + (t1 &gt; lo) <span class="kw">as </span>u64;
-    (hi, lo)
+<span class="attr">#[inline]
+</span><span class="kw">fn </span>mul(x: u64, y: u64) -&gt; (u64, u64) {
+    <span class="kw">let </span>t = (x <span class="kw">as </span>u128).wrapping_mul(y <span class="kw">as </span>u128);
+    ((t &gt;&gt; <span class="number">64</span>) <span class="kw">as </span>u64, t <span class="kw">as </span>u64)
 }
 
 <span class="doccomment">/// Floating multiply add (f64)
@@ -345,12 +343,12 @@
         rhi += zhi + (rlo &lt; zlo) <span class="kw">as </span>u64;
     } <span class="kw">else </span>{
         <span class="comment">/* r -= z */
-        </span><span class="kw">let </span>t = rlo;
-        rlo = rlo.wrapping_sub(zlo);
-        rhi = rhi.wrapping_sub(zhi.wrapping_sub((t &lt; rlo) <span class="kw">as </span>u64));
+        </span><span class="kw">let </span>(res, borrow) = rlo.overflowing_sub(zlo);
+        rlo = res;
+        rhi = rhi.wrapping_sub(zhi.wrapping_add(borrow <span class="kw">as </span>u64));
         <span class="kw">if </span>(rhi &gt;&gt; <span class="number">63</span>) != <span class="number">0 </span>{
-            rlo = (-(rlo <span class="kw">as </span>i64)) <span class="kw">as </span>u64;
-            rhi = (-(rhi <span class="kw">as </span>i64)) <span class="kw">as </span>u64 - (rlo != <span class="number">0</span>) <span class="kw">as </span>u64;
+            rlo = (rlo <span class="kw">as </span>i64).wrapping_neg() <span class="kw">as </span>u64;
+            rhi = (rhi <span class="kw">as </span>i64).wrapping_neg() <span class="kw">as </span>u64 - (rlo != <span class="number">0</span>) <span class="kw">as </span>u64;
             sign = (sign == <span class="number">0</span>) <span class="kw">as </span>i32;
         }
         nonzero = (rhi != <span class="number">0</span>) <span class="kw">as </span>i32;
@@ -441,7 +439,27 @@
             -<span class="number">0.00000000000000022204460492503126</span>,
         );
 
-        <span class="macro">assert_eq!</span>(fma(-<span class="number">0.992</span>, -<span class="number">0.992</span>, -<span class="number">0.992</span>), -<span class="number">0.00793599999988632</span>,);
+        <span class="kw">let </span>result = fma(-<span class="number">0.992</span>, -<span class="number">0.992</span>, -<span class="number">0.992</span>);
+        <span class="comment">//force rounding to storage format on x87 to prevent superious errors.
+        </span><span class="attr">#[cfg(all(target_arch = <span class="string">&quot;x86&quot;</span>, not(target_feature = <span class="string">&quot;sse2&quot;</span>)))]
+        </span><span class="kw">let </span>result = <span class="macro">force_eval!</span>(result);
+        <span class="macro">assert_eq!</span>(result, -<span class="number">0.007936000000000007</span>,);
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>fma_sbb() {
+        <span class="macro">assert_eq!</span>(
+            fma(-(<span class="number">1.0 </span>- f64::EPSILON), f64::MIN, f64::MIN),
+            -<span class="number">3991680619069439e277
+        </span>);
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>fma_underflow() {
+        <span class="macro">assert_eq!</span>(
+            fma(<span class="number">1.1102230246251565e-16</span>, -<span class="number">9.812526705433188e-305</span>, <span class="number">1.0894e-320</span>),
+            <span class="number">0.0</span>,
+        );
     }
 }
 </code></pre></div></section></main></body></html>

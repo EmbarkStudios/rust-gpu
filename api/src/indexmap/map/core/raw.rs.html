@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/indexmap-1.9.2/src/map/core/raw.rs`."><title>raw.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="indexmap" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../indexmap/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/indexmap-2.1.0/src/map/core/raw.rs`."><title>raw.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="indexmap" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../indexmap/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -189,11 +189,14 @@
 <a href="#189" id="189">189</a>
 <a href="#190" id="190">190</a>
 <a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
 </pre></div><pre class="rust"><code><span class="attr">#![allow(unsafe_code)]
 </span><span class="doccomment">//! This module encapsulates the `unsafe` access to `hashbrown::raw::RawTable`,
 //! mostly in dealing with its bucket &quot;pointers&quot;.
 
-</span><span class="kw">use super</span>::{equivalent, Bucket, Entry, HashValue, IndexMapCore, VacantEntry};
+</span><span class="kw">use super</span>::{equivalent, get_hash, Bucket, Entry, HashValue, IndexMapCore, VacantEntry};
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::mem::replace;
 <span class="kw">use </span>hashbrown::raw::RawTable;
@@ -217,7 +220,7 @@
 <span class="kw">impl </span>fmt::Debug <span class="kw">for </span>DebugIndices&lt;<span class="lifetime">&#39;_</span>&gt; {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
         <span class="comment">// SAFETY: we&#39;re not letting any of the buckets escape this function
-        </span><span class="kw">let </span>indices = <span class="kw">unsafe </span>{ <span class="self">self</span>.<span class="number">0</span>.iter().map(|raw_bucket| raw_bucket.read()) };
+        </span><span class="kw">let </span>indices = <span class="kw">unsafe </span>{ <span class="self">self</span>.<span class="number">0</span>.iter().map(|raw_bucket| <span class="kw-2">*</span>raw_bucket.as_ref()) };
         f.debug_list().entries(indices).finish()
     }
 }
@@ -229,11 +232,37 @@
         </span><span class="kw">unsafe </span>{
             <span class="kw">let </span>offset = end - start;
             <span class="kw">for </span>bucket <span class="kw">in </span><span class="self">self</span>.indices.iter() {
-                <span class="kw">let </span>i = bucket.read();
-                <span class="kw">if </span>i &gt;= end {
-                    bucket.write(i - offset);
-                } <span class="kw">else if </span>i &gt;= start {
+                <span class="kw">let </span>i = bucket.as_mut();
+                <span class="kw">if </span><span class="kw-2">*</span>i &gt;= end {
+                    <span class="kw-2">*</span>i -= offset;
+                } <span class="kw">else if </span><span class="kw-2">*</span>i &gt;= start {
                     <span class="self">self</span>.indices.erase(bucket);
+                }
+            }
+        }
+    }
+
+    <span class="doccomment">/// Search for a key in the table and return `Ok(entry_index)` if found.
+    /// Otherwise, insert the key and return `Err(new_index)`.
+    ///
+    /// Note that hashbrown may resize the table to reserve space for insertion,
+    /// even before checking if it&#39;s already present, so this is somewhat biased
+    /// towards new items.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>find_or_insert(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hash: HashValue, key: <span class="kw-2">&amp;</span>K) -&gt; <span class="prelude-ty">Result</span>&lt;usize, usize&gt;
+    <span class="kw">where
+        </span>K: Eq,
+    {
+        <span class="kw">let </span>hash = hash.get();
+        <span class="kw">let </span>eq = equivalent(key, <span class="kw-2">&amp;</span><span class="self">self</span>.entries);
+        <span class="kw">let </span>hasher = get_hash(<span class="kw-2">&amp;</span><span class="self">self</span>.entries);
+        <span class="comment">// SAFETY: We&#39;re not mutating between find and read/insert.
+        </span><span class="kw">unsafe </span>{
+            <span class="kw">match </span><span class="self">self</span>.indices.find_or_find_insert_slot(hash, eq, hasher) {
+                <span class="prelude-val">Ok</span>(raw_bucket) =&gt; <span class="prelude-val">Ok</span>(<span class="kw-2">*</span>raw_bucket.as_ref()),
+                <span class="prelude-val">Err</span>(slot) =&gt; {
+                    <span class="kw">let </span>index = <span class="self">self</span>.indices.len();
+                    <span class="self">self</span>.indices.insert_in_slot(hash, slot, index);
+                    <span class="prelude-val">Err</span>(index)
                 }
             }
         }
@@ -264,29 +293,6 @@
         <span class="comment">// SAFETY: we&#39;re not letting any of the buckets escape this function,
         // only the item references that are appropriately bound to `&amp;mut self`.
         </span><span class="kw">unsafe </span>{ <span class="self">self</span>.indices.iter().map(|bucket| bucket.as_mut()) }
-    }
-
-    <span class="doccomment">/// Return the raw bucket for the given index
-    </span><span class="kw">fn </span>find_index(<span class="kw-2">&amp;</span><span class="self">self</span>, index: usize) -&gt; RawBucket {
-        <span class="comment">// We&#39;ll get a &quot;nice&quot; bounds-check from indexing `self.entries`,
-        // and then we expect to find it in the table as well.
-        </span><span class="kw">let </span>hash = <span class="self">self</span>.entries[index].hash.get();
-        <span class="self">self</span>.indices
-            .find(hash, <span class="kw">move </span>|<span class="kw-2">&amp;</span>i| i == index)
-            .expect(<span class="string">&quot;index not found&quot;</span>)
-    }
-
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>swap_indices(<span class="kw-2">&amp;mut </span><span class="self">self</span>, a: usize, b: usize) {
-        <span class="comment">// SAFETY: Can&#39;t take two `get_mut` references from one table, so we
-        // must use raw buckets to do the swap. This is still safe because we
-        // are locally sure they won&#39;t dangle, and we write them individually.
-        </span><span class="kw">unsafe </span>{
-            <span class="kw">let </span>raw_bucket_a = <span class="self">self</span>.find_index(a);
-            <span class="kw">let </span>raw_bucket_b = <span class="self">self</span>.find_index(b);
-            raw_bucket_a.write(b);
-            raw_bucket_b.write(a);
-        }
-        <span class="self">self</span>.entries.swap(a, b);
     }
 }
 
@@ -342,7 +348,7 @@
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
         <span class="comment">// SAFETY: we have &amp;mut map keep keeping the bucket stable
-        </span><span class="kw">unsafe </span>{ <span class="self">self</span>.raw_bucket.read() }
+        </span><span class="kw">unsafe </span>{ <span class="kw-2">*</span><span class="self">self</span>.raw_bucket.as_ref() }
     }
 
     <span class="doccomment">/// Converts into a mutable reference to the entry&#39;s value in the map,
@@ -362,7 +368,7 @@
     </span><span class="kw">pub fn </span>swap_remove_entry(<span class="self">self</span>) -&gt; (K, V) {
         <span class="comment">// SAFETY: This is safe because it can only happen once (self is consumed)
         // and map.indices have not been modified since entry construction
-        </span><span class="kw">let </span>index = <span class="kw">unsafe </span>{ <span class="self">self</span>.map.indices.remove(<span class="self">self</span>.raw_bucket) };
+        </span><span class="kw">let </span>(index, _slot) = <span class="kw">unsafe </span>{ <span class="self">self</span>.map.indices.remove(<span class="self">self</span>.raw_bucket) };
         <span class="self">self</span>.map.swap_remove_finish(index)
     }
 
@@ -376,7 +382,7 @@
     </span><span class="kw">pub fn </span>shift_remove_entry(<span class="self">self</span>) -&gt; (K, V) {
         <span class="comment">// SAFETY: This is safe because it can only happen once (self is consumed)
         // and map.indices have not been modified since entry construction
-        </span><span class="kw">let </span>index = <span class="kw">unsafe </span>{ <span class="self">self</span>.map.indices.remove(<span class="self">self</span>.raw_bucket) };
+        </span><span class="kw">let </span>(index, _slot) = <span class="kw">unsafe </span>{ <span class="self">self</span>.map.indices.remove(<span class="self">self</span>.raw_bucket) };
         <span class="self">self</span>.map.shift_remove_finish(index)
     }
 }

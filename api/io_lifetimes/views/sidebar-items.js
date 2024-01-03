@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":["FilelikeView","SocketlikeView"],"trait":["FilelikeViewType","SocketlikeViewType"]};

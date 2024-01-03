@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/rustix-0.36.9/src/backend/libc/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="rustix" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../rustix/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/rustix-0.38.28/src/backend/libc/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="rustix" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../rustix/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -108,10 +108,115 @@
 <a href="#108" id="108">108</a>
 <a href="#109" id="109">109</a>
 <a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! The libc backend.
 //!
 //! On most platforms, this uses the `libc` crate to make system calls. On
-//! Windows, this uses the Winsock2 API in `windows-sys`, which can be adapted
+//! Windows, this uses the Winsock API in `windows-sys`, which can be adapted
 //! to have a very `libc`-like interface.
 
 </span><span class="comment">// Every FFI call requires an unsafe block, and there are a lot of FFI
@@ -121,64 +226,119 @@
 // one platform where it&#39;s redundant on another.
 </span><span class="attr">#![allow(clippy::useless_conversion)]
 
-#[cfg(not(any(windows, target_os = <span class="string">&quot;wasi&quot;</span>)))]
-#[macro_use]
-</span><span class="kw">mod </span>weak;
-
-<span class="kw">mod </span>conv;
-<span class="kw">mod </span>offset;
+</span><span class="kw">mod </span>conv;
 
 <span class="attr">#[cfg(windows)]
-</span><span class="kw">mod </span>io_lifetimes;
-<span class="attr">#[cfg(not(windows))]
-#[cfg(not(feature = <span class="string">&quot;std&quot;</span>))]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>fd {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span><span class="kw">super</span>::c::c_int <span class="kw">as </span>LibcFd;
-    <span class="kw">pub use </span><span class="kw">crate</span>::io::fd::<span class="kw-2">*</span>;
-}
-<span class="attr">#[cfg(windows)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>fd {
-    <span class="kw">pub use </span><span class="kw">super</span>::io_lifetimes::<span class="kw-2">*</span>;
-}
-<span class="attr">#[cfg(not(windows))]
-#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>fd {
-    <span class="kw">pub use </span>io_lifetimes::<span class="kw-2">*</span>;
+    <span class="kw">pub use </span><span class="kw">crate</span>::maybe_polyfill::os::windows::io::{
+        AsRawSocket, AsSocket, BorrowedSocket <span class="kw">as </span>BorrowedFd, FromRawSocket, IntoRawSocket,
+        OwnedSocket <span class="kw">as </span>OwnedFd, RawSocket <span class="kw">as </span>RawFd,
+    };
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>windows_sys::Win32::Networking::WinSock::SOCKET <span class="kw">as </span>LibcFd;
 
-    <span class="attr">#[cfg(target_os = <span class="string">&quot;wasi&quot;</span>)]
-    #[allow(unused_imports)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span><span class="kw">super</span>::c::c_int <span class="kw">as </span>LibcFd;
-    <span class="attr">#[cfg(unix)]
-    #[allow(unused_imports)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>std::os::unix::io::RawFd <span class="kw">as </span>LibcFd;
-    <span class="attr">#[cfg(unix)]
-    </span><span class="kw">pub use </span>std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, RawFd};
-    <span class="attr">#[cfg(target_os = <span class="string">&quot;wasi&quot;</span>)]
-    </span><span class="kw">pub use </span>std::os::wasi::io::{AsRawFd, FromRawFd, IntoRawFd, RawFd};
+    <span class="doccomment">/// A version of [`AsRawFd`] for use with Winsock API.
+    ///
+    /// [`AsRawFd`]: https://doc.rust-lang.org/stable/std/os/fd/trait.AsRawFd.html
+    </span><span class="kw">pub trait </span>AsRawFd {
+        <span class="doccomment">/// A version of [`as_raw_fd`] for use with Winsock API.
+        ///
+        /// [`as_raw_fd`]: https://doc.rust-lang.org/stable/std/os/fd/trait.FromRawFd.html#tymethod.as_raw_fd
+        </span><span class="kw">fn </span>as_raw_fd(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; RawFd;
+    }
+    <span class="kw">impl</span>&lt;T: AsRawSocket&gt; AsRawFd <span class="kw">for </span>T {
+        <span class="attr">#[inline]
+        </span><span class="kw">fn </span>as_raw_fd(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; RawFd {
+            <span class="self">self</span>.as_raw_socket()
+        }
+    }
+
+    <span class="doccomment">/// A version of [`IntoRawFd`] for use with Winsock API.
+    ///
+    /// [`IntoRawFd`]: https://doc.rust-lang.org/stable/std/os/fd/trait.IntoRawFd.html
+    </span><span class="kw">pub trait </span>IntoRawFd {
+        <span class="doccomment">/// A version of [`into_raw_fd`] for use with Winsock API.
+        ///
+        /// [`into_raw_fd`]: https://doc.rust-lang.org/stable/std/os/fd/trait.FromRawFd.html#tymethod.into_raw_fd
+        </span><span class="kw">fn </span>into_raw_fd(<span class="self">self</span>) -&gt; RawFd;
+    }
+    <span class="kw">impl</span>&lt;T: IntoRawSocket&gt; IntoRawFd <span class="kw">for </span>T {
+        <span class="attr">#[inline]
+        </span><span class="kw">fn </span>into_raw_fd(<span class="self">self</span>) -&gt; RawFd {
+            <span class="self">self</span>.into_raw_socket()
+        }
+    }
+
+    <span class="doccomment">/// A version of [`FromRawFd`] for use with Winsock API.
+    ///
+    /// [`FromRawFd`]: https://doc.rust-lang.org/stable/std/os/fd/trait.FromRawFd.html
+    </span><span class="kw">pub trait </span>FromRawFd {
+        <span class="doccomment">/// A version of [`from_raw_fd`] for use with Winsock API.
+        ///
+        /// # Safety
+        ///
+        /// See the [safety requirements] for [`from_raw_fd`].
+        ///
+        /// [`from_raw_fd`]: https://doc.rust-lang.org/stable/std/os/fd/trait.FromRawFd.html#tymethod.from_raw_fd
+        /// [safety requirements]: https://doc.rust-lang.org/stable/std/os/fd/trait.FromRawFd.html#safety
+        </span><span class="kw">unsafe fn </span>from_raw_fd(raw_fd: RawFd) -&gt; <span class="self">Self</span>;
+    }
+    <span class="kw">impl</span>&lt;T: FromRawSocket&gt; FromRawFd <span class="kw">for </span>T {
+        <span class="attr">#[inline]
+        </span><span class="kw">unsafe fn </span>from_raw_fd(raw_fd: RawFd) -&gt; <span class="self">Self </span>{
+            <span class="self">Self</span>::from_raw_socket(raw_fd)
+        }
+    }
+
+    <span class="doccomment">/// A version of [`AsFd`] for use with Winsock API.
+    ///
+    /// [`AsFd`]: https://doc.rust-lang.org/stable/std/os/fd/trait.AsFd.html
+    </span><span class="kw">pub trait </span>AsFd {
+        <span class="doccomment">/// An `as_fd` function for Winsock, where a `Fd` is a `Socket`.
+        </span><span class="kw">fn </span>as_fd(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BorrowedFd;
+    }
+    <span class="kw">impl</span>&lt;T: AsSocket&gt; AsFd <span class="kw">for </span>T {
+        <span class="attr">#[inline]
+        </span><span class="kw">fn </span>as_fd(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BorrowedFd {
+            <span class="self">self</span>.as_socket()
+        }
+    }
+}
+<span class="attr">#[cfg(not(windows))]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>fd {
+    <span class="kw">pub use </span><span class="kw">crate</span>::maybe_polyfill::os::fd::{
+        AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, OwnedFd, RawFd,
+    };
+    <span class="attr">#[allow(unused_imports)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>RawFd <span class="kw">as </span>LibcFd;
 }
 
 <span class="comment">// On Windows we emulate selected libc-compatible interfaces. On non-Windows,
 // we just use libc here, since this is the libc backend.
-</span><span class="attr">#[cfg(windows)]
-#[path = <span class="string">&quot;winsock_c.rs&quot;</span>]
+</span><span class="attr">#[cfg_attr(windows, path = <span class="string">&quot;winsock_c.rs&quot;</span>)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>c;
-<span class="attr">#[cfg(not(windows))]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>libc <span class="kw">as </span>c;
 
+<span class="attr">#[cfg(feature = <span class="string">&quot;event&quot;</span>)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>event;
 <span class="attr">#[cfg(not(windows))]
 #[cfg(feature = <span class="string">&quot;fs&quot;</span>)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>fs;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>io;
-<span class="attr">#[cfg(any(target_os = <span class="string">&quot;android&quot;</span>, target_os = <span class="string">&quot;linux&quot;</span>))]
+<span class="attr">#[cfg(linux_kernel)]
 #[cfg(feature = <span class="string">&quot;io_uring&quot;</span>)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>io_uring;
-<span class="attr">#[cfg(not(any(windows, target_os = <span class="string">&quot;wasi&quot;</span>)))]
+<span class="attr">#[cfg(not(any(windows, target_os = <span class="string">&quot;espidf&quot;</span>, target_os = <span class="string">&quot;vita&quot;</span>, target_os = <span class="string">&quot;wasi&quot;</span>)))]
 #[cfg(feature = <span class="string">&quot;mm&quot;</span>)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>mm;
-<span class="attr">#[cfg(not(any(target_os = <span class="string">&quot;redox&quot;</span>, target_os = <span class="string">&quot;wasi&quot;</span>)))]
+<span class="attr">#[cfg(linux_kernel)]
+#[cfg(feature = <span class="string">&quot;mount&quot;</span>)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>mount;
+<span class="attr">#[cfg(linux_kernel)]
+#[cfg(all(feature = <span class="string">&quot;fs&quot;</span>, not(feature = <span class="string">&quot;mount&quot;</span>)))]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>mount; <span class="comment">// for deprecated mount functions in &quot;fs&quot;
+</span><span class="attr">#[cfg(not(any(target_os = <span class="string">&quot;redox&quot;</span>, target_os = <span class="string">&quot;wasi&quot;</span>)))]
 #[cfg(feature = <span class="string">&quot;net&quot;</span>)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>net;
-<span class="attr">#[cfg(not(windows))]
+<span class="attr">#[cfg(not(any(windows, target_os = <span class="string">&quot;espidf&quot;</span>)))]
 #[cfg(any(
     feature = <span class="string">&quot;param&quot;</span>,
     feature = <span class="string">&quot;runtime&quot;</span>,
@@ -187,17 +347,30 @@
 ))]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>param;
 <span class="attr">#[cfg(not(windows))]
+#[cfg(feature = <span class="string">&quot;pipe&quot;</span>)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>pipe;
+<span class="attr">#[cfg(not(windows))]
+#[cfg(feature = <span class="string">&quot;process&quot;</span>)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>process;
+<span class="attr">#[cfg(not(windows))]
+#[cfg(not(target_os = <span class="string">&quot;wasi&quot;</span>))]
+#[cfg(feature = <span class="string">&quot;pty&quot;</span>)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>pty;
 <span class="attr">#[cfg(not(windows))]
 #[cfg(feature = <span class="string">&quot;rand&quot;</span>)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>rand;
 <span class="attr">#[cfg(not(windows))]
+#[cfg(not(target_os = <span class="string">&quot;wasi&quot;</span>))]
+#[cfg(feature = <span class="string">&quot;system&quot;</span>)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>system;
+<span class="attr">#[cfg(not(any(windows, target_os = <span class="string">&quot;vita&quot;</span>)))]
 #[cfg(feature = <span class="string">&quot;termios&quot;</span>)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>termios;
 <span class="attr">#[cfg(not(windows))]
 #[cfg(feature = <span class="string">&quot;thread&quot;</span>)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>thread;
-<span class="attr">#[cfg(not(windows))]
+<span class="attr">#[cfg(not(any(windows, target_os = <span class="string">&quot;espidf&quot;</span>)))]
+#[cfg(feature = <span class="string">&quot;time&quot;</span>)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>time;
 
 <span class="doccomment">/// If the host libc is glibc, return `true` if it is less than version 2.25.
@@ -210,12 +383,49 @@
 </span><span class="attr">#[cfg(all(unix, target_env = <span class="string">&quot;gnu&quot;</span>))]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>if_glibc_is_less_than_2_25() -&gt; bool {
     <span class="comment">// This is also defined inside `weak_or_syscall!` in
-    // backend/libc/rand/syscalls.rs, but it&#39;s not convenient to re-export the weak
-    // symbol from that macro, so we duplicate it at a small cost here.
+    // backend/libc/rand/syscalls.rs, but it&#39;s not convenient to re-export the
+    // weak symbol from that macro, so we duplicate it at a small cost here.
     </span><span class="macro">weak! </span>{ <span class="kw">fn </span>getrandom(<span class="kw-2">*mut </span>c::c_void, c::size_t, c::c_uint) -&gt; c::ssize_t }
 
     <span class="comment">// glibc 2.25 has `getrandom`, which is how we satisfy the API contract of
     // this function. But, there are likely other libc versions which have it.
     </span>getrandom.get().is_none()
 }
-</code></pre></div></section></main></body></html>
+
+<span class="comment">// Private modules used by multiple public modules.
+</span><span class="attr">#[cfg(any(feature = <span class="string">&quot;procfs&quot;</span>, feature = <span class="string">&quot;process&quot;</span>, feature = <span class="string">&quot;runtime&quot;</span>))]
+#[cfg(not(any(windows, target_os = <span class="string">&quot;wasi&quot;</span>)))]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>pid;
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;process&quot;</span>, feature = <span class="string">&quot;thread&quot;</span>))]
+#[cfg(linux_kernel)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>prctl;
+<span class="attr">#[cfg(not(any(
+    windows,
+    target_os = <span class="string">&quot;android&quot;</span>,
+    target_os = <span class="string">&quot;espidf&quot;</span>,
+    target_os = <span class="string">&quot;vita&quot;</span>,
+    target_os = <span class="string">&quot;wasi&quot;
+</span>)))]
+#[cfg(feature = <span class="string">&quot;shm&quot;</span>)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>shm;
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;fs&quot;</span>, feature = <span class="string">&quot;thread&quot;</span>, feature = <span class="string">&quot;process&quot;</span>))]
+#[cfg(not(any(windows, target_os = <span class="string">&quot;wasi&quot;</span>)))]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>ugid;
+
+<span class="attr">#[cfg(bsd)]
+</span><span class="kw">const </span>MAX_IOV: usize = c::IOV_MAX <span class="kw">as </span>usize;
+
+<span class="attr">#[cfg(any(linux_kernel, target_os = <span class="string">&quot;emscripten&quot;</span>, target_os = <span class="string">&quot;nto&quot;</span>))]
+</span><span class="kw">const </span>MAX_IOV: usize = c::UIO_MAXIOV <span class="kw">as </span>usize;
+
+<span class="attr">#[cfg(not(any(
+    bsd,
+    linux_kernel,
+    windows,
+    target_os = <span class="string">&quot;emscripten&quot;</span>,
+    target_os = <span class="string">&quot;espidf&quot;</span>,
+    target_os = <span class="string">&quot;nto&quot;</span>,
+    target_os = <span class="string">&quot;horizon&quot;</span>,
+)))]
+</span><span class="kw">const </span>MAX_IOV: usize = <span class="number">16</span>; <span class="comment">// The minimum value required by POSIX.
+</span></code></pre></div></section></main></body></html>

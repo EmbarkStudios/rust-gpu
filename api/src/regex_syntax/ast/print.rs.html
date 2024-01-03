@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/regex-syntax-0.6.27/src/ast/print.rs`."><title>print.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="regex_syntax" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../regex_syntax/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/regex-syntax-0.8.2/src/ast/print.rs`."><title>print.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="regex_syntax" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../regex_syntax/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -566,14 +566,26 @@
 <a href="#566" id="566">566</a>
 <a href="#567" id="567">567</a>
 <a href="#568" id="568">568</a>
+<a href="#569" id="569">569</a>
+<a href="#570" id="570">570</a>
+<a href="#571" id="571">571</a>
+<a href="#572" id="572">572</a>
+<a href="#573" id="573">573</a>
+<a href="#574" id="574">574</a>
+<a href="#575" id="575">575</a>
+<a href="#576" id="576">576</a>
+<a href="#577" id="577">577</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 This module provides a regular expression printer for `Ast`.
 */
 
-</span><span class="kw">use </span>std::fmt;
+</span><span class="kw">use </span>core::fmt;
 
-<span class="kw">use </span><span class="kw">crate</span>::ast::visitor::{<span class="self">self</span>, Visitor};
-<span class="kw">use </span><span class="kw">crate</span>::ast::{<span class="self">self</span>, Ast};
+<span class="kw">use </span><span class="kw">crate</span>::ast::{
+    <span class="self">self</span>,
+    visitor::{<span class="self">self</span>, Visitor},
+    Ast,
+};
 
 <span class="doccomment">/// A builder for constructing a printer.
 ///
@@ -645,27 +657,21 @@ This module provides a regular expression printer for `Ast`.
     <span class="kw">fn </span>visit_pre(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ast: <span class="kw-2">&amp;</span>Ast) -&gt; fmt::Result {
         <span class="kw">match </span><span class="kw-2">*</span>ast {
             Ast::Group(<span class="kw-2">ref </span>x) =&gt; <span class="self">self</span>.fmt_group_pre(x),
-            Ast::Class(ast::Class::Bracketed(<span class="kw-2">ref </span>x)) =&gt; {
-                <span class="self">self</span>.fmt_class_bracketed_pre(x)
-            }
+            Ast::ClassBracketed(<span class="kw-2">ref </span>x) =&gt; <span class="self">self</span>.fmt_class_bracketed_pre(x),
             <span class="kw">_ </span>=&gt; <span class="prelude-val">Ok</span>(()),
         }
     }
 
     <span class="kw">fn </span>visit_post(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ast: <span class="kw-2">&amp;</span>Ast) -&gt; fmt::Result {
-        <span class="kw">use </span><span class="kw">crate</span>::ast::Class;
-
         <span class="kw">match </span><span class="kw-2">*</span>ast {
             Ast::Empty(<span class="kw">_</span>) =&gt; <span class="prelude-val">Ok</span>(()),
             Ast::Flags(<span class="kw-2">ref </span>x) =&gt; <span class="self">self</span>.fmt_set_flags(x),
             Ast::Literal(<span class="kw-2">ref </span>x) =&gt; <span class="self">self</span>.fmt_literal(x),
             Ast::Dot(<span class="kw">_</span>) =&gt; <span class="self">self</span>.wtr.write_str(<span class="string">&quot;.&quot;</span>),
             Ast::Assertion(<span class="kw-2">ref </span>x) =&gt; <span class="self">self</span>.fmt_assertion(x),
-            Ast::Class(Class::Perl(<span class="kw-2">ref </span>x)) =&gt; <span class="self">self</span>.fmt_class_perl(x),
-            Ast::Class(Class::Unicode(<span class="kw-2">ref </span>x)) =&gt; <span class="self">self</span>.fmt_class_unicode(x),
-            Ast::Class(Class::Bracketed(<span class="kw-2">ref </span>x)) =&gt; {
-                <span class="self">self</span>.fmt_class_bracketed_post(x)
-            }
+            Ast::ClassPerl(<span class="kw-2">ref </span>x) =&gt; <span class="self">self</span>.fmt_class_perl(x),
+            Ast::ClassUnicode(<span class="kw-2">ref </span>x) =&gt; <span class="self">self</span>.fmt_class_unicode(x),
+            Ast::ClassBracketed(<span class="kw-2">ref </span>x) =&gt; <span class="self">self</span>.fmt_class_bracketed_post(x),
             Ast::Repetition(<span class="kw-2">ref </span>x) =&gt; <span class="self">self</span>.fmt_repetition(x),
             Ast::Group(<span class="kw-2">ref </span>x) =&gt; <span class="self">self</span>.fmt_group_post(x),
             Ast::Alternation(<span class="kw">_</span>) =&gt; <span class="prelude-val">Ok</span>(()),
@@ -725,9 +731,10 @@ This module provides a regular expression printer for `Ast`.
         <span class="kw">use </span><span class="kw">crate</span>::ast::GroupKind::<span class="kw-2">*</span>;
         <span class="kw">match </span>ast.kind {
             CaptureIndex(<span class="kw">_</span>) =&gt; <span class="self">self</span>.wtr.write_str(<span class="string">&quot;(&quot;</span>),
-            CaptureName(<span class="kw-2">ref </span>x) =&gt; {
-                <span class="self">self</span>.wtr.write_str(<span class="string">&quot;(?P&lt;&quot;</span>)<span class="question-mark">?</span>;
-                <span class="self">self</span>.wtr.write_str(<span class="kw-2">&amp;</span>x.name)<span class="question-mark">?</span>;
+            CaptureName { <span class="kw-2">ref </span>name, starts_with_p } =&gt; {
+                <span class="kw">let </span>start = <span class="kw">if </span>starts_with_p { <span class="string">&quot;(?P&lt;&quot; </span>} <span class="kw">else </span>{ <span class="string">&quot;(?&lt;&quot; </span>};
+                <span class="self">self</span>.wtr.write_str(start)<span class="question-mark">?</span>;
+                <span class="self">self</span>.wtr.write_str(<span class="kw-2">&amp;</span>name.name)<span class="question-mark">?</span>;
                 <span class="self">self</span>.wtr.write_str(<span class="string">&quot;&gt;&quot;</span>)<span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(())
             }
@@ -780,25 +787,25 @@ This module provides a regular expression printer for `Ast`.
 
         <span class="kw">match </span>ast.kind {
             Verbatim =&gt; <span class="self">self</span>.wtr.write_char(ast.c),
-            Punctuation =&gt; <span class="macro">write!</span>(<span class="self">self</span>.wtr, <span class="string">r&quot;\{}&quot;</span>, ast.c),
-            Octal =&gt; <span class="macro">write!</span>(<span class="self">self</span>.wtr, <span class="string">r&quot;\{:o}&quot;</span>, ast.c <span class="kw">as </span>u32),
+            Meta | Superfluous =&gt; <span class="macro">write!</span>(<span class="self">self</span>.wtr, <span class="string">r&quot;\{}&quot;</span>, ast.c),
+            Octal =&gt; <span class="macro">write!</span>(<span class="self">self</span>.wtr, <span class="string">r&quot;\{:o}&quot;</span>, u32::from(ast.c)),
             HexFixed(ast::HexLiteralKind::X) =&gt; {
-                <span class="macro">write!</span>(<span class="self">self</span>.wtr, <span class="string">r&quot;\x{:02X}&quot;</span>, ast.c <span class="kw">as </span>u32)
+                <span class="macro">write!</span>(<span class="self">self</span>.wtr, <span class="string">r&quot;\x{:02X}&quot;</span>, u32::from(ast.c))
             }
             HexFixed(ast::HexLiteralKind::UnicodeShort) =&gt; {
-                <span class="macro">write!</span>(<span class="self">self</span>.wtr, <span class="string">r&quot;\u{:04X}&quot;</span>, ast.c <span class="kw">as </span>u32)
+                <span class="macro">write!</span>(<span class="self">self</span>.wtr, <span class="string">r&quot;\u{:04X}&quot;</span>, u32::from(ast.c))
             }
             HexFixed(ast::HexLiteralKind::UnicodeLong) =&gt; {
-                <span class="macro">write!</span>(<span class="self">self</span>.wtr, <span class="string">r&quot;\U{:08X}&quot;</span>, ast.c <span class="kw">as </span>u32)
+                <span class="macro">write!</span>(<span class="self">self</span>.wtr, <span class="string">r&quot;\U{:08X}&quot;</span>, u32::from(ast.c))
             }
             HexBrace(ast::HexLiteralKind::X) =&gt; {
-                <span class="macro">write!</span>(<span class="self">self</span>.wtr, <span class="string">r&quot;\x{{{:X}}}&quot;</span>, ast.c <span class="kw">as </span>u32)
+                <span class="macro">write!</span>(<span class="self">self</span>.wtr, <span class="string">r&quot;\x{{{:X}}}&quot;</span>, u32::from(ast.c))
             }
             HexBrace(ast::HexLiteralKind::UnicodeShort) =&gt; {
-                <span class="macro">write!</span>(<span class="self">self</span>.wtr, <span class="string">r&quot;\u{{{:X}}}&quot;</span>, ast.c <span class="kw">as </span>u32)
+                <span class="macro">write!</span>(<span class="self">self</span>.wtr, <span class="string">r&quot;\u{{{:X}}}&quot;</span>, u32::from(ast.c))
             }
             HexBrace(ast::HexLiteralKind::UnicodeLong) =&gt; {
-                <span class="macro">write!</span>(<span class="self">self</span>.wtr, <span class="string">r&quot;\U{{{:X}}}&quot;</span>, ast.c <span class="kw">as </span>u32)
+                <span class="macro">write!</span>(<span class="self">self</span>.wtr, <span class="string">r&quot;\U{{{:X}}}&quot;</span>, u32::from(ast.c))
             }
             Special(ast::SpecialLiteralKind::Bell) =&gt; {
                 <span class="self">self</span>.wtr.write_str(<span class="string">r&quot;\a&quot;</span>)
@@ -831,6 +838,12 @@ This module provides a regular expression printer for `Ast`.
             EndText =&gt; <span class="self">self</span>.wtr.write_str(<span class="string">r&quot;\z&quot;</span>),
             WordBoundary =&gt; <span class="self">self</span>.wtr.write_str(<span class="string">r&quot;\b&quot;</span>),
             NotWordBoundary =&gt; <span class="self">self</span>.wtr.write_str(<span class="string">r&quot;\B&quot;</span>),
+            WordBoundaryStart =&gt; <span class="self">self</span>.wtr.write_str(<span class="string">r&quot;\b{start}&quot;</span>),
+            WordBoundaryEnd =&gt; <span class="self">self</span>.wtr.write_str(<span class="string">r&quot;\b{end}&quot;</span>),
+            WordBoundaryStartAngle =&gt; <span class="self">self</span>.wtr.write_str(<span class="string">r&quot;\&lt;&quot;</span>),
+            WordBoundaryEndAngle =&gt; <span class="self">self</span>.wtr.write_str(<span class="string">r&quot;\&gt;&quot;</span>),
+            WordBoundaryStartHalf =&gt; <span class="self">self</span>.wtr.write_str(<span class="string">r&quot;\b{start-half}&quot;</span>),
+            WordBoundaryEndHalf =&gt; <span class="self">self</span>.wtr.write_str(<span class="string">r&quot;\b{end-half}&quot;</span>),
         }
     }
 
@@ -853,6 +866,7 @@ This module provides a regular expression printer for `Ast`.
                     Flag::DotMatchesNewLine =&gt; <span class="self">self</span>.wtr.write_str(<span class="string">&quot;s&quot;</span>),
                     Flag::SwapGreed =&gt; <span class="self">self</span>.wtr.write_str(<span class="string">&quot;U&quot;</span>),
                     Flag::Unicode =&gt; <span class="self">self</span>.wtr.write_str(<span class="string">&quot;u&quot;</span>),
+                    Flag::CRLF =&gt; <span class="self">self</span>.wtr.write_str(<span class="string">&quot;R&quot;</span>),
                     Flag::IgnoreWhitespace =&gt; <span class="self">self</span>.wtr.write_str(<span class="string">&quot;x&quot;</span>),
                 },
             }<span class="question-mark">?</span>;
@@ -963,8 +977,11 @@ This module provides a regular expression printer for `Ast`.
 
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
-    <span class="kw">use </span><span class="kw">super</span>::Printer;
+    <span class="kw">use </span>alloc::string::String;
+
     <span class="kw">use </span><span class="kw">crate</span>::ast::parse::ParserBuilder;
+
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
     <span class="kw">fn </span>roundtrip(given: <span class="kw-2">&amp;</span>str) {
         roundtrip_with(|b| b, given);
@@ -1067,6 +1084,7 @@ This module provides a regular expression printer for `Ast`.
     </span><span class="kw">fn </span>print_group() {
         roundtrip(<span class="string">&quot;(?i:a)&quot;</span>);
         roundtrip(<span class="string">&quot;(?P&lt;foo&gt;a)&quot;</span>);
+        roundtrip(<span class="string">&quot;(?&lt;foo&gt;a)&quot;</span>);
         roundtrip(<span class="string">&quot;(a)&quot;</span>);
     }
 

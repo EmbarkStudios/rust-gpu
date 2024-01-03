@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"trait":["AsRawFilelike","AsRawSocketlike","FromRawFilelike","FromRawSocketlike","IntoRawFilelike","IntoRawSocketlike"],"type":["RawFilelike","RawSocketlike"]};

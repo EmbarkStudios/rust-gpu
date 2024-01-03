@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/aho-corasick-0.7.18/src/dfa.rs`."><title>dfa.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="aho_corasick" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../aho_corasick/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/aho-corasick-1.1.2/src/dfa.rs`."><title>dfa.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="aho_corasick" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../aho_corasick/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -711,717 +711,961 @@
 <a href="#711" id="711">711</a>
 <a href="#712" id="712">712</a>
 <a href="#713" id="713">713</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::mem::size_of;
-
-<span class="kw">use </span><span class="kw">crate</span>::ahocorasick::MatchKind;
-<span class="kw">use </span><span class="kw">crate</span>::automaton::Automaton;
-<span class="kw">use </span><span class="kw">crate</span>::classes::ByteClasses;
-<span class="kw">use </span><span class="kw">crate</span>::error::Result;
-<span class="kw">use </span><span class="kw">crate</span>::nfa::{PatternID, PatternLength, NFA};
-<span class="kw">use </span><span class="kw">crate</span>::prefilter::{Prefilter, PrefilterObj, PrefilterState};
-<span class="kw">use </span><span class="kw">crate</span>::state_id::{dead_id, fail_id, premultiply_overflow_error, StateID};
-<span class="kw">use </span><span class="kw">crate</span>::Match;
-
-<span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub enum </span>DFA&lt;S&gt; {
-    Standard(Standard&lt;S&gt;),
-    ByteClass(ByteClass&lt;S&gt;),
-    Premultiplied(Premultiplied&lt;S&gt;),
-    PremultipliedByteClass(PremultipliedByteClass&lt;S&gt;),
-}
-
-<span class="kw">impl</span>&lt;S: StateID&gt; DFA&lt;S&gt; {
-    <span class="kw">fn </span>repr(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Repr&lt;S&gt; {
-        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-            DFA::Standard(<span class="kw-2">ref </span>dfa) =&gt; dfa.repr(),
-            DFA::ByteClass(<span class="kw-2">ref </span>dfa) =&gt; dfa.repr(),
-            DFA::Premultiplied(<span class="kw-2">ref </span>dfa) =&gt; dfa.repr(),
-            DFA::PremultipliedByteClass(<span class="kw-2">ref </span>dfa) =&gt; dfa.repr(),
-        }
-    }
-
-    <span class="kw">pub fn </span>match_kind(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>MatchKind {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.repr().match_kind
-    }
-
-    <span class="kw">pub fn </span>heap_bytes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
-        <span class="self">self</span>.repr().heap_bytes
-    }
-
-    <span class="kw">pub fn </span>max_pattern_len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
-        <span class="self">self</span>.repr().max_pattern_len
-    }
-
-    <span class="kw">pub fn </span>pattern_count(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
-        <span class="self">self</span>.repr().pattern_count
-    }
-
-    <span class="kw">pub fn </span>prefilter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="kw">dyn </span>Prefilter&gt; {
-        <span class="self">self</span>.repr().prefilter.as_ref().map(|p| p.as_ref())
-    }
-
-    <span class="kw">pub fn </span>start_state(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; S {
-        <span class="self">self</span>.repr().start_id
-    }
-
-    <span class="attr">#[inline(always)]
-    </span><span class="kw">pub fn </span>overlapping_find_at(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        prestate: <span class="kw-2">&amp;mut </span>PrefilterState,
-        haystack: <span class="kw-2">&amp;</span>[u8],
-        at: usize,
-        state_id: <span class="kw-2">&amp;mut </span>S,
-        match_index: <span class="kw-2">&amp;mut </span>usize,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;Match&gt; {
-        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-            DFA::Standard(<span class="kw-2">ref </span>dfa) =&gt; dfa.overlapping_find_at(
-                prestate,
-                haystack,
-                at,
-                state_id,
-                match_index,
-            ),
-            DFA::ByteClass(<span class="kw-2">ref </span>dfa) =&gt; dfa.overlapping_find_at(
-                prestate,
-                haystack,
-                at,
-                state_id,
-                match_index,
-            ),
-            DFA::Premultiplied(<span class="kw-2">ref </span>dfa) =&gt; dfa.overlapping_find_at(
-                prestate,
-                haystack,
-                at,
-                state_id,
-                match_index,
-            ),
-            DFA::PremultipliedByteClass(<span class="kw-2">ref </span>dfa) =&gt; dfa.overlapping_find_at(
-                prestate,
-                haystack,
-                at,
-                state_id,
-                match_index,
-            ),
-        }
-    }
-
-    <span class="attr">#[inline(always)]
-    </span><span class="kw">pub fn </span>earliest_find_at(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        prestate: <span class="kw-2">&amp;mut </span>PrefilterState,
-        haystack: <span class="kw-2">&amp;</span>[u8],
-        at: usize,
-        state_id: <span class="kw-2">&amp;mut </span>S,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;Match&gt; {
-        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-            DFA::Standard(<span class="kw-2">ref </span>dfa) =&gt; {
-                dfa.earliest_find_at(prestate, haystack, at, state_id)
-            }
-            DFA::ByteClass(<span class="kw-2">ref </span>dfa) =&gt; {
-                dfa.earliest_find_at(prestate, haystack, at, state_id)
-            }
-            DFA::Premultiplied(<span class="kw-2">ref </span>dfa) =&gt; {
-                dfa.earliest_find_at(prestate, haystack, at, state_id)
-            }
-            DFA::PremultipliedByteClass(<span class="kw-2">ref </span>dfa) =&gt; {
-                dfa.earliest_find_at(prestate, haystack, at, state_id)
-            }
-        }
-    }
-
-    <span class="attr">#[inline(always)]
-    </span><span class="kw">pub fn </span>find_at_no_state(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        prestate: <span class="kw-2">&amp;mut </span>PrefilterState,
-        haystack: <span class="kw-2">&amp;</span>[u8],
-        at: usize,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;Match&gt; {
-        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-            DFA::Standard(<span class="kw-2">ref </span>dfa) =&gt; {
-                dfa.find_at_no_state(prestate, haystack, at)
-            }
-            DFA::ByteClass(<span class="kw-2">ref </span>dfa) =&gt; {
-                dfa.find_at_no_state(prestate, haystack, at)
-            }
-            DFA::Premultiplied(<span class="kw-2">ref </span>dfa) =&gt; {
-                dfa.find_at_no_state(prestate, haystack, at)
-            }
-            DFA::PremultipliedByteClass(<span class="kw-2">ref </span>dfa) =&gt; {
-                dfa.find_at_no_state(prestate, haystack, at)
-            }
-        }
-    }
-}
-
-<span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>Standard&lt;S&gt;(Repr&lt;S&gt;);
-
-<span class="kw">impl</span>&lt;S: StateID&gt; Standard&lt;S&gt; {
-    <span class="kw">fn </span>repr(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Repr&lt;S&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0
-    </span>}
-}
-
-<span class="kw">impl</span>&lt;S: StateID&gt; Automaton <span class="kw">for </span>Standard&lt;S&gt; {
-    <span class="kw">type </span>ID = S;
-
-    <span class="kw">fn </span>match_kind(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>MatchKind {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.repr().match_kind
-    }
-
-    <span class="kw">fn </span>anchored(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="self">self</span>.repr().anchored
-    }
-
-    <span class="kw">fn </span>prefilter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="kw">dyn </span>Prefilter&gt; {
-        <span class="self">self</span>.repr().prefilter.as_ref().map(|p| p.as_ref())
-    }
-
-    <span class="kw">fn </span>start_state(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; S {
-        <span class="self">self</span>.repr().start_id
-    }
-
-    <span class="kw">fn </span>is_valid(<span class="kw-2">&amp;</span><span class="self">self</span>, id: S) -&gt; bool {
-        id.to_usize() &lt; <span class="self">self</span>.repr().state_count
-    }
-
-    <span class="kw">fn </span>is_match_state(<span class="kw-2">&amp;</span><span class="self">self</span>, id: S) -&gt; bool {
-        <span class="self">self</span>.repr().is_match_state(id)
-    }
-
-    <span class="kw">fn </span>is_match_or_dead_state(<span class="kw-2">&amp;</span><span class="self">self</span>, id: S) -&gt; bool {
-        <span class="self">self</span>.repr().is_match_or_dead_state(id)
-    }
-
-    <span class="kw">fn </span>get_match(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        id: S,
-        match_index: usize,
-        end: usize,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;Match&gt; {
-        <span class="self">self</span>.repr().get_match(id, match_index, end)
-    }
-
-    <span class="kw">fn </span>match_count(<span class="kw-2">&amp;</span><span class="self">self</span>, id: S) -&gt; usize {
-        <span class="self">self</span>.repr().match_count(id)
-    }
-
-    <span class="kw">fn </span>next_state(<span class="kw-2">&amp;</span><span class="self">self</span>, current: S, input: u8) -&gt; S {
-        <span class="kw">let </span>o = current.to_usize() * <span class="number">256 </span>+ input <span class="kw">as </span>usize;
-        <span class="self">self</span>.repr().trans[o]
-    }
-}
-
-<span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>ByteClass&lt;S&gt;(Repr&lt;S&gt;);
-
-<span class="kw">impl</span>&lt;S: StateID&gt; ByteClass&lt;S&gt; {
-    <span class="kw">fn </span>repr(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Repr&lt;S&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0
-    </span>}
-}
-
-<span class="kw">impl</span>&lt;S: StateID&gt; Automaton <span class="kw">for </span>ByteClass&lt;S&gt; {
-    <span class="kw">type </span>ID = S;
-
-    <span class="kw">fn </span>match_kind(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>MatchKind {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.repr().match_kind
-    }
-
-    <span class="kw">fn </span>anchored(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="self">self</span>.repr().anchored
-    }
-
-    <span class="kw">fn </span>prefilter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="kw">dyn </span>Prefilter&gt; {
-        <span class="self">self</span>.repr().prefilter.as_ref().map(|p| p.as_ref())
-    }
-
-    <span class="kw">fn </span>start_state(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; S {
-        <span class="self">self</span>.repr().start_id
-    }
-
-    <span class="kw">fn </span>is_valid(<span class="kw-2">&amp;</span><span class="self">self</span>, id: S) -&gt; bool {
-        id.to_usize() &lt; <span class="self">self</span>.repr().state_count
-    }
-
-    <span class="kw">fn </span>is_match_state(<span class="kw-2">&amp;</span><span class="self">self</span>, id: S) -&gt; bool {
-        <span class="self">self</span>.repr().is_match_state(id)
-    }
-
-    <span class="kw">fn </span>is_match_or_dead_state(<span class="kw-2">&amp;</span><span class="self">self</span>, id: S) -&gt; bool {
-        <span class="self">self</span>.repr().is_match_or_dead_state(id)
-    }
-
-    <span class="kw">fn </span>get_match(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        id: S,
-        match_index: usize,
-        end: usize,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;Match&gt; {
-        <span class="self">self</span>.repr().get_match(id, match_index, end)
-    }
-
-    <span class="kw">fn </span>match_count(<span class="kw-2">&amp;</span><span class="self">self</span>, id: S) -&gt; usize {
-        <span class="self">self</span>.repr().match_count(id)
-    }
-
-    <span class="kw">fn </span>next_state(<span class="kw-2">&amp;</span><span class="self">self</span>, current: S, input: u8) -&gt; S {
-        <span class="kw">let </span>alphabet_len = <span class="self">self</span>.repr().byte_classes.alphabet_len();
-        <span class="kw">let </span>input = <span class="self">self</span>.repr().byte_classes.get(input);
-        <span class="kw">let </span>o = current.to_usize() * alphabet_len + input <span class="kw">as </span>usize;
-        <span class="self">self</span>.repr().trans[o]
-    }
-}
-
-<span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>Premultiplied&lt;S&gt;(Repr&lt;S&gt;);
-
-<span class="kw">impl</span>&lt;S: StateID&gt; Premultiplied&lt;S&gt; {
-    <span class="kw">fn </span>repr(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Repr&lt;S&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0
-    </span>}
-}
-
-<span class="kw">impl</span>&lt;S: StateID&gt; Automaton <span class="kw">for </span>Premultiplied&lt;S&gt; {
-    <span class="kw">type </span>ID = S;
-
-    <span class="kw">fn </span>match_kind(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>MatchKind {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.repr().match_kind
-    }
-
-    <span class="kw">fn </span>anchored(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="self">self</span>.repr().anchored
-    }
-
-    <span class="kw">fn </span>prefilter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="kw">dyn </span>Prefilter&gt; {
-        <span class="self">self</span>.repr().prefilter.as_ref().map(|p| p.as_ref())
-    }
-
-    <span class="kw">fn </span>start_state(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; S {
-        <span class="self">self</span>.repr().start_id
-    }
-
-    <span class="kw">fn </span>is_valid(<span class="kw-2">&amp;</span><span class="self">self</span>, id: S) -&gt; bool {
-        (id.to_usize() / <span class="number">256</span>) &lt; <span class="self">self</span>.repr().state_count
-    }
-
-    <span class="kw">fn </span>is_match_state(<span class="kw-2">&amp;</span><span class="self">self</span>, id: S) -&gt; bool {
-        <span class="self">self</span>.repr().is_match_state(id)
-    }
-
-    <span class="kw">fn </span>is_match_or_dead_state(<span class="kw-2">&amp;</span><span class="self">self</span>, id: S) -&gt; bool {
-        <span class="self">self</span>.repr().is_match_or_dead_state(id)
-    }
-
-    <span class="kw">fn </span>get_match(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        id: S,
-        match_index: usize,
-        end: usize,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;Match&gt; {
-        <span class="kw">if </span>id &gt; <span class="self">self</span>.repr().max_match {
-            <span class="kw">return </span><span class="prelude-val">None</span>;
-        }
-        <span class="self">self</span>.repr()
-            .matches
-            .get(id.to_usize() / <span class="number">256</span>)
-            .and_then(|m| m.get(match_index))
-            .map(|<span class="kw-2">&amp;</span>(id, len)| Match { pattern: id, len, end })
-    }
-
-    <span class="kw">fn </span>match_count(<span class="kw-2">&amp;</span><span class="self">self</span>, id: S) -&gt; usize {
-        <span class="kw">let </span>o = id.to_usize() / <span class="number">256</span>;
-        <span class="self">self</span>.repr().matches[o].len()
-    }
-
-    <span class="kw">fn </span>next_state(<span class="kw-2">&amp;</span><span class="self">self</span>, current: S, input: u8) -&gt; S {
-        <span class="kw">let </span>o = current.to_usize() + input <span class="kw">as </span>usize;
-        <span class="self">self</span>.repr().trans[o]
-    }
-}
-
-<span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>PremultipliedByteClass&lt;S&gt;(Repr&lt;S&gt;);
-
-<span class="kw">impl</span>&lt;S: StateID&gt; PremultipliedByteClass&lt;S&gt; {
-    <span class="kw">fn </span>repr(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Repr&lt;S&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0
-    </span>}
-}
-
-<span class="kw">impl</span>&lt;S: StateID&gt; Automaton <span class="kw">for </span>PremultipliedByteClass&lt;S&gt; {
-    <span class="kw">type </span>ID = S;
-
-    <span class="kw">fn </span>match_kind(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>MatchKind {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.repr().match_kind
-    }
-
-    <span class="kw">fn </span>anchored(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="self">self</span>.repr().anchored
-    }
-
-    <span class="kw">fn </span>prefilter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="kw">dyn </span>Prefilter&gt; {
-        <span class="self">self</span>.repr().prefilter.as_ref().map(|p| p.as_ref())
-    }
-
-    <span class="kw">fn </span>start_state(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; S {
-        <span class="self">self</span>.repr().start_id
-    }
-
-    <span class="kw">fn </span>is_valid(<span class="kw-2">&amp;</span><span class="self">self</span>, id: S) -&gt; bool {
-        (id.to_usize() / <span class="self">self</span>.repr().alphabet_len()) &lt; <span class="self">self</span>.repr().state_count
-    }
-
-    <span class="kw">fn </span>is_match_state(<span class="kw-2">&amp;</span><span class="self">self</span>, id: S) -&gt; bool {
-        <span class="self">self</span>.repr().is_match_state(id)
-    }
-
-    <span class="kw">fn </span>is_match_or_dead_state(<span class="kw-2">&amp;</span><span class="self">self</span>, id: S) -&gt; bool {
-        <span class="self">self</span>.repr().is_match_or_dead_state(id)
-    }
-
-    <span class="kw">fn </span>get_match(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        id: S,
-        match_index: usize,
-        end: usize,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;Match&gt; {
-        <span class="kw">if </span>id &gt; <span class="self">self</span>.repr().max_match {
-            <span class="kw">return </span><span class="prelude-val">None</span>;
-        }
-        <span class="self">self</span>.repr()
-            .matches
-            .get(id.to_usize() / <span class="self">self</span>.repr().alphabet_len())
-            .and_then(|m| m.get(match_index))
-            .map(|<span class="kw-2">&amp;</span>(id, len)| Match { pattern: id, len, end })
-    }
-
-    <span class="kw">fn </span>match_count(<span class="kw-2">&amp;</span><span class="self">self</span>, id: S) -&gt; usize {
-        <span class="kw">let </span>o = id.to_usize() / <span class="self">self</span>.repr().alphabet_len();
-        <span class="self">self</span>.repr().matches[o].len()
-    }
-
-    <span class="kw">fn </span>next_state(<span class="kw-2">&amp;</span><span class="self">self</span>, current: S, input: u8) -&gt; S {
-        <span class="kw">let </span>input = <span class="self">self</span>.repr().byte_classes.get(input);
-        <span class="kw">let </span>o = current.to_usize() + input <span class="kw">as </span>usize;
-        <span class="self">self</span>.repr().trans[o]
-    }
-}
-
-<span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>Repr&lt;S&gt; {
-    match_kind: MatchKind,
-    anchored: bool,
-    premultiplied: bool,
-    start_id: S,
-    <span class="doccomment">/// The length, in bytes, of the longest pattern in this automaton. This
-    /// information is useful for keeping correct buffer sizes when searching
-    /// on streams.
+<a href="#714" id="714">714</a>
+<a href="#715" id="715">715</a>
+<a href="#716" id="716">716</a>
+<a href="#717" id="717">717</a>
+<a href="#718" id="718">718</a>
+<a href="#719" id="719">719</a>
+<a href="#720" id="720">720</a>
+<a href="#721" id="721">721</a>
+<a href="#722" id="722">722</a>
+<a href="#723" id="723">723</a>
+<a href="#724" id="724">724</a>
+<a href="#725" id="725">725</a>
+<a href="#726" id="726">726</a>
+<a href="#727" id="727">727</a>
+<a href="#728" id="728">728</a>
+<a href="#729" id="729">729</a>
+<a href="#730" id="730">730</a>
+<a href="#731" id="731">731</a>
+<a href="#732" id="732">732</a>
+<a href="#733" id="733">733</a>
+<a href="#734" id="734">734</a>
+<a href="#735" id="735">735</a>
+<a href="#736" id="736">736</a>
+<a href="#737" id="737">737</a>
+<a href="#738" id="738">738</a>
+<a href="#739" id="739">739</a>
+<a href="#740" id="740">740</a>
+<a href="#741" id="741">741</a>
+<a href="#742" id="742">742</a>
+<a href="#743" id="743">743</a>
+<a href="#744" id="744">744</a>
+<a href="#745" id="745">745</a>
+<a href="#746" id="746">746</a>
+<a href="#747" id="747">747</a>
+<a href="#748" id="748">748</a>
+<a href="#749" id="749">749</a>
+<a href="#750" id="750">750</a>
+<a href="#751" id="751">751</a>
+<a href="#752" id="752">752</a>
+<a href="#753" id="753">753</a>
+<a href="#754" id="754">754</a>
+<a href="#755" id="755">755</a>
+<a href="#756" id="756">756</a>
+<a href="#757" id="757">757</a>
+<a href="#758" id="758">758</a>
+<a href="#759" id="759">759</a>
+<a href="#760" id="760">760</a>
+<a href="#761" id="761">761</a>
+<a href="#762" id="762">762</a>
+<a href="#763" id="763">763</a>
+<a href="#764" id="764">764</a>
+<a href="#765" id="765">765</a>
+<a href="#766" id="766">766</a>
+<a href="#767" id="767">767</a>
+<a href="#768" id="768">768</a>
+<a href="#769" id="769">769</a>
+<a href="#770" id="770">770</a>
+<a href="#771" id="771">771</a>
+<a href="#772" id="772">772</a>
+<a href="#773" id="773">773</a>
+<a href="#774" id="774">774</a>
+<a href="#775" id="775">775</a>
+<a href="#776" id="776">776</a>
+<a href="#777" id="777">777</a>
+<a href="#778" id="778">778</a>
+<a href="#779" id="779">779</a>
+<a href="#780" id="780">780</a>
+<a href="#781" id="781">781</a>
+<a href="#782" id="782">782</a>
+<a href="#783" id="783">783</a>
+<a href="#784" id="784">784</a>
+<a href="#785" id="785">785</a>
+<a href="#786" id="786">786</a>
+<a href="#787" id="787">787</a>
+<a href="#788" id="788">788</a>
+<a href="#789" id="789">789</a>
+<a href="#790" id="790">790</a>
+<a href="#791" id="791">791</a>
+<a href="#792" id="792">792</a>
+<a href="#793" id="793">793</a>
+<a href="#794" id="794">794</a>
+<a href="#795" id="795">795</a>
+<a href="#796" id="796">796</a>
+<a href="#797" id="797">797</a>
+<a href="#798" id="798">798</a>
+<a href="#799" id="799">799</a>
+<a href="#800" id="800">800</a>
+<a href="#801" id="801">801</a>
+<a href="#802" id="802">802</a>
+<a href="#803" id="803">803</a>
+<a href="#804" id="804">804</a>
+<a href="#805" id="805">805</a>
+<a href="#806" id="806">806</a>
+<a href="#807" id="807">807</a>
+<a href="#808" id="808">808</a>
+<a href="#809" id="809">809</a>
+<a href="#810" id="810">810</a>
+<a href="#811" id="811">811</a>
+<a href="#812" id="812">812</a>
+<a href="#813" id="813">813</a>
+<a href="#814" id="814">814</a>
+<a href="#815" id="815">815</a>
+<a href="#816" id="816">816</a>
+<a href="#817" id="817">817</a>
+<a href="#818" id="818">818</a>
+<a href="#819" id="819">819</a>
+<a href="#820" id="820">820</a>
+<a href="#821" id="821">821</a>
+<a href="#822" id="822">822</a>
+<a href="#823" id="823">823</a>
+<a href="#824" id="824">824</a>
+<a href="#825" id="825">825</a>
+<a href="#826" id="826">826</a>
+<a href="#827" id="827">827</a>
+<a href="#828" id="828">828</a>
+<a href="#829" id="829">829</a>
+<a href="#830" id="830">830</a>
+<a href="#831" id="831">831</a>
+<a href="#832" id="832">832</a>
+<a href="#833" id="833">833</a>
+<a href="#834" id="834">834</a>
+<a href="#835" id="835">835</a>
+</pre></div><pre class="rust"><code><span class="doccomment">/*!
+Provides direct access to a DFA implementation of Aho-Corasick.
+
+This is a low-level API that generally only needs to be used in niche
+circumstances. When possible, prefer using [`AhoCorasick`](crate::AhoCorasick)
+instead of a DFA directly. Using an `DFA` directly is typically only necessary
+when one needs access to the [`Automaton`] trait implementation.
+*/
+
+</span><span class="kw">use </span>alloc::{vec, vec::Vec};
+
+<span class="kw">use crate</span>::{
+    automaton::Automaton,
+    nfa::noncontiguous,
+    util::{
+        alphabet::ByteClasses,
+        error::{BuildError, MatchError},
+        int::{Usize, U32},
+        prefilter::Prefilter,
+        primitives::{IteratorIndexExt, PatternID, SmallIndex, StateID},
+        search::{Anchored, MatchKind, StartKind},
+        special::Special,
+    },
+};
+
+<span class="doccomment">/// A DFA implementation of Aho-Corasick.
+///
+/// When possible, prefer using [`AhoCorasick`](crate::AhoCorasick) instead of
+/// this type directly. Using a `DFA` directly is typically only necessary when
+/// one needs access to the [`Automaton`] trait implementation.
+///
+/// This DFA can only be built by first constructing a [`noncontiguous::NFA`].
+/// Both [`DFA::new`] and [`Builder::build`] do this for you automatically, but
+/// [`Builder::build_from_noncontiguous`] permits doing it explicitly.
+///
+/// A DFA provides the best possible search performance (in this crate) via two
+/// mechanisms:
+///
+/// * All states use a dense representation for their transitions.
+/// * All failure transitions are pre-computed such that they are never
+/// explicitly handled at search time.
+///
+/// These two facts combined mean that every state transition is performed
+/// using a constant number of instructions. However, this comes at
+/// great cost. The memory usage of a DFA can be quite exorbitant.
+/// It is potentially multiple orders of magnitude greater than a
+/// [`contiguous::NFA`](crate::nfa::contiguous::NFA) for example. In exchange,
+/// a DFA will typically have better search speed than a `contiguous::NFA`, but
+/// not by orders of magnitude.
+///
+/// Unless you have a small number of patterns or memory usage is not a concern
+/// and search performance is critical, a DFA is usually not the best choice.
+///
+/// Moreover, unlike the NFAs in this crate, it is costly for a DFA to
+/// support for anchored and unanchored search configurations. Namely,
+/// since failure transitions are pre-computed, supporting both anchored
+/// and unanchored searches requires a duplication of the transition table,
+/// making the memory usage of such a DFA ever bigger. (The NFAs in this crate
+/// unconditionally support both anchored and unanchored searches because there
+/// is essentially no added cost for doing so.) It is for this reason that
+/// a DFA&#39;s support for anchored and unanchored searches can be configured
+/// via [`Builder::start_kind`]. By default, a DFA only supports unanchored
+/// searches.
+///
+/// # Example
+///
+/// This example shows how to build an `DFA` directly and use it to execute
+/// [`Automaton::try_find`]:
+///
+/// ```
+/// use aho_corasick::{
+///     automaton::Automaton,
+///     dfa::DFA,
+///     Input, Match,
+/// };
+///
+/// let patterns = &amp;[&quot;b&quot;, &quot;abc&quot;, &quot;abcd&quot;];
+/// let haystack = &quot;abcd&quot;;
+///
+/// let nfa = DFA::new(patterns).unwrap();
+/// assert_eq!(
+///     Some(Match::must(0, 1..2)),
+///     nfa.try_find(&amp;Input::new(haystack))?,
+/// );
+/// # Ok::&lt;(), Box&lt;dyn std::error::Error&gt;&gt;(())
+/// ```
+///
+/// It is also possible to implement your own version of `try_find`. See the
+/// [`Automaton`] documentation for an example.
+</span><span class="attr">#[derive(Clone)]
+</span><span class="kw">pub struct </span>DFA {
+    <span class="doccomment">/// The DFA transition table. IDs in this table are pre-multiplied. So
+    /// instead of the IDs being 0, 1, 2, 3, ..., they are 0*stride, 1*stride,
+    /// 2*stride, 3*stride, ...
+    </span>trans: Vec&lt;StateID&gt;,
+    <span class="doccomment">/// The matches for every match state in this DFA. This is first indexed by
+    /// state index (so that&#39;s `sid &gt;&gt; stride2`) and then by order in which the
+    /// matches are meant to occur.
+    </span>matches: Vec&lt;Vec&lt;PatternID&gt;&gt;,
+    <span class="doccomment">/// The amount of heap memory used, in bytes, by the inner Vecs of
+    /// &#39;matches&#39;.
+    </span>matches_memory_usage: usize,
+    <span class="doccomment">/// The length of each pattern. This is used to compute the start offset
+    /// of a match.
+    </span>pattern_lens: Vec&lt;SmallIndex&gt;,
+    <span class="doccomment">/// A prefilter for accelerating searches, if one exists.
+    </span>prefilter: <span class="prelude-ty">Option</span>&lt;Prefilter&gt;,
+    <span class="doccomment">/// The match semantics built into this DFA.
+    </span>match_kind: MatchKind,
+    <span class="doccomment">/// The total number of states in this DFA.
+    </span>state_len: usize,
+    <span class="doccomment">/// The alphabet size, or total number of equivalence classes, for this
+    /// DFA. Note that the actual number of transitions in each state is
+    /// stride=2^stride2, where stride is the smallest power of 2 greater than
+    /// or equal to alphabet_len. We do things this way so that we can use
+    /// bitshifting to go from a state ID to an index into &#39;matches&#39;.
+    </span>alphabet_len: usize,
+    <span class="doccomment">/// The exponent with a base 2, such that stride=2^stride2. Given a state
+    /// index &#39;i&#39;, its state identifier is &#39;i &lt;&lt; stride2&#39;. Given a state
+    /// identifier &#39;sid&#39;, its state index is &#39;sid &gt;&gt; stride2&#39;.
+    </span>stride2: usize,
+    <span class="doccomment">/// The equivalence classes for this DFA. All transitions are defined on
+    /// equivalence classes and not on the 256 distinct byte values.
+    </span>byte_classes: ByteClasses,
+    <span class="doccomment">/// The length of the shortest pattern in this automaton.
+    </span>min_pattern_len: usize,
+    <span class="doccomment">/// The length of the longest pattern in this automaton.
     </span>max_pattern_len: usize,
-    <span class="doccomment">/// The total number of patterns added to this automaton. This includes
-    /// patterns that may never match.
-    </span>pattern_count: usize,
-    state_count: usize,
-    max_match: S,
-    <span class="doccomment">/// The number of bytes of heap used by this NFA&#39;s transition table.
-    </span>heap_bytes: usize,
-    <span class="doccomment">/// A prefilter for quickly detecting candidate matchs, if pertinent.
-    </span>prefilter: <span class="prelude-ty">Option</span>&lt;PrefilterObj&gt;,
-    byte_classes: ByteClasses,
-    trans: Vec&lt;S&gt;,
-    matches: Vec&lt;Vec&lt;(PatternID, PatternLength)&gt;&gt;,
+    <span class="doccomment">/// The information required to deduce which states are &quot;special&quot; in this
+    /// DFA.
+    </span>special: Special,
 }
 
-<span class="kw">impl</span>&lt;S: StateID&gt; Repr&lt;S&gt; {
-    <span class="doccomment">/// Returns the total alphabet size for this DFA.
+<span class="kw">impl </span>DFA {
+    <span class="doccomment">/// Create a new Aho-Corasick DFA using the default configuration.
     ///
-    /// If byte classes are enabled, then this corresponds to the number of
-    /// equivalence classes. If they are disabled, then this is always 256.
-    </span><span class="kw">fn </span>alphabet_len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
-        <span class="self">self</span>.byte_classes.alphabet_len()
+    /// Use a [`Builder`] if you want to change the configuration.
+    </span><span class="kw">pub fn </span>new&lt;I, P&gt;(patterns: I) -&gt; <span class="prelude-ty">Result</span>&lt;DFA, BuildError&gt;
+    <span class="kw">where
+        </span>I: IntoIterator&lt;Item = P&gt;,
+        P: AsRef&lt;[u8]&gt;,
+    {
+        DFA::builder().build(patterns)
     }
 
-    <span class="doccomment">/// Returns true only if the given state is a match state.
-    </span><span class="kw">fn </span>is_match_state(<span class="kw-2">&amp;</span><span class="self">self</span>, id: S) -&gt; bool {
-        id &lt;= <span class="self">self</span>.max_match &amp;&amp; id &gt; dead_id()
+    <span class="doccomment">/// A convenience method for returning a new Aho-Corasick DFA builder.
+    ///
+    /// This usually permits one to just import the `DFA` type.
+    </span><span class="kw">pub fn </span>builder() -&gt; Builder {
+        Builder::new()
+    }
+}
+
+<span class="kw">impl </span>DFA {
+    <span class="doccomment">/// A sentinel state ID indicating that a search should stop once it has
+    /// entered this state. When a search stops, it returns a match if one has
+    /// been found, otherwise no match. A DFA always has an actual dead state
+    /// at this ID.
+    ///
+    /// N.B. DFAs, unlike NFAs, do not have any notion of a FAIL state.
+    /// Namely, the whole point of a DFA is that the FAIL state is completely
+    /// compiled away. That is, DFA construction involves pre-computing the
+    /// failure transitions everywhere, such that failure transitions are no
+    /// longer used at search time. This, combined with its uniformly dense
+    /// representation, are the two most important factors in why it&#39;s faster
+    /// than the NFAs in this crate.
+    </span><span class="kw">const </span>DEAD: StateID = StateID::new_unchecked(<span class="number">0</span>);
+
+    <span class="doccomment">/// Adds the given pattern IDs as matches to the given state and also
+    /// records the added memory usage.
+    </span><span class="kw">fn </span>set_matches(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        sid: StateID,
+        pids: <span class="kw">impl </span>Iterator&lt;Item = PatternID&gt;,
+    ) {
+        <span class="kw">let </span>index = (sid.as_usize() &gt;&gt; <span class="self">self</span>.stride2).checked_sub(<span class="number">2</span>).unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>at_least_one = <span class="bool-val">false</span>;
+        <span class="kw">for </span>pid <span class="kw">in </span>pids {
+            <span class="self">self</span>.matches[index].push(pid);
+            <span class="self">self</span>.matches_memory_usage += PatternID::SIZE;
+            at_least_one = <span class="bool-val">true</span>;
+        }
+        <span class="macro">assert!</span>(at_least_one, <span class="string">&quot;match state must have non-empty pids&quot;</span>);
+    }
+}
+
+<span class="comment">// SAFETY: &#39;start_state&#39; always returns a valid state ID, &#39;next_state&#39; always
+// returns a valid state ID given a valid state ID. We otherwise claim that
+// all other methods are correct as well.
+</span><span class="kw">unsafe impl </span>Automaton <span class="kw">for </span>DFA {
+    <span class="attr">#[inline(always)]
+    </span><span class="kw">fn </span>start_state(<span class="kw-2">&amp;</span><span class="self">self</span>, anchored: Anchored) -&gt; <span class="prelude-ty">Result</span>&lt;StateID, MatchError&gt; {
+        <span class="comment">// Either of the start state IDs can be DEAD, in which case, support
+        // for that type of search is not provided by this DFA. Which start
+        // state IDs are inactive depends on the &#39;StartKind&#39; configuration at
+        // DFA construction time.
+        </span><span class="kw">match </span>anchored {
+            Anchored::No =&gt; {
+                <span class="kw">let </span>start = <span class="self">self</span>.special.start_unanchored_id;
+                <span class="kw">if </span>start == DFA::DEAD {
+                    <span class="prelude-val">Err</span>(MatchError::invalid_input_unanchored())
+                } <span class="kw">else </span>{
+                    <span class="prelude-val">Ok</span>(start)
+                }
+            }
+            Anchored::Yes =&gt; {
+                <span class="kw">let </span>start = <span class="self">self</span>.special.start_anchored_id;
+                <span class="kw">if </span>start == DFA::DEAD {
+                    <span class="prelude-val">Err</span>(MatchError::invalid_input_anchored())
+                } <span class="kw">else </span>{
+                    <span class="prelude-val">Ok</span>(start)
+                }
+            }
+        }
     }
 
-    <span class="doccomment">/// Returns true only if the given state is either a dead state or a match
-    /// state.
-    </span><span class="kw">fn </span>is_match_or_dead_state(<span class="kw-2">&amp;</span><span class="self">self</span>, id: S) -&gt; bool {
-        id &lt;= <span class="self">self</span>.max_match
-    }
-
-    <span class="doccomment">/// Get the ith match for the given state, where the end position of a
-    /// match was found at `end`.
-    ///
-    /// # Panics
-    ///
-    /// The caller must ensure that the given state identifier is valid,
-    /// otherwise this may panic. The `match_index` need not be valid. That is,
-    /// if the given state has no matches then this returns `None`.
-    </span><span class="kw">fn </span>get_match(
+    <span class="attr">#[inline(always)]
+    </span><span class="kw">fn </span>next_state(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        id: S,
-        match_index: usize,
-        end: usize,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;Match&gt; {
-        <span class="kw">if </span>id &gt; <span class="self">self</span>.max_match {
-            <span class="kw">return </span><span class="prelude-val">None</span>;
-        }
-        <span class="self">self</span>.matches
-            .get(id.to_usize())
-            .and_then(|m| m.get(match_index))
-            .map(|<span class="kw-2">&amp;</span>(id, len)| Match { pattern: id, len, end })
+        _anchored: Anchored,
+        sid: StateID,
+        byte: u8,
+    ) -&gt; StateID {
+        <span class="kw">let </span>class = <span class="self">self</span>.byte_classes.get(byte);
+        <span class="self">self</span>.trans[(sid.as_u32() + u32::from(class)).as_usize()]
     }
 
-    <span class="doccomment">/// Return the total number of matches for the given state.
-    ///
-    /// # Panics
-    ///
-    /// The caller must ensure that the given identifier is valid, or else
-    /// this panics.
-    </span><span class="kw">fn </span>match_count(<span class="kw-2">&amp;</span><span class="self">self</span>, id: S) -&gt; usize {
-        <span class="self">self</span>.matches[id.to_usize()].len()
+    <span class="attr">#[inline(always)]
+    </span><span class="kw">fn </span>is_special(<span class="kw-2">&amp;</span><span class="self">self</span>, sid: StateID) -&gt; bool {
+        sid &lt;= <span class="self">self</span>.special.max_special_id
     }
 
-    <span class="doccomment">/// Get the next state given `from` as the current state and `byte` as the
-    /// current input byte.
-    </span><span class="kw">fn </span>next_state(<span class="kw-2">&amp;</span><span class="self">self</span>, from: S, byte: u8) -&gt; S {
-        <span class="kw">let </span>alphabet_len = <span class="self">self</span>.alphabet_len();
-        <span class="kw">let </span>byte = <span class="self">self</span>.byte_classes.get(byte);
-        <span class="self">self</span>.trans[from.to_usize() * alphabet_len + byte <span class="kw">as </span>usize]
+    <span class="attr">#[inline(always)]
+    </span><span class="kw">fn </span>is_dead(<span class="kw-2">&amp;</span><span class="self">self</span>, sid: StateID) -&gt; bool {
+        sid == DFA::DEAD
     }
 
-    <span class="doccomment">/// Set the `byte` transition for the `from` state to point to `to`.
-    </span><span class="kw">fn </span>set_next_state(<span class="kw-2">&amp;mut </span><span class="self">self</span>, from: S, byte: u8, to: S) {
-        <span class="kw">let </span>alphabet_len = <span class="self">self</span>.alphabet_len();
-        <span class="kw">let </span>byte = <span class="self">self</span>.byte_classes.get(byte);
-        <span class="self">self</span>.trans[from.to_usize() * alphabet_len + byte <span class="kw">as </span>usize] = to;
+    <span class="attr">#[inline(always)]
+    </span><span class="kw">fn </span>is_match(<span class="kw-2">&amp;</span><span class="self">self</span>, sid: StateID) -&gt; bool {
+        !<span class="self">self</span>.is_dead(sid) &amp;&amp; sid &lt;= <span class="self">self</span>.special.max_match_id
     }
 
-    <span class="doccomment">/// Swap the given states in place.
-    </span><span class="kw">fn </span>swap_states(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id1: S, id2: S) {
-        <span class="macro">assert!</span>(!<span class="self">self</span>.premultiplied, <span class="string">&quot;can&#39;t swap states in premultiplied DFA&quot;</span>);
-
-        <span class="kw">let </span>o1 = id1.to_usize() * <span class="self">self</span>.alphabet_len();
-        <span class="kw">let </span>o2 = id2.to_usize() * <span class="self">self</span>.alphabet_len();
-        <span class="kw">for </span>b <span class="kw">in </span><span class="number">0</span>..<span class="self">self</span>.alphabet_len() {
-            <span class="self">self</span>.trans.swap(o1 + b, o2 + b);
-        }
-        <span class="self">self</span>.matches.swap(id1.to_usize(), id2.to_usize());
+    <span class="attr">#[inline(always)]
+    </span><span class="kw">fn </span>is_start(<span class="kw-2">&amp;</span><span class="self">self</span>, sid: StateID) -&gt; bool {
+        sid == <span class="self">self</span>.special.start_unanchored_id
+            || sid == <span class="self">self</span>.special.start_anchored_id
     }
 
-    <span class="doccomment">/// This routine shuffles all match states in this DFA to the beginning
-    /// of the DFA such that every non-match state appears after every match
-    /// state. (With one exception: the special fail and dead states remain as
-    /// the first two states.)
-    ///
-    /// The purpose of doing this shuffling is to avoid an extra conditional
-    /// in the search loop, and in particular, detecting whether a state is a
-    /// match or not does not need to access any memory.
-    ///
-    /// This updates `self.max_match` to point to the last matching state as
-    /// well as `self.start` if the starting state was moved.
-    </span><span class="kw">fn </span>shuffle_match_states(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="macro">assert!</span>(
-            !<span class="self">self</span>.premultiplied,
-            <span class="string">&quot;cannot shuffle match states of premultiplied DFA&quot;
-        </span>);
+    <span class="attr">#[inline(always)]
+    </span><span class="kw">fn </span>match_kind(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; MatchKind {
+        <span class="self">self</span>.match_kind
+    }
 
-        <span class="kw">if </span><span class="self">self</span>.state_count &lt;= <span class="number">1 </span>{
-            <span class="kw">return</span>;
-        }
+    <span class="attr">#[inline(always)]
+    </span><span class="kw">fn </span>patterns_len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.pattern_lens.len()
+    }
 
-        <span class="kw">let </span><span class="kw-2">mut </span>first_non_match = <span class="self">self</span>.start_id.to_usize();
-        <span class="kw">while </span>first_non_match &lt; <span class="self">self</span>.state_count
-            &amp;&amp; <span class="self">self</span>.matches[first_non_match].len() &gt; <span class="number">0
-        </span>{
-            first_non_match += <span class="number">1</span>;
-        }
+    <span class="attr">#[inline(always)]
+    </span><span class="kw">fn </span>pattern_len(<span class="kw-2">&amp;</span><span class="self">self</span>, pid: PatternID) -&gt; usize {
+        <span class="self">self</span>.pattern_lens[pid].as_usize()
+    }
 
-        <span class="kw">let </span><span class="kw-2">mut </span>swaps: Vec&lt;S&gt; = <span class="macro">vec!</span>[fail_id(); <span class="self">self</span>.state_count];
-        <span class="kw">let </span><span class="kw-2">mut </span>cur = <span class="self">self</span>.state_count - <span class="number">1</span>;
-        <span class="kw">while </span>cur &gt; first_non_match {
-            <span class="kw">if </span><span class="self">self</span>.matches[cur].len() &gt; <span class="number">0 </span>{
-                <span class="self">self</span>.swap_states(
-                    S::from_usize(cur),
-                    S::from_usize(first_non_match),
-                );
-                swaps[cur] = S::from_usize(first_non_match);
-                swaps[first_non_match] = S::from_usize(cur);
+    <span class="attr">#[inline(always)]
+    </span><span class="kw">fn </span>min_pattern_len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.min_pattern_len
+    }
 
-                first_non_match += <span class="number">1</span>;
-                <span class="kw">while </span>first_non_match &lt; cur
-                    &amp;&amp; <span class="self">self</span>.matches[first_non_match].len() &gt; <span class="number">0
-                </span>{
-                    first_non_match += <span class="number">1</span>;
+    <span class="attr">#[inline(always)]
+    </span><span class="kw">fn </span>max_pattern_len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.max_pattern_len
+    }
+
+    <span class="attr">#[inline(always)]
+    </span><span class="kw">fn </span>match_len(<span class="kw-2">&amp;</span><span class="self">self</span>, sid: StateID) -&gt; usize {
+        <span class="macro">debug_assert!</span>(<span class="self">self</span>.is_match(sid));
+        <span class="kw">let </span>offset = (sid.as_usize() &gt;&gt; <span class="self">self</span>.stride2) - <span class="number">2</span>;
+        <span class="self">self</span>.matches[offset].len()
+    }
+
+    <span class="attr">#[inline(always)]
+    </span><span class="kw">fn </span>match_pattern(<span class="kw-2">&amp;</span><span class="self">self</span>, sid: StateID, index: usize) -&gt; PatternID {
+        <span class="macro">debug_assert!</span>(<span class="self">self</span>.is_match(sid));
+        <span class="kw">let </span>offset = (sid.as_usize() &gt;&gt; <span class="self">self</span>.stride2) - <span class="number">2</span>;
+        <span class="self">self</span>.matches[offset][index]
+    }
+
+    <span class="attr">#[inline(always)]
+    </span><span class="kw">fn </span>memory_usage(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="kw">use </span>core::mem::size_of;
+
+        (<span class="self">self</span>.trans.len() * size_of::&lt;u32&gt;())
+            + (<span class="self">self</span>.matches.len() * size_of::&lt;Vec&lt;PatternID&gt;&gt;())
+            + <span class="self">self</span>.matches_memory_usage
+            + (<span class="self">self</span>.pattern_lens.len() * size_of::&lt;SmallIndex&gt;())
+            + <span class="self">self</span>.prefilter.as_ref().map_or(<span class="number">0</span>, |p| p.memory_usage())
+    }
+
+    <span class="attr">#[inline(always)]
+    </span><span class="kw">fn </span>prefilter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Prefilter&gt; {
+        <span class="self">self</span>.prefilter.as_ref()
+    }
+}
+
+<span class="kw">impl </span>core::fmt::Debug <span class="kw">for </span>DFA {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>core::fmt::Formatter) -&gt; core::fmt::Result {
+        <span class="kw">use crate</span>::{
+            automaton::{fmt_state_indicator, sparse_transitions},
+            util::debug::DebugByte,
+        };
+
+        <span class="macro">writeln!</span>(f, <span class="string">&quot;dfa::DFA(&quot;</span>)<span class="question-mark">?</span>;
+        <span class="kw">for </span>index <span class="kw">in </span><span class="number">0</span>..<span class="self">self</span>.state_len {
+            <span class="kw">let </span>sid = StateID::new_unchecked(index &lt;&lt; <span class="self">self</span>.stride2);
+            <span class="comment">// While we do currently include the FAIL state in the transition
+            // table (to simplify construction), it is never actually used. It
+            // poses problems with the code below because it gets treated as
+            // a match state incidentally when it is, of course, not. So we
+            // special case it. The fail state is always the first state after
+            // the dead state.
+            //
+            // If the construction is changed to remove the fail state (it
+            // probably should be), then this special case should be updated.
+            </span><span class="kw">if </span>index == <span class="number">1 </span>{
+                <span class="macro">writeln!</span>(f, <span class="string">&quot;F {:06}:&quot;</span>, sid.as_usize())<span class="question-mark">?</span>;
+                <span class="kw">continue</span>;
+            }
+            fmt_state_indicator(f, <span class="self">self</span>, sid)<span class="question-mark">?</span>;
+            <span class="macro">write!</span>(f, <span class="string">&quot;{:06}: &quot;</span>, sid.as_usize())<span class="question-mark">?</span>;
+
+            <span class="kw">let </span>it = (<span class="number">0</span>..<span class="self">self</span>.byte_classes.alphabet_len()).map(|class| {
+                (class.as_u8(), <span class="self">self</span>.trans[sid.as_usize() + class])
+            });
+            <span class="kw">for </span>(i, (start, end, next)) <span class="kw">in </span>sparse_transitions(it).enumerate() {
+                <span class="kw">if </span>i &gt; <span class="number">0 </span>{
+                    <span class="macro">write!</span>(f, <span class="string">&quot;, &quot;</span>)<span class="question-mark">?</span>;
+                }
+                <span class="kw">if </span>start == end {
+                    <span class="macro">write!</span>(
+                        f,
+                        <span class="string">&quot;{:?} =&gt; {:?}&quot;</span>,
+                        DebugByte(start),
+                        next.as_usize()
+                    )<span class="question-mark">?</span>;
+                } <span class="kw">else </span>{
+                    <span class="macro">write!</span>(
+                        f,
+                        <span class="string">&quot;{:?}-{:?} =&gt; {:?}&quot;</span>,
+                        DebugByte(start),
+                        DebugByte(end),
+                        next.as_usize()
+                    )<span class="question-mark">?</span>;
                 }
             }
-            cur -= <span class="number">1</span>;
-        }
-        <span class="kw">for </span>id <span class="kw">in </span>(<span class="number">0</span>..<span class="self">self</span>.state_count).map(S::from_usize) {
-            <span class="kw">let </span>alphabet_len = <span class="self">self</span>.alphabet_len();
-            <span class="kw">let </span>offset = id.to_usize() * alphabet_len;
-            <span class="kw">for </span>next <span class="kw">in </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.trans[offset..offset + alphabet_len] {
-                <span class="kw">if </span>swaps[next.to_usize()] != fail_id() {
-                    <span class="kw-2">*</span>next = swaps[next.to_usize()];
+            <span class="macro">write!</span>(f, <span class="string">&quot;\n&quot;</span>)<span class="question-mark">?</span>;
+            <span class="kw">if </span><span class="self">self</span>.is_match(sid) {
+                <span class="macro">write!</span>(f, <span class="string">&quot; matches: &quot;</span>)<span class="question-mark">?</span>;
+                <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="self">self</span>.match_len(sid) {
+                    <span class="kw">if </span>i &gt; <span class="number">0 </span>{
+                        <span class="macro">write!</span>(f, <span class="string">&quot;, &quot;</span>)<span class="question-mark">?</span>;
+                    }
+                    <span class="kw">let </span>pid = <span class="self">self</span>.match_pattern(sid, i);
+                    <span class="macro">write!</span>(f, <span class="string">&quot;{}&quot;</span>, pid.as_usize())<span class="question-mark">?</span>;
                 }
+                <span class="macro">write!</span>(f, <span class="string">&quot;\n&quot;</span>)<span class="question-mark">?</span>;
             }
         }
-        <span class="kw">if </span>swaps[<span class="self">self</span>.start_id.to_usize()] != fail_id() {
-            <span class="self">self</span>.start_id = swaps[<span class="self">self</span>.start_id.to_usize()];
-        }
-        <span class="self">self</span>.max_match = S::from_usize(first_non_match - <span class="number">1</span>);
-    }
-
-    <span class="kw">fn </span>premultiply(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">if </span><span class="self">self</span>.premultiplied || <span class="self">self</span>.state_count &lt;= <span class="number">1 </span>{
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-        }
-
-        <span class="kw">let </span>alpha_len = <span class="self">self</span>.alphabet_len();
-        premultiply_overflow_error(
-            S::from_usize(<span class="self">self</span>.state_count - <span class="number">1</span>),
-            alpha_len,
-        )<span class="question-mark">?</span>;
-
-        <span class="kw">for </span>id <span class="kw">in </span>(<span class="number">2</span>..<span class="self">self</span>.state_count).map(S::from_usize) {
-            <span class="kw">let </span>offset = id.to_usize() * alpha_len;
-            <span class="kw">for </span>next <span class="kw">in </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.trans[offset..offset + alpha_len] {
-                <span class="kw">if </span><span class="kw-2">*</span>next == dead_id() {
-                    <span class="kw">continue</span>;
-                }
-                <span class="kw-2">*</span>next = S::from_usize(next.to_usize() * alpha_len);
-            }
-        }
-        <span class="self">self</span>.premultiplied = <span class="bool-val">true</span>;
-        <span class="self">self</span>.start_id = S::from_usize(<span class="self">self</span>.start_id.to_usize() * alpha_len);
-        <span class="self">self</span>.max_match = S::from_usize(<span class="self">self</span>.max_match.to_usize() * alpha_len);
+        <span class="macro">writeln!</span>(f, <span class="string">&quot;match kind: {:?}&quot;</span>, <span class="self">self</span>.match_kind)<span class="question-mark">?</span>;
+        <span class="macro">writeln!</span>(f, <span class="string">&quot;prefilter: {:?}&quot;</span>, <span class="self">self</span>.prefilter.is_some())<span class="question-mark">?</span>;
+        <span class="macro">writeln!</span>(f, <span class="string">&quot;state length: {:?}&quot;</span>, <span class="self">self</span>.state_len)<span class="question-mark">?</span>;
+        <span class="macro">writeln!</span>(f, <span class="string">&quot;pattern length: {:?}&quot;</span>, <span class="self">self</span>.patterns_len())<span class="question-mark">?</span>;
+        <span class="macro">writeln!</span>(f, <span class="string">&quot;shortest pattern length: {:?}&quot;</span>, <span class="self">self</span>.min_pattern_len)<span class="question-mark">?</span>;
+        <span class="macro">writeln!</span>(f, <span class="string">&quot;longest pattern length: {:?}&quot;</span>, <span class="self">self</span>.max_pattern_len)<span class="question-mark">?</span>;
+        <span class="macro">writeln!</span>(f, <span class="string">&quot;alphabet length: {:?}&quot;</span>, <span class="self">self</span>.alphabet_len)<span class="question-mark">?</span>;
+        <span class="macro">writeln!</span>(f, <span class="string">&quot;stride: {:?}&quot;</span>, <span class="number">1 </span>&lt;&lt; <span class="self">self</span>.stride2)<span class="question-mark">?</span>;
+        <span class="macro">writeln!</span>(f, <span class="string">&quot;byte classes: {:?}&quot;</span>, <span class="self">self</span>.byte_classes)<span class="question-mark">?</span>;
+        <span class="macro">writeln!</span>(f, <span class="string">&quot;memory usage: {:?}&quot;</span>, <span class="self">self</span>.memory_usage())<span class="question-mark">?</span>;
+        <span class="macro">writeln!</span>(f, <span class="string">&quot;)&quot;</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
-
-    <span class="doccomment">/// Computes the total amount of heap used by this NFA in bytes.
-    </span><span class="kw">fn </span>calculate_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">let </span><span class="kw-2">mut </span>size = (<span class="self">self</span>.trans.len() * size_of::&lt;S&gt;())
-            + (<span class="self">self</span>.matches.len()
-                * size_of::&lt;Vec&lt;(PatternID, PatternLength)&gt;&gt;());
-        <span class="kw">for </span>state_matches <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.matches {
-            size +=
-                state_matches.len() * size_of::&lt;(PatternID, PatternLength)&gt;();
-        }
-        size += <span class="self">self</span>.prefilter.as_ref().map_or(<span class="number">0</span>, |p| p.as_ref().heap_bytes());
-        <span class="self">self</span>.heap_bytes = size;
-    }
 }
 
-<span class="doccomment">/// A builder for configuring the determinization of an NFA into a DFA.
+<span class="doccomment">/// A builder for configuring an Aho-Corasick DFA.
+///
+/// This builder has a subset of the options available to a
+/// [`AhoCorasickBuilder`](crate::AhoCorasickBuilder). Of the shared options,
+/// their behavior is identical.
 </span><span class="attr">#[derive(Clone, Debug)]
 </span><span class="kw">pub struct </span>Builder {
-    premultiply: bool,
+    noncontiguous: noncontiguous::Builder,
+    start_kind: StartKind,
     byte_classes: bool,
 }
 
+<span class="kw">impl </span>Default <span class="kw">for </span>Builder {
+    <span class="kw">fn </span>default() -&gt; Builder {
+        Builder {
+            noncontiguous: noncontiguous::Builder::new(),
+            start_kind: StartKind::Unanchored,
+            byte_classes: <span class="bool-val">true</span>,
+        }
+    }
+}
+
 <span class="kw">impl </span>Builder {
-    <span class="doccomment">/// Create a new builder for a DFA.
+    <span class="doccomment">/// Create a new builder for configuring an Aho-Corasick DFA.
     </span><span class="kw">pub fn </span>new() -&gt; Builder {
-        Builder { premultiply: <span class="bool-val">true</span>, byte_classes: <span class="bool-val">true </span>}
+        Builder::default()
     }
 
-    <span class="doccomment">/// Build a DFA from the given NFA.
+    <span class="doccomment">/// Build an Aho-Corasick DFA from the given iterator of patterns.
     ///
-    /// This returns an error if the state identifiers exceed their
-    /// representation size. This can only happen when state ids are
-    /// premultiplied (which is enabled by default).
-    </span><span class="kw">pub fn </span>build&lt;S: StateID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, nfa: <span class="kw-2">&amp;</span>NFA&lt;S&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;DFA&lt;S&gt;&gt; {
+    /// A builder may be reused to create more DFAs.
+    </span><span class="kw">pub fn </span>build&lt;I, P&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, patterns: I) -&gt; <span class="prelude-ty">Result</span>&lt;DFA, BuildError&gt;
+    <span class="kw">where
+        </span>I: IntoIterator&lt;Item = P&gt;,
+        P: AsRef&lt;[u8]&gt;,
+    {
+        <span class="kw">let </span>nnfa = <span class="self">self</span>.noncontiguous.build(patterns)<span class="question-mark">?</span>;
+        <span class="self">self</span>.build_from_noncontiguous(<span class="kw-2">&amp;</span>nnfa)
+    }
+
+    <span class="doccomment">/// Build an Aho-Corasick DFA from the given noncontiguous NFA.
+    ///
+    /// Note that when this method is used, only the `start_kind` and
+    /// `byte_classes` settings on this builder are respected. The other
+    /// settings only apply to the initial construction of the Aho-Corasick
+    /// automaton. Since using this method requires that initial construction
+    /// has already completed, all settings impacting only initial construction
+    /// are no longer relevant.
+    </span><span class="kw">pub fn </span>build_from_noncontiguous(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        nnfa: <span class="kw-2">&amp;</span>noncontiguous::NFA,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;DFA, BuildError&gt; {
+        <span class="macro">debug!</span>(<span class="string">&quot;building DFA&quot;</span>);
         <span class="kw">let </span>byte_classes = <span class="kw">if </span><span class="self">self</span>.byte_classes {
-            nfa.byte_classes().clone()
+            nnfa.byte_classes().clone()
         } <span class="kw">else </span>{
             ByteClasses::singletons()
         };
-        <span class="kw">let </span>alphabet_len = byte_classes.alphabet_len();
-        <span class="kw">let </span>trans = <span class="macro">vec!</span>[fail_id(); alphabet_len * nfa.state_len()];
-        <span class="kw">let </span>matches = <span class="macro">vec!</span>[<span class="macro">vec!</span>[]; nfa.state_len()];
-        <span class="kw">let </span><span class="kw-2">mut </span>repr = Repr {
-            match_kind: nfa.match_kind().clone(),
-            anchored: nfa.anchored(),
-            premultiplied: <span class="bool-val">false</span>,
-            start_id: nfa.start_state(),
-            max_pattern_len: nfa.max_pattern_len(),
-            pattern_count: nfa.pattern_count(),
-            state_count: nfa.state_len(),
-            max_match: fail_id(),
-            heap_bytes: <span class="number">0</span>,
-            prefilter: nfa.prefilter_obj().map(|p| p.clone()),
-            byte_classes: byte_classes.clone(),
-            trans,
-            matches,
+        <span class="kw">let </span>state_len = <span class="kw">match </span><span class="self">self</span>.start_kind {
+            StartKind::Unanchored | StartKind::Anchored =&gt; nnfa.states().len(),
+            StartKind::Both =&gt; {
+                <span class="comment">// These unwraps are OK because we know that the number of
+                // NFA states is &lt; StateID::LIMIT which is in turn less than
+                // i32::MAX. Thus, there is always room to multiply by 2.
+                // Finally, the number of states is always at least 4 in the
+                // NFA (DEAD, FAIL, START-UNANCHORED, START-ANCHORED), so the
+                // subtraction of 4 is okay.
+                //
+                // Note that we subtract 4 because the &quot;anchored&quot; part of
+                // the DFA duplicates the unanchored part (without failure
+                // transitions), but reuses the DEAD, FAIL and START states.
+                </span>nnfa.states()
+                    .len()
+                    .checked_mul(<span class="number">2</span>)
+                    .unwrap()
+                    .checked_sub(<span class="number">4</span>)
+                    .unwrap()
+            }
         };
-        <span class="kw">for </span>id <span class="kw">in </span>(<span class="number">0</span>..nfa.state_len()).map(S::from_usize) {
-            repr.matches[id.to_usize()].extend_from_slice(nfa.matches(id));
-
-            <span class="kw">let </span>fail = nfa.failure_transition(id);
-            nfa.iter_all_transitions(<span class="kw-2">&amp;</span>byte_classes, id, |b, <span class="kw-2">mut </span>next| {
-                <span class="kw">if </span>next == fail_id() {
-                    next = nfa_next_state_memoized(nfa, <span class="kw-2">&amp;</span>repr, id, fail, b);
+        <span class="kw">let </span>trans_len =
+            <span class="kw">match </span>state_len.checked_shl(byte_classes.stride2().as_u32()) {
+                <span class="prelude-val">Some</span>(trans_len) =&gt; trans_len,
+                <span class="prelude-val">None </span>=&gt; {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(BuildError::state_id_overflow(
+                        StateID::MAX.as_u64(),
+                        usize::MAX.as_u64(),
+                    ))
                 }
-                repr.set_next_state(id, b, next);
-            });
+            };
+        StateID::new(trans_len.checked_sub(byte_classes.stride()).unwrap())
+            .map_err(|e| {
+                BuildError::state_id_overflow(
+                    StateID::MAX.as_u64(),
+                    e.attempted(),
+                )
+            })<span class="question-mark">?</span>;
+        <span class="kw">let </span>num_match_states = <span class="kw">match </span><span class="self">self</span>.start_kind {
+            StartKind::Unanchored | StartKind::Anchored =&gt; {
+                nnfa.special().max_match_id.as_usize().checked_sub(<span class="number">1</span>).unwrap()
+            }
+            StartKind::Both =&gt; nnfa
+                .special()
+                .max_match_id
+                .as_usize()
+                .checked_sub(<span class="number">1</span>)
+                .unwrap()
+                .checked_mul(<span class="number">2</span>)
+                .unwrap(),
+        };
+        <span class="kw">let </span><span class="kw-2">mut </span>dfa = DFA {
+            trans: <span class="macro">vec!</span>[DFA::DEAD; trans_len],
+            matches: <span class="macro">vec!</span>[<span class="macro">vec!</span>[]; num_match_states],
+            matches_memory_usage: <span class="number">0</span>,
+            pattern_lens: nnfa.pattern_lens_raw().to_vec(),
+            prefilter: nnfa.prefilter().map(|p| p.clone()),
+            match_kind: nnfa.match_kind(),
+            state_len,
+            alphabet_len: byte_classes.alphabet_len(),
+            stride2: byte_classes.stride2(),
+            byte_classes,
+            min_pattern_len: nnfa.min_pattern_len(),
+            max_pattern_len: nnfa.max_pattern_len(),
+            <span class="comment">// The special state IDs are set later.
+            </span>special: Special::zero(),
+        };
+        <span class="kw">match </span><span class="self">self</span>.start_kind {
+            StartKind::Both =&gt; {
+                <span class="self">self</span>.finish_build_both_starts(nnfa, <span class="kw-2">&amp;mut </span>dfa);
+            }
+            StartKind::Unanchored =&gt; {
+                <span class="self">self</span>.finish_build_one_start(Anchored::No, nnfa, <span class="kw-2">&amp;mut </span>dfa);
+            }
+            StartKind::Anchored =&gt; {
+                <span class="self">self</span>.finish_build_one_start(Anchored::Yes, nnfa, <span class="kw-2">&amp;mut </span>dfa)
+            }
         }
-        repr.shuffle_match_states();
-        repr.calculate_size();
-        <span class="kw">if </span><span class="self">self</span>.premultiply {
-            repr.premultiply()<span class="question-mark">?</span>;
-            <span class="kw">if </span>byte_classes.is_singleton() {
-                <span class="prelude-val">Ok</span>(DFA::Premultiplied(Premultiplied(repr)))
-            } <span class="kw">else </span>{
-                <span class="prelude-val">Ok</span>(DFA::PremultipliedByteClass(PremultipliedByteClass(repr)))
+        <span class="macro">debug!</span>(
+            <span class="string">&quot;DFA built, &lt;states: {:?}, size: {:?}, \
+             alphabet len: {:?}, stride: {:?}&gt;&quot;</span>,
+            dfa.state_len,
+            dfa.memory_usage(),
+            dfa.byte_classes.alphabet_len(),
+            dfa.byte_classes.stride(),
+        );
+        <span class="comment">// The vectors can grow ~twice as big during construction because a
+        // Vec amortizes growth. But here, let&#39;s shrink things back down to
+        // what we actually need since we&#39;re never going to add more to it.
+        </span>dfa.trans.shrink_to_fit();
+        dfa.pattern_lens.shrink_to_fit();
+        dfa.matches.shrink_to_fit();
+        <span class="comment">// TODO: We might also want to shrink each Vec inside of `dfa.matches`,
+        // or even better, convert it to one contiguous allocation. But I think
+        // I went with nested allocs for good reason (can&#39;t remember), so this
+        // may be tricky to do. I decided not to shrink them here because it
+        // might require a fair bit of work to do. It&#39;s unclear whether it&#39;s
+        // worth it.
+        </span><span class="prelude-val">Ok</span>(dfa)
+    }
+
+    <span class="doccomment">/// Finishes building a DFA for either unanchored or anchored searches,
+    /// but NOT both.
+    </span><span class="kw">fn </span>finish_build_one_start(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        anchored: Anchored,
+        nnfa: <span class="kw-2">&amp;</span>noncontiguous::NFA,
+        dfa: <span class="kw-2">&amp;mut </span>DFA,
+    ) {
+        <span class="comment">// This function always succeeds because we check above that all of the
+        // states in the NFA can be mapped to DFA state IDs.
+        </span><span class="kw">let </span>stride2 = dfa.stride2;
+        <span class="kw">let </span>old2new = |oldsid: StateID| {
+            StateID::new_unchecked(oldsid.as_usize() &lt;&lt; stride2)
+        };
+        <span class="kw">for </span>(oldsid, state) <span class="kw">in </span>nnfa.states().iter().with_state_ids() {
+            <span class="kw">let </span>newsid = old2new(oldsid);
+            <span class="kw">if </span>state.is_match() {
+                dfa.set_matches(newsid, nnfa.iter_matches(oldsid));
             }
+            sparse_iter(
+                nnfa,
+                oldsid,
+                <span class="kw-2">&amp;</span>dfa.byte_classes,
+                |byte, class, <span class="kw-2">mut </span>oldnextsid| {
+                    <span class="kw">if </span>oldnextsid == noncontiguous::NFA::FAIL {
+                        <span class="kw">if </span>anchored.is_anchored() {
+                            oldnextsid = noncontiguous::NFA::DEAD;
+                        } <span class="kw">else if </span>state.fail() == noncontiguous::NFA::DEAD {
+                            <span class="comment">// This is a special case that avoids following
+                            // DEAD transitions in a non-contiguous NFA.
+                            // Following these transitions is pretty slow
+                            // because the non-contiguous NFA will always use
+                            // a sparse representation for it (because the
+                            // DEAD state is usually treated as a sentinel).
+                            // The *vast* majority of failure states are DEAD
+                            // states, so this winds up being pretty slow if
+                            // we go through the non-contiguous NFA state
+                            // transition logic. Instead, just do it ourselves.
+                            </span>oldnextsid = noncontiguous::NFA::DEAD;
+                        } <span class="kw">else </span>{
+                            oldnextsid = nnfa.next_state(
+                                Anchored::No,
+                                state.fail(),
+                                byte,
+                            );
+                        }
+                    }
+                    dfa.trans[newsid.as_usize() + usize::from(class)] =
+                        old2new(oldnextsid);
+                },
+            );
+        }
+        <span class="comment">// Now that we&#39;ve remapped all the IDs in our states, all that&#39;s left
+        // is remapping the special state IDs.
+        </span><span class="kw">let </span>old = nnfa.special();
+        <span class="kw">let </span>new = <span class="kw-2">&amp;mut </span>dfa.special;
+        new.max_special_id = old2new(old.max_special_id);
+        new.max_match_id = old2new(old.max_match_id);
+        <span class="kw">if </span>anchored.is_anchored() {
+            new.start_unanchored_id = DFA::DEAD;
+            new.start_anchored_id = old2new(old.start_anchored_id);
         } <span class="kw">else </span>{
-            <span class="kw">if </span>byte_classes.is_singleton() {
-                <span class="prelude-val">Ok</span>(DFA::Standard(Standard(repr)))
-            } <span class="kw">else </span>{
-                <span class="prelude-val">Ok</span>(DFA::ByteClass(ByteClass(repr)))
-            }
+            new.start_unanchored_id = old2new(old.start_unanchored_id);
+            new.start_anchored_id = DFA::DEAD;
         }
     }
 
-    <span class="doccomment">/// Whether to use byte classes or in the DFA.
+    <span class="doccomment">/// Finishes building a DFA that supports BOTH unanchored and anchored
+    /// searches. It works by inter-leaving unanchored states with anchored
+    /// states in the same transition table. This way, we avoid needing to
+    /// re-shuffle states afterward to ensure that our states still look like
+    /// DEAD, MATCH, ..., START-UNANCHORED, START-ANCHORED, NON-MATCH, ...
+    ///
+    /// Honestly this is pretty inscrutable... Simplifications are most
+    /// welcome.
+    </span><span class="kw">fn </span>finish_build_both_starts(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        nnfa: <span class="kw-2">&amp;</span>noncontiguous::NFA,
+        dfa: <span class="kw-2">&amp;mut </span>DFA,
+    ) {
+        <span class="kw">let </span>stride2 = dfa.stride2;
+        <span class="kw">let </span>stride = <span class="number">1 </span>&lt;&lt; stride2;
+        <span class="kw">let </span><span class="kw-2">mut </span>remap_unanchored = <span class="macro">vec!</span>[DFA::DEAD; nnfa.states().len()];
+        <span class="kw">let </span><span class="kw-2">mut </span>remap_anchored = <span class="macro">vec!</span>[DFA::DEAD; nnfa.states().len()];
+        <span class="kw">let </span><span class="kw-2">mut </span>is_anchored = <span class="macro">vec!</span>[<span class="bool-val">false</span>; dfa.state_len];
+        <span class="kw">let </span><span class="kw-2">mut </span>newsid = DFA::DEAD;
+        <span class="kw">let </span>next_dfa_id =
+            |sid: StateID| StateID::new_unchecked(sid.as_usize() + stride);
+        <span class="kw">for </span>(oldsid, state) <span class="kw">in </span>nnfa.states().iter().with_state_ids() {
+            <span class="kw">if </span>oldsid == noncontiguous::NFA::DEAD
+                || oldsid == noncontiguous::NFA::FAIL
+            {
+                remap_unanchored[oldsid] = newsid;
+                remap_anchored[oldsid] = newsid;
+                newsid = next_dfa_id(newsid);
+            } <span class="kw">else if </span>oldsid == nnfa.special().start_unanchored_id
+                || oldsid == nnfa.special().start_anchored_id
+            {
+                <span class="kw">if </span>oldsid == nnfa.special().start_unanchored_id {
+                    remap_unanchored[oldsid] = newsid;
+                    remap_anchored[oldsid] = DFA::DEAD;
+                } <span class="kw">else </span>{
+                    remap_unanchored[oldsid] = DFA::DEAD;
+                    remap_anchored[oldsid] = newsid;
+                    is_anchored[newsid.as_usize() &gt;&gt; stride2] = <span class="bool-val">true</span>;
+                }
+                <span class="kw">if </span>state.is_match() {
+                    dfa.set_matches(newsid, nnfa.iter_matches(oldsid));
+                }
+                sparse_iter(
+                    nnfa,
+                    oldsid,
+                    <span class="kw-2">&amp;</span>dfa.byte_classes,
+                    |<span class="kw">_</span>, class, oldnextsid| {
+                        <span class="kw">let </span>class = usize::from(class);
+                        <span class="kw">if </span>oldnextsid == noncontiguous::NFA::FAIL {
+                            dfa.trans[newsid.as_usize() + class] = DFA::DEAD;
+                        } <span class="kw">else </span>{
+                            dfa.trans[newsid.as_usize() + class] = oldnextsid;
+                        }
+                    },
+                );
+                newsid = next_dfa_id(newsid);
+            } <span class="kw">else </span>{
+                <span class="kw">let </span>unewsid = newsid;
+                newsid = next_dfa_id(newsid);
+                <span class="kw">let </span>anewsid = newsid;
+                newsid = next_dfa_id(newsid);
+
+                remap_unanchored[oldsid] = unewsid;
+                remap_anchored[oldsid] = anewsid;
+                is_anchored[anewsid.as_usize() &gt;&gt; stride2] = <span class="bool-val">true</span>;
+                <span class="kw">if </span>state.is_match() {
+                    dfa.set_matches(unewsid, nnfa.iter_matches(oldsid));
+                    dfa.set_matches(anewsid, nnfa.iter_matches(oldsid));
+                }
+                sparse_iter(
+                    nnfa,
+                    oldsid,
+                    <span class="kw-2">&amp;</span>dfa.byte_classes,
+                    |byte, class, oldnextsid| {
+                        <span class="kw">let </span>class = usize::from(class);
+                        <span class="kw">if </span>oldnextsid == noncontiguous::NFA::FAIL {
+                            <span class="kw">let </span>oldnextsid =
+                                <span class="kw">if </span>state.fail() == noncontiguous::NFA::DEAD {
+                                    noncontiguous::NFA::DEAD
+                                } <span class="kw">else </span>{
+                                    nnfa.next_state(
+                                        Anchored::No,
+                                        state.fail(),
+                                        byte,
+                                    )
+                                };
+                            dfa.trans[unewsid.as_usize() + class] = oldnextsid;
+                        } <span class="kw">else </span>{
+                            dfa.trans[unewsid.as_usize() + class] = oldnextsid;
+                            dfa.trans[anewsid.as_usize() + class] = oldnextsid;
+                        }
+                    },
+                );
+            }
+        }
+        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..dfa.state_len {
+            <span class="kw">let </span>sid = i &lt;&lt; stride2;
+            <span class="kw">if </span>is_anchored[i] {
+                <span class="kw">for </span>next <span class="kw">in </span>dfa.trans[sid..][..stride].iter_mut() {
+                    <span class="kw-2">*</span>next = remap_anchored[<span class="kw-2">*</span>next];
+                }
+            } <span class="kw">else </span>{
+                <span class="kw">for </span>next <span class="kw">in </span>dfa.trans[sid..][..stride].iter_mut() {
+                    <span class="kw-2">*</span>next = remap_unanchored[<span class="kw-2">*</span>next];
+                }
+            }
+        }
+        <span class="comment">// Now that we&#39;ve remapped all the IDs in our states, all that&#39;s left
+        // is remapping the special state IDs.
+        </span><span class="kw">let </span>old = nnfa.special();
+        <span class="kw">let </span>new = <span class="kw-2">&amp;mut </span>dfa.special;
+        new.max_special_id = remap_anchored[old.max_special_id];
+        new.max_match_id = remap_anchored[old.max_match_id];
+        new.start_unanchored_id = remap_unanchored[old.start_unanchored_id];
+        new.start_anchored_id = remap_anchored[old.start_anchored_id];
+    }
+
+    <span class="doccomment">/// Set the desired match semantics.
+    ///
+    /// This only applies when using [`Builder::build`] and not
+    /// [`Builder::build_from_noncontiguous`].
+    ///
+    /// See
+    /// [`AhoCorasickBuilder::match_kind`](crate::AhoCorasickBuilder::match_kind)
+    /// for more documentation and examples.
+    </span><span class="kw">pub fn </span>match_kind(<span class="kw-2">&amp;mut </span><span class="self">self</span>, kind: MatchKind) -&gt; <span class="kw-2">&amp;mut </span>Builder {
+        <span class="self">self</span>.noncontiguous.match_kind(kind);
+        <span class="self">self
+    </span>}
+
+    <span class="doccomment">/// Enable ASCII-aware case insensitive matching.
+    ///
+    /// This only applies when using [`Builder::build`] and not
+    /// [`Builder::build_from_noncontiguous`].
+    ///
+    /// See
+    /// [`AhoCorasickBuilder::ascii_case_insensitive`](crate::AhoCorasickBuilder::ascii_case_insensitive)
+    /// for more documentation and examples.
+    </span><span class="kw">pub fn </span>ascii_case_insensitive(<span class="kw-2">&amp;mut </span><span class="self">self</span>, yes: bool) -&gt; <span class="kw-2">&amp;mut </span>Builder {
+        <span class="self">self</span>.noncontiguous.ascii_case_insensitive(yes);
+        <span class="self">self
+    </span>}
+
+    <span class="doccomment">/// Enable heuristic prefilter optimizations.
+    ///
+    /// This only applies when using [`Builder::build`] and not
+    /// [`Builder::build_from_noncontiguous`].
+    ///
+    /// See
+    /// [`AhoCorasickBuilder::prefilter`](crate::AhoCorasickBuilder::prefilter)
+    /// for more documentation and examples.
+    </span><span class="kw">pub fn </span>prefilter(<span class="kw-2">&amp;mut </span><span class="self">self</span>, yes: bool) -&gt; <span class="kw-2">&amp;mut </span>Builder {
+        <span class="self">self</span>.noncontiguous.prefilter(yes);
+        <span class="self">self
+    </span>}
+
+    <span class="doccomment">/// Sets the starting state configuration for the automaton.
+    ///
+    /// See
+    /// [`AhoCorasickBuilder::start_kind`](crate::AhoCorasickBuilder::start_kind)
+    /// for more documentation and examples.
+    </span><span class="kw">pub fn </span>start_kind(<span class="kw-2">&amp;mut </span><span class="self">self</span>, kind: StartKind) -&gt; <span class="kw-2">&amp;mut </span>Builder {
+        <span class="self">self</span>.start_kind = kind;
+        <span class="self">self
+    </span>}
+
+    <span class="doccomment">/// A debug setting for whether to attempt to shrink the size of the
+    /// automaton&#39;s alphabet or not.
+    ///
+    /// This should never be enabled unless you&#39;re debugging an automaton.
+    /// Namely, disabling byte classes makes transitions easier to reason
+    /// about, since they use the actual bytes instead of equivalence classes.
+    /// Disabling this confers no performance benefit at search time.
+    ///
+    /// See
+    /// [`AhoCorasickBuilder::byte_classes`](crate::AhoCorasickBuilder::byte_classes)
+    /// for more documentation and examples.
     </span><span class="kw">pub fn </span>byte_classes(<span class="kw-2">&amp;mut </span><span class="self">self</span>, yes: bool) -&gt; <span class="kw-2">&amp;mut </span>Builder {
         <span class="self">self</span>.byte_classes = yes;
         <span class="self">self
     </span>}
-
-    <span class="doccomment">/// Whether to premultiply state identifier in the DFA.
-    </span><span class="kw">pub fn </span>premultiply(<span class="kw-2">&amp;mut </span><span class="self">self</span>, yes: bool) -&gt; <span class="kw-2">&amp;mut </span>Builder {
-        <span class="self">self</span>.premultiply = yes;
-        <span class="self">self
-    </span>}
 }
 
-<span class="doccomment">/// This returns the next NFA transition (including resolving failure
-/// transitions), except once it sees a state id less than the id of the DFA
-/// state that is currently being populated, then we no longer need to follow
-/// failure transitions and can instead query the pre-computed state id from
-/// the DFA itself.
+<span class="doccomment">/// Iterate over all possible equivalence class transitions in this state.
+/// The closure is called for all transitions with a distinct equivalence
+/// class, even those not explicitly represented in this sparse state. For
+/// any implicitly defined transitions, the given closure is called with
+/// the fail state ID.
 ///
-/// In general, this should only be called when a failure transition is seen.
-</span><span class="kw">fn </span>nfa_next_state_memoized&lt;S: StateID&gt;(
-    nfa: <span class="kw-2">&amp;</span>NFA&lt;S&gt;,
-    dfa: <span class="kw-2">&amp;</span>Repr&lt;S&gt;,
-    populating: S,
-    <span class="kw-2">mut </span>current: S,
-    input: u8,
-) -&gt; S {
-    <span class="kw">loop </span>{
-        <span class="kw">if </span>current &lt; populating {
-            <span class="kw">return </span>dfa.next_state(current, input);
+/// The closure is guaranteed to be called precisely
+/// `byte_classes.alphabet_len()` times, once for every possible class in
+/// ascending order.
+</span><span class="kw">fn </span>sparse_iter&lt;F: FnMut(u8, u8, StateID)&gt;(
+    nnfa: <span class="kw-2">&amp;</span>noncontiguous::NFA,
+    oldsid: StateID,
+    classes: <span class="kw-2">&amp;</span>ByteClasses,
+    <span class="kw-2">mut </span>f: F,
+) {
+    <span class="kw">let </span><span class="kw-2">mut </span>prev_class = <span class="prelude-val">None</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>byte = <span class="number">0usize</span>;
+    <span class="kw">for </span>t <span class="kw">in </span>nnfa.iter_trans(oldsid) {
+        <span class="kw">while </span>byte &lt; usize::from(t.byte()) {
+            <span class="kw">let </span>rep = byte.as_u8();
+            <span class="kw">let </span>class = classes.get(rep);
+            byte += <span class="number">1</span>;
+            <span class="kw">if </span>prev_class != <span class="prelude-val">Some</span>(class) {
+                f(rep, class, noncontiguous::NFA::FAIL);
+                prev_class = <span class="prelude-val">Some</span>(class);
+            }
         }
-        <span class="kw">let </span>next = nfa.next_state(current, input);
-        <span class="kw">if </span>next != fail_id() {
-            <span class="kw">return </span>next;
+        <span class="kw">let </span>rep = t.byte();
+        <span class="kw">let </span>class = classes.get(rep);
+        byte += <span class="number">1</span>;
+        <span class="kw">if </span>prev_class != <span class="prelude-val">Some</span>(class) {
+            f(rep, class, t.next());
+            prev_class = <span class="prelude-val">Some</span>(class);
         }
-        current = nfa.failure_transition(current);
+    }
+    <span class="kw">for </span>b <span class="kw">in </span>byte..=<span class="number">255 </span>{
+        <span class="kw">let </span>rep = b.as_u8();
+        <span class="kw">let </span>class = classes.get(rep);
+        <span class="kw">if </span>prev_class != <span class="prelude-val">Some</span>(class) {
+            f(rep, class, noncontiguous::NFA::FAIL);
+            prev_class = <span class="prelude-val">Some</span>(class);
+        }
     }
 }
 </code></pre></div></section></main></body></html>

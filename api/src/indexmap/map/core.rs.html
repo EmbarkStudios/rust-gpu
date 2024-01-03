@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/indexmap-1.9.2/src/map/core.rs`."><title>core.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="indexmap" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../indexmap/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/indexmap-2.1.0/src/map/core.rs`."><title>core.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="indexmap" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../indexmap/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -698,6 +698,68 @@
 <a href="#698" id="698">698</a>
 <a href="#699" id="699">699</a>
 <a href="#700" id="700">700</a>
+<a href="#701" id="701">701</a>
+<a href="#702" id="702">702</a>
+<a href="#703" id="703">703</a>
+<a href="#704" id="704">704</a>
+<a href="#705" id="705">705</a>
+<a href="#706" id="706">706</a>
+<a href="#707" id="707">707</a>
+<a href="#708" id="708">708</a>
+<a href="#709" id="709">709</a>
+<a href="#710" id="710">710</a>
+<a href="#711" id="711">711</a>
+<a href="#712" id="712">712</a>
+<a href="#713" id="713">713</a>
+<a href="#714" id="714">714</a>
+<a href="#715" id="715">715</a>
+<a href="#716" id="716">716</a>
+<a href="#717" id="717">717</a>
+<a href="#718" id="718">718</a>
+<a href="#719" id="719">719</a>
+<a href="#720" id="720">720</a>
+<a href="#721" id="721">721</a>
+<a href="#722" id="722">722</a>
+<a href="#723" id="723">723</a>
+<a href="#724" id="724">724</a>
+<a href="#725" id="725">725</a>
+<a href="#726" id="726">726</a>
+<a href="#727" id="727">727</a>
+<a href="#728" id="728">728</a>
+<a href="#729" id="729">729</a>
+<a href="#730" id="730">730</a>
+<a href="#731" id="731">731</a>
+<a href="#732" id="732">732</a>
+<a href="#733" id="733">733</a>
+<a href="#734" id="734">734</a>
+<a href="#735" id="735">735</a>
+<a href="#736" id="736">736</a>
+<a href="#737" id="737">737</a>
+<a href="#738" id="738">738</a>
+<a href="#739" id="739">739</a>
+<a href="#740" id="740">740</a>
+<a href="#741" id="741">741</a>
+<a href="#742" id="742">742</a>
+<a href="#743" id="743">743</a>
+<a href="#744" id="744">744</a>
+<a href="#745" id="745">745</a>
+<a href="#746" id="746">746</a>
+<a href="#747" id="747">747</a>
+<a href="#748" id="748">748</a>
+<a href="#749" id="749">749</a>
+<a href="#750" id="750">750</a>
+<a href="#751" id="751">751</a>
+<a href="#752" id="752">752</a>
+<a href="#753" id="753">753</a>
+<a href="#754" id="754">754</a>
+<a href="#755" id="755">755</a>
+<a href="#756" id="756">756</a>
+<a href="#757" id="757">757</a>
+<a href="#758" id="758">758</a>
+<a href="#759" id="759">759</a>
+<a href="#760" id="760">760</a>
+<a href="#761" id="761">761</a>
+<a href="#762" id="762">762</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! This is the core implementation that doesn&#39;t depend on the hasher at all.
 //!
 //! The methods of `IndexMapCore` don&#39;t use any Hash properties of K.
@@ -712,14 +774,13 @@
 <span class="kw">use </span>hashbrown::raw::RawTable;
 
 <span class="kw">use </span><span class="kw">crate</span>::vec::{Drain, Vec};
-<span class="kw">use </span>core::cmp;
+<span class="kw">use </span><span class="kw">crate</span>::TryReserveError;
 <span class="kw">use </span>core::fmt;
-<span class="kw">use </span>core::mem::replace;
+<span class="kw">use </span>core::mem;
 <span class="kw">use </span>core::ops::RangeBounds;
 
-<span class="kw">use </span><span class="kw">crate</span>::equivalent::Equivalent;
 <span class="kw">use </span><span class="kw">crate</span>::util::simplify_range;
-<span class="kw">use crate</span>::{Bucket, Entries, HashValue};
+<span class="kw">use crate</span>::{Bucket, Entries, Equivalent, HashValue};
 
 <span class="doccomment">/// Core of the map that does not depend on S
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>IndexMapCore&lt;K, V&gt; {
@@ -762,18 +823,18 @@
     V: Clone,
 {
     <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>indices = <span class="self">self</span>.indices.clone();
-        <span class="kw">let </span><span class="kw-2">mut </span>entries = Vec::with_capacity(indices.capacity());
-        entries.clone_from(<span class="kw-2">&amp;</span><span class="self">self</span>.entries);
-        IndexMapCore { indices, entries }
+        <span class="kw">let </span><span class="kw-2">mut </span>new = <span class="self">Self</span>::new();
+        new.clone_from(<span class="self">self</span>);
+        new
     }
 
     <span class="kw">fn </span>clone_from(<span class="kw-2">&amp;mut </span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) {
         <span class="kw">let </span>hasher = get_hash(<span class="kw-2">&amp;</span>other.entries);
         <span class="self">self</span>.indices.clone_from_with_hasher(<span class="kw-2">&amp;</span>other.indices, hasher);
         <span class="kw">if </span><span class="self">self</span>.entries.capacity() &lt; other.entries.len() {
-            <span class="comment">// If we must resize, match the indices capacity
-            </span><span class="self">self</span>.reserve_entries();
+            <span class="comment">// If we must resize, match the indices capacity.
+            </span><span class="kw">let </span>additional = other.entries.len() - <span class="self">self</span>.entries.len();
+            <span class="self">self</span>.reserve_entries(additional);
         }
         <span class="self">self</span>.entries.clone_from(<span class="kw-2">&amp;</span>other.entries);
     }
@@ -820,6 +881,9 @@
 }
 
 <span class="kw">impl</span>&lt;K, V&gt; IndexMapCore&lt;K, V&gt; {
+    <span class="doccomment">/// The maximum capacity before the `entries` allocation would exceed `isize::MAX`.
+    </span><span class="kw">const </span>MAX_ENTRIES_CAPACITY: usize = (isize::MAX <span class="kw">as </span>usize) / mem::size_of::&lt;Bucket&lt;K, V&gt;&gt;();
+
     <span class="attr">#[inline]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const fn </span>new() -&gt; <span class="self">Self </span>{
         IndexMapCore {
@@ -843,7 +907,7 @@
 
     <span class="attr">#[inline]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>capacity(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
-        cmp::min(<span class="self">self</span>.indices.capacity(), <span class="self">self</span>.entries.capacity())
+        Ord::min(<span class="self">self</span>.indices.capacity(), <span class="self">self</span>.entries.capacity())
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
@@ -893,13 +957,65 @@
     <span class="doccomment">/// Reserve capacity for `additional` more key-value pairs.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>reserve(<span class="kw-2">&amp;mut </span><span class="self">self</span>, additional: usize) {
         <span class="self">self</span>.indices.reserve(additional, get_hash(<span class="kw-2">&amp;</span><span class="self">self</span>.entries));
-        <span class="self">self</span>.reserve_entries();
+        <span class="comment">// Only grow entries if necessary, since we also round up capacity.
+        </span><span class="kw">if </span>additional &gt; <span class="self">self</span>.entries.capacity() - <span class="self">self</span>.entries.len() {
+            <span class="self">self</span>.reserve_entries(additional);
+        }
     }
 
-    <span class="doccomment">/// Reserve entries capacity to match the indices
-    </span><span class="kw">fn </span>reserve_entries(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">let </span>additional = <span class="self">self</span>.indices.capacity() - <span class="self">self</span>.entries.len();
+    <span class="doccomment">/// Reserve entries capacity, rounded up to match the indices
+    </span><span class="kw">fn </span>reserve_entries(<span class="kw-2">&amp;mut </span><span class="self">self</span>, additional: usize) {
+        <span class="comment">// Use a soft-limit on the maximum capacity, but if the caller explicitly
+        // requested more, do it and let them have the resulting panic.
+        </span><span class="kw">let </span>new_capacity = Ord::min(<span class="self">self</span>.indices.capacity(), <span class="self">Self</span>::MAX_ENTRIES_CAPACITY);
+        <span class="kw">let </span>try_add = new_capacity - <span class="self">self</span>.entries.len();
+        <span class="kw">if </span>try_add &gt; additional &amp;&amp; <span class="self">self</span>.entries.try_reserve_exact(try_add).is_ok() {
+            <span class="kw">return</span>;
+        }
         <span class="self">self</span>.entries.reserve_exact(additional);
+    }
+
+    <span class="doccomment">/// Reserve capacity for `additional` more key-value pairs, without over-allocating.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>reserve_exact(<span class="kw-2">&amp;mut </span><span class="self">self</span>, additional: usize) {
+        <span class="self">self</span>.indices.reserve(additional, get_hash(<span class="kw-2">&amp;</span><span class="self">self</span>.entries));
+        <span class="self">self</span>.entries.reserve_exact(additional);
+    }
+
+    <span class="doccomment">/// Try to reserve capacity for `additional` more key-value pairs.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>try_reserve(<span class="kw-2">&amp;mut </span><span class="self">self</span>, additional: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), TryReserveError&gt; {
+        <span class="self">self</span>.indices
+            .try_reserve(additional, get_hash(<span class="kw-2">&amp;</span><span class="self">self</span>.entries))
+            .map_err(TryReserveError::from_hashbrown)<span class="question-mark">?</span>;
+        <span class="comment">// Only grow entries if necessary, since we also round up capacity.
+        </span><span class="kw">if </span>additional &gt; <span class="self">self</span>.entries.capacity() - <span class="self">self</span>.entries.len() {
+            <span class="self">self</span>.try_reserve_entries(additional)
+        } <span class="kw">else </span>{
+            <span class="prelude-val">Ok</span>(())
+        }
+    }
+
+    <span class="doccomment">/// Try to reserve entries capacity, rounded up to match the indices
+    </span><span class="kw">fn </span>try_reserve_entries(<span class="kw-2">&amp;mut </span><span class="self">self</span>, additional: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), TryReserveError&gt; {
+        <span class="comment">// Use a soft-limit on the maximum capacity, but if the caller explicitly
+        // requested more, do it and let them have the resulting error.
+        </span><span class="kw">let </span>new_capacity = Ord::min(<span class="self">self</span>.indices.capacity(), <span class="self">Self</span>::MAX_ENTRIES_CAPACITY);
+        <span class="kw">let </span>try_add = new_capacity - <span class="self">self</span>.entries.len();
+        <span class="kw">if </span>try_add &gt; additional &amp;&amp; <span class="self">self</span>.entries.try_reserve_exact(try_add).is_ok() {
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+        }
+        <span class="self">self</span>.entries
+            .try_reserve_exact(additional)
+            .map_err(TryReserveError::from_alloc)
+    }
+
+    <span class="doccomment">/// Try to reserve capacity for `additional` more key-value pairs, without over-allocating.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>try_reserve_exact(<span class="kw-2">&amp;mut </span><span class="self">self</span>, additional: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), TryReserveError&gt; {
+        <span class="self">self</span>.indices
+            .try_reserve(additional, get_hash(<span class="kw-2">&amp;</span><span class="self">self</span>.entries))
+            .map_err(TryReserveError::from_hashbrown)<span class="question-mark">?</span>;
+        <span class="self">self</span>.entries
+            .try_reserve_exact(additional)
+            .map_err(TryReserveError::from_alloc)
     }
 
     <span class="doccomment">/// Shrink the capacity of the map with a lower bound
@@ -920,18 +1036,14 @@
         </span>}
     }
 
-    <span class="doccomment">/// Append a key-value pair, *without* checking whether it already exists,
-    /// and return the pair&#39;s new index.
-    </span><span class="kw">fn </span>push(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hash: HashValue, key: K, value: V) -&gt; usize {
-        <span class="kw">let </span>i = <span class="self">self</span>.entries.len();
-        <span class="self">self</span>.indices.insert(hash.get(), i, get_hash(<span class="kw-2">&amp;</span><span class="self">self</span>.entries));
-        <span class="kw">if </span>i == <span class="self">self</span>.entries.capacity() {
+    <span class="doccomment">/// Append a key-value pair to `entries`, *without* checking whether it already exists.
+    </span><span class="kw">fn </span>push_entry(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hash: HashValue, key: K, value: V) {
+        <span class="kw">if </span><span class="self">self</span>.entries.len() == <span class="self">self</span>.entries.capacity() {
             <span class="comment">// Reserve our own capacity synced to the indices,
             // rather than letting `Vec::push` just double it.
-            </span><span class="self">self</span>.reserve_entries();
+            </span><span class="self">self</span>.reserve_entries(<span class="number">1</span>);
         }
         <span class="self">self</span>.entries.push(Bucket { hash, key, value });
-        i
     }
 
     <span class="doccomment">/// Return the index in `entries` where an equivalent key can be found
@@ -947,9 +1059,13 @@
     <span class="kw">where
         </span>K: Eq,
     {
-        <span class="kw">match </span><span class="self">self</span>.get_index_of(hash, <span class="kw-2">&amp;</span>key) {
-            <span class="prelude-val">Some</span>(i) =&gt; (i, <span class="prelude-val">Some</span>(replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.entries[i].value, value))),
-            <span class="prelude-val">None </span>=&gt; (<span class="self">self</span>.push(hash, key, value), <span class="prelude-val">None</span>),
+        <span class="kw">match </span><span class="self">self</span>.find_or_insert(hash, <span class="kw-2">&amp;</span>key) {
+            <span class="prelude-val">Ok</span>(i) =&gt; (i, <span class="prelude-val">Some</span>(mem::replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.entries[i].value, value))),
+            <span class="prelude-val">Err</span>(i) =&gt; {
+                <span class="macro">debug_assert_eq!</span>(i, <span class="self">self</span>.entries.len());
+                <span class="self">self</span>.push_entry(hash, key, value);
+                (i, <span class="prelude-val">None</span>)
+            }
         }
     }
 
@@ -1039,7 +1155,7 @@
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>move_index(<span class="kw-2">&amp;mut </span><span class="self">self</span>, from: usize, to: usize) {
         <span class="kw">let </span>from_hash = <span class="self">self</span>.entries[from].hash;
         <span class="kw">if </span>from != to {
-            <span class="comment">// Use a sentinal index so other indices don&#39;t collide.
+            <span class="comment">// Use a sentinel index so other indices don&#39;t collide.
             </span>update_index(<span class="kw-2">&amp;mut </span><span class="self">self</span>.indices, from_hash, from, usize::MAX);
 
             <span class="comment">// Update all other indices and rotate the entry positions.
@@ -1051,9 +1167,29 @@
                 <span class="self">self</span>.entries[to..=from].rotate_right(<span class="number">1</span>);
             }
 
-            <span class="comment">// Change the sentinal index to its final position.
+            <span class="comment">// Change the sentinel index to its final position.
             </span>update_index(<span class="kw-2">&amp;mut </span><span class="self">self</span>.indices, from_hash, usize::MAX, to);
         }
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>swap_indices(<span class="kw-2">&amp;mut </span><span class="self">self</span>, a: usize, b: usize) {
+        <span class="comment">// If they&#39;re equal and in-bounds, there&#39;s nothing to do.
+        </span><span class="kw">if </span>a == b &amp;&amp; a &lt; <span class="self">self</span>.entries.len() {
+            <span class="kw">return</span>;
+        }
+
+        <span class="comment">// We&#39;ll get a &quot;nice&quot; bounds-check from indexing `self.entries`,
+        // and then we expect to find it in the table as well.
+        </span><span class="kw">let </span>[ref_a, ref_b] = <span class="self">self
+            </span>.indices
+            .get_many_mut(
+                [<span class="self">self</span>.entries[a].hash.get(), <span class="self">self</span>.entries[b].hash.get()],
+                <span class="kw">move </span>|i, <span class="kw-2">&amp;</span>x| <span class="kw">if </span>i == <span class="number">0 </span>{ x == a } <span class="kw">else </span>{ x == b },
+            )
+            .expect(<span class="string">&quot;indices not found&quot;</span>);
+
+        mem::swap(ref_a, ref_b);
+        <span class="self">self</span>.entries.swap(a, b);
     }
 
     <span class="doccomment">/// Remove an entry by swapping it with the last
@@ -1147,25 +1283,9 @@
     <span class="kw">where
         </span>F: FnMut(<span class="kw-2">&amp;mut </span>K, <span class="kw-2">&amp;mut </span>V) -&gt; bool,
     {
-        <span class="comment">// FIXME: This could use Vec::retain_mut with MSRV 1.61.
-        // Like Vec::retain in self.entries, but with mutable K and V.
-        // We swap-shift all the items we want to keep, truncate the rest,
-        // then rebuild the raw hash table with the new indexes.
-        </span><span class="kw">let </span>len = <span class="self">self</span>.entries.len();
-        <span class="kw">let </span><span class="kw-2">mut </span>n_deleted = <span class="number">0</span>;
-        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..len {
-            <span class="kw">let </span>will_keep = {
-                <span class="kw">let </span>entry = <span class="kw-2">&amp;mut </span><span class="self">self</span>.entries[i];
-                keep(<span class="kw-2">&amp;mut </span>entry.key, <span class="kw-2">&amp;mut </span>entry.value)
-            };
-            <span class="kw">if </span>!will_keep {
-                n_deleted += <span class="number">1</span>;
-            } <span class="kw">else if </span>n_deleted &gt; <span class="number">0 </span>{
-                <span class="self">self</span>.entries.swap(i - n_deleted, i);
-            }
-        }
-        <span class="kw">if </span>n_deleted &gt; <span class="number">0 </span>{
-            <span class="self">self</span>.entries.truncate(len - n_deleted);
+        <span class="self">self</span>.entries
+            .retain_mut(|entry| keep(<span class="kw-2">&amp;mut </span>entry.key, <span class="kw-2">&amp;mut </span>entry.value));
+        <span class="kw">if </span><span class="self">self</span>.entries.len() &lt; <span class="self">self</span>.indices.len() {
             <span class="self">self</span>.rebuild_hash_table();
         }
     }
@@ -1301,7 +1421,7 @@
 </span><span class="kw">impl</span>&lt;K, V&gt; OccupiedEntry&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
     <span class="doccomment">/// Sets the value of the entry to `value`, and returns the entry&#39;s old value.
     </span><span class="kw">pub fn </span>insert(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: V) -&gt; V {
-        replace(<span class="self">self</span>.get_mut(), value)
+        mem::replace(<span class="self">self</span>.get_mut(), value)
     }
 
     <span class="doccomment">/// Remove the key, value pair stored in the map for this entry, and return the value.
@@ -1373,14 +1493,18 @@
 
     <span class="doccomment">/// Return the index where the key-value pair will be inserted.
     </span><span class="kw">pub fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
-        <span class="self">self</span>.map.len()
+        <span class="self">self</span>.map.indices.len()
     }
 
     <span class="doccomment">/// Inserts the entry&#39;s key and the given value into the map, and returns a mutable reference
     /// to the value.
     </span><span class="kw">pub fn </span>insert(<span class="self">self</span>, value: V) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>V {
-        <span class="kw">let </span>i = <span class="self">self</span>.map.push(<span class="self">self</span>.hash, <span class="self">self</span>.key, value);
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>.map.entries[i].value
+        <span class="kw">let </span>i = <span class="self">self</span>.index();
+        <span class="kw">let </span><span class="self">Self </span>{ map, hash, key } = <span class="self">self</span>;
+        map.indices.insert(hash.get(), i, get_hash(<span class="kw-2">&amp;</span>map.entries));
+        <span class="macro">debug_assert_eq!</span>(i, map.entries.len());
+        map.push_entry(hash, key, value);
+        <span class="kw-2">&amp;mut </span>map.entries[i].value
     }
 }
 

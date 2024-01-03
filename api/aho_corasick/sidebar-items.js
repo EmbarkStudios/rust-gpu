@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["ErrorKind","MatchKind"],"mod":["packed"],"struct":["AhoCorasick","AhoCorasickBuilder","Error","FindIter","FindOverlappingIter","Match","StreamFindIter"],"trait":["StateID"]};
+window.SIDEBAR_ITEMS = {"enum":["AhoCorasickKind","Anchored","MatchErrorKind","MatchKind","StartKind"],"mod":["automaton","dfa","nfa","packed"],"struct":["AhoCorasick","AhoCorasickBuilder","BuildError","FindIter","FindOverlappingIter","Input","Match","MatchError","PatternID","PatternIDError","Span","StreamFindIter"]};

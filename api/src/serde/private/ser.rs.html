@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde-1.0.156/src/private/ser.rs`."><title>ser.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="serde" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../serde/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde-1.0.194/src/private/ser.rs`."><title>ser.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="serde" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../serde/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1308,9 +1308,84 @@
 <a href="#1308" id="1308">1308</a>
 <a href="#1309" id="1309">1309</a>
 <a href="#1310" id="1310">1310</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>lib::<span class="kw-2">*</span>;
+<a href="#1311" id="1311">1311</a>
+<a href="#1312" id="1312">1312</a>
+<a href="#1313" id="1313">1313</a>
+<a href="#1314" id="1314">1314</a>
+<a href="#1315" id="1315">1315</a>
+<a href="#1316" id="1316">1316</a>
+<a href="#1317" id="1317">1317</a>
+<a href="#1318" id="1318">1318</a>
+<a href="#1319" id="1319">1319</a>
+<a href="#1320" id="1320">1320</a>
+<a href="#1321" id="1321">1321</a>
+<a href="#1322" id="1322">1322</a>
+<a href="#1323" id="1323">1323</a>
+<a href="#1324" id="1324">1324</a>
+<a href="#1325" id="1325">1325</a>
+<a href="#1326" id="1326">1326</a>
+<a href="#1327" id="1327">1327</a>
+<a href="#1328" id="1328">1328</a>
+<a href="#1329" id="1329">1329</a>
+<a href="#1330" id="1330">1330</a>
+<a href="#1331" id="1331">1331</a>
+<a href="#1332" id="1332">1332</a>
+<a href="#1333" id="1333">1333</a>
+<a href="#1334" id="1334">1334</a>
+<a href="#1335" id="1335">1335</a>
+<a href="#1336" id="1336">1336</a>
+<a href="#1337" id="1337">1337</a>
+<a href="#1338" id="1338">1338</a>
+<a href="#1339" id="1339">1339</a>
+<a href="#1340" id="1340">1340</a>
+<a href="#1341" id="1341">1341</a>
+<a href="#1342" id="1342">1342</a>
+<a href="#1343" id="1343">1343</a>
+<a href="#1344" id="1344">1344</a>
+<a href="#1345" id="1345">1345</a>
+<a href="#1346" id="1346">1346</a>
+<a href="#1347" id="1347">1347</a>
+<a href="#1348" id="1348">1348</a>
+<a href="#1349" id="1349">1349</a>
+<a href="#1350" id="1350">1350</a>
+<a href="#1351" id="1351">1351</a>
+<a href="#1352" id="1352">1352</a>
+<a href="#1353" id="1353">1353</a>
+<a href="#1354" id="1354">1354</a>
+<a href="#1355" id="1355">1355</a>
+<a href="#1356" id="1356">1356</a>
+<a href="#1357" id="1357">1357</a>
+<a href="#1358" id="1358">1358</a>
+<a href="#1359" id="1359">1359</a>
+<a href="#1360" id="1360">1360</a>
+<a href="#1361" id="1361">1361</a>
+<a href="#1362" id="1362">1362</a>
+<a href="#1363" id="1363">1363</a>
+<a href="#1364" id="1364">1364</a>
+<a href="#1365" id="1365">1365</a>
+<a href="#1366" id="1366">1366</a>
+<a href="#1367" id="1367">1367</a>
+<a href="#1368" id="1368">1368</a>
+<a href="#1369" id="1369">1369</a>
+<a href="#1370" id="1370">1370</a>
+<a href="#1371" id="1371">1371</a>
+<a href="#1372" id="1372">1372</a>
+<a href="#1373" id="1373">1373</a>
+<a href="#1374" id="1374">1374</a>
+<a href="#1375" id="1375">1375</a>
+<a href="#1376" id="1376">1376</a>
+<a href="#1377" id="1377">1377</a>
+<a href="#1378" id="1378">1378</a>
+<a href="#1379" id="1379">1379</a>
+<a href="#1380" id="1380">1380</a>
+<a href="#1381" id="1381">1381</a>
+<a href="#1382" id="1382">1382</a>
+<a href="#1383" id="1383">1383</a>
+<a href="#1384" id="1384">1384</a>
+<a href="#1385" id="1385">1385</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::lib::<span class="kw-2">*</span>;
 
-<span class="kw">use </span>ser::{<span class="self">self</span>, Impossible, Serialize, SerializeMap, SerializeStruct, Serializer};
+<span class="kw">use </span><span class="kw">crate</span>::ser::{<span class="self">self</span>, Impossible, Serialize, SerializeMap, SerializeStruct, Serializer};
 
 <span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="kw">use </span><span class="self">self</span>::content::{
@@ -1337,10 +1412,10 @@
     T: Serialize,
 {
     value.serialize(TaggedSerializer {
-        type_ident: type_ident,
-        variant_ident: variant_ident,
-        tag: tag,
-        variant_name: variant_name,
+        type_ident,
+        variant_ident,
+        tag,
+        variant_name,
         delegate: serializer,
     })
 }
@@ -1492,14 +1567,14 @@
     }
 
     <span class="kw">fn </span>serialize_unit(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Ok, <span class="self">Self</span>::Error&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>map = <span class="macro">try!</span>(<span class="self">self</span>.delegate.serialize_map(<span class="prelude-val">Some</span>(<span class="number">1</span>)));
-        <span class="macro">try!</span>(map.serialize_entry(<span class="self">self</span>.tag, <span class="self">self</span>.variant_name));
+        <span class="kw">let </span><span class="kw-2">mut </span>map = <span class="macro">tri!</span>(<span class="self">self</span>.delegate.serialize_map(<span class="prelude-val">Some</span>(<span class="number">1</span>)));
+        <span class="macro">tri!</span>(map.serialize_entry(<span class="self">self</span>.tag, <span class="self">self</span>.variant_name));
         map.end()
     }
 
     <span class="kw">fn </span>serialize_unit_struct(<span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Ok, <span class="self">Self</span>::Error&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>map = <span class="macro">try!</span>(<span class="self">self</span>.delegate.serialize_map(<span class="prelude-val">Some</span>(<span class="number">1</span>)));
-        <span class="macro">try!</span>(map.serialize_entry(<span class="self">self</span>.tag, <span class="self">self</span>.variant_name));
+        <span class="kw">let </span><span class="kw-2">mut </span>map = <span class="macro">tri!</span>(<span class="self">self</span>.delegate.serialize_map(<span class="prelude-val">Some</span>(<span class="number">1</span>)));
+        <span class="macro">tri!</span>(map.serialize_entry(<span class="self">self</span>.tag, <span class="self">self</span>.variant_name));
         map.end()
     }
 
@@ -1509,9 +1584,9 @@
         <span class="kw">_</span>: u32,
         inner_variant: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Ok, <span class="self">Self</span>::Error&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>map = <span class="macro">try!</span>(<span class="self">self</span>.delegate.serialize_map(<span class="prelude-val">Some</span>(<span class="number">2</span>)));
-        <span class="macro">try!</span>(map.serialize_entry(<span class="self">self</span>.tag, <span class="self">self</span>.variant_name));
-        <span class="macro">try!</span>(map.serialize_entry(inner_variant, <span class="kw-2">&amp;</span>()));
+        <span class="kw">let </span><span class="kw-2">mut </span>map = <span class="macro">tri!</span>(<span class="self">self</span>.delegate.serialize_map(<span class="prelude-val">Some</span>(<span class="number">2</span>)));
+        <span class="macro">tri!</span>(map.serialize_entry(<span class="self">self</span>.tag, <span class="self">self</span>.variant_name));
+        <span class="macro">tri!</span>(map.serialize_entry(inner_variant, <span class="kw-2">&amp;</span>()));
         map.end()
     }
 
@@ -1536,9 +1611,9 @@
     <span class="kw">where
         </span>T: Serialize,
     {
-        <span class="kw">let </span><span class="kw-2">mut </span>map = <span class="macro">try!</span>(<span class="self">self</span>.delegate.serialize_map(<span class="prelude-val">Some</span>(<span class="number">2</span>)));
-        <span class="macro">try!</span>(map.serialize_entry(<span class="self">self</span>.tag, <span class="self">self</span>.variant_name));
-        <span class="macro">try!</span>(map.serialize_entry(inner_variant, inner_value));
+        <span class="kw">let </span><span class="kw-2">mut </span>map = <span class="macro">tri!</span>(<span class="self">self</span>.delegate.serialize_map(<span class="prelude-val">Some</span>(<span class="number">2</span>)));
+        <span class="macro">tri!</span>(map.serialize_entry(<span class="self">self</span>.tag, <span class="self">self</span>.variant_name));
+        <span class="macro">tri!</span>(map.serialize_entry(inner_variant, inner_value));
         map.end()
     }
 
@@ -1579,9 +1654,9 @@
         inner_variant: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
         len: usize,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::SerializeTupleVariant, <span class="self">Self</span>::Error&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>map = <span class="macro">try!</span>(<span class="self">self</span>.delegate.serialize_map(<span class="prelude-val">Some</span>(<span class="number">2</span>)));
-        <span class="macro">try!</span>(map.serialize_entry(<span class="self">self</span>.tag, <span class="self">self</span>.variant_name));
-        <span class="macro">try!</span>(map.serialize_key(inner_variant));
+        <span class="kw">let </span><span class="kw-2">mut </span>map = <span class="macro">tri!</span>(<span class="self">self</span>.delegate.serialize_map(<span class="prelude-val">Some</span>(<span class="number">2</span>)));
+        <span class="macro">tri!</span>(map.serialize_entry(<span class="self">self</span>.tag, <span class="self">self</span>.variant_name));
+        <span class="macro">tri!</span>(map.serialize_key(inner_variant));
         <span class="prelude-val">Ok</span>(SerializeTupleVariantAsMapValue::new(
             map,
             inner_variant,
@@ -1590,8 +1665,8 @@
     }
 
     <span class="kw">fn </span>serialize_map(<span class="self">self</span>, len: <span class="prelude-ty">Option</span>&lt;usize&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::SerializeMap, <span class="self">Self</span>::Error&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>map = <span class="macro">try!</span>(<span class="self">self</span>.delegate.serialize_map(len.map(|len| len + <span class="number">1</span>)));
-        <span class="macro">try!</span>(map.serialize_entry(<span class="self">self</span>.tag, <span class="self">self</span>.variant_name));
+        <span class="kw">let </span><span class="kw-2">mut </span>map = <span class="macro">tri!</span>(<span class="self">self</span>.delegate.serialize_map(len.map(|len| len + <span class="number">1</span>)));
+        <span class="macro">tri!</span>(map.serialize_entry(<span class="self">self</span>.tag, <span class="self">self</span>.variant_name));
         <span class="prelude-val">Ok</span>(map)
     }
 
@@ -1600,8 +1675,8 @@
         name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
         len: usize,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::SerializeStruct, <span class="self">Self</span>::Error&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>state = <span class="macro">try!</span>(<span class="self">self</span>.delegate.serialize_struct(name, len + <span class="number">1</span>));
-        <span class="macro">try!</span>(state.serialize_field(<span class="self">self</span>.tag, <span class="self">self</span>.variant_name));
+        <span class="kw">let </span><span class="kw-2">mut </span>state = <span class="macro">tri!</span>(<span class="self">self</span>.delegate.serialize_struct(name, len + <span class="number">1</span>));
+        <span class="macro">tri!</span>(state.serialize_field(<span class="self">self</span>.tag, <span class="self">self</span>.variant_name));
         <span class="prelude-val">Ok</span>(state)
     }
 
@@ -1626,9 +1701,9 @@
         inner_variant: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
         len: usize,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::SerializeStructVariant, <span class="self">Self</span>::Error&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>map = <span class="macro">try!</span>(<span class="self">self</span>.delegate.serialize_map(<span class="prelude-val">Some</span>(<span class="number">2</span>)));
-        <span class="macro">try!</span>(map.serialize_entry(<span class="self">self</span>.tag, <span class="self">self</span>.variant_name));
-        <span class="macro">try!</span>(map.serialize_key(inner_variant));
+        <span class="kw">let </span><span class="kw-2">mut </span>map = <span class="macro">tri!</span>(<span class="self">self</span>.delegate.serialize_map(<span class="prelude-val">Some</span>(<span class="number">2</span>)));
+        <span class="macro">tri!</span>(map.serialize_entry(<span class="self">self</span>.tag, <span class="self">self</span>.variant_name));
+        <span class="macro">tri!</span>(map.serialize_key(inner_variant));
         <span class="prelude-val">Ok</span>(SerializeStructVariantAsMapValue::new(
             map,
             inner_variant,
@@ -1647,9 +1722,9 @@
 
 <span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="kw">mod </span>content {
-    <span class="kw">use </span>lib::<span class="kw-2">*</span>;
+    <span class="kw">use </span><span class="kw">crate</span>::lib::<span class="kw-2">*</span>;
 
-    <span class="kw">use </span>ser::{<span class="self">self</span>, Serialize, Serializer};
+    <span class="kw">use </span><span class="kw">crate</span>::ser::{<span class="self">self</span>, Serialize, Serializer};
 
     <span class="kw">pub struct </span>SerializeTupleVariantAsMapValue&lt;M&gt; {
         map: M,
@@ -1660,8 +1735,8 @@
     <span class="kw">impl</span>&lt;M&gt; SerializeTupleVariantAsMapValue&lt;M&gt; {
         <span class="kw">pub fn </span>new(map: M, name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, len: usize) -&gt; <span class="self">Self </span>{
             SerializeTupleVariantAsMapValue {
-                map: map,
-                name: name,
+                map,
+                name,
                 fields: Vec::with_capacity(len),
             }
         }
@@ -1678,13 +1753,13 @@
         <span class="kw">where
             </span>T: Serialize,
         {
-            <span class="kw">let </span>value = <span class="macro">try!</span>(value.serialize(ContentSerializer::&lt;M::Error&gt;::new()));
+            <span class="kw">let </span>value = <span class="macro">tri!</span>(value.serialize(ContentSerializer::&lt;M::Error&gt;::new()));
             <span class="self">self</span>.fields.push(value);
             <span class="prelude-val">Ok</span>(())
         }
 
         <span class="kw">fn </span>end(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;M::Ok, M::Error&gt; {
-            <span class="macro">try!</span>(<span class="self">self
+            <span class="macro">tri!</span>(<span class="self">self
                 </span>.map
                 .serialize_value(<span class="kw-2">&amp;</span>Content::TupleStruct(<span class="self">self</span>.name, <span class="self">self</span>.fields)));
             <span class="self">self</span>.map.end()
@@ -1700,8 +1775,8 @@
     <span class="kw">impl</span>&lt;M&gt; SerializeStructVariantAsMapValue&lt;M&gt; {
         <span class="kw">pub fn </span>new(map: M, name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, len: usize) -&gt; <span class="self">Self </span>{
             SerializeStructVariantAsMapValue {
-                map: map,
-                name: name,
+                map,
+                name,
                 fields: Vec::with_capacity(len),
             }
         }
@@ -1722,13 +1797,13 @@
         <span class="kw">where
             </span>T: Serialize,
         {
-            <span class="kw">let </span>value = <span class="macro">try!</span>(value.serialize(ContentSerializer::&lt;M::Error&gt;::new()));
+            <span class="kw">let </span>value = <span class="macro">tri!</span>(value.serialize(ContentSerializer::&lt;M::Error&gt;::new()));
             <span class="self">self</span>.fields.push((key, value));
             <span class="prelude-val">Ok</span>(())
         }
 
         <span class="kw">fn </span>end(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;M::Ok, M::Error&gt; {
-            <span class="macro">try!</span>(<span class="self">self
+            <span class="macro">tri!</span>(<span class="self">self
                 </span>.map
                 .serialize_value(<span class="kw-2">&amp;</span>Content::Struct(<span class="self">self</span>.name, <span class="self">self</span>.fields)));
             <span class="self">self</span>.map.end()
@@ -1809,50 +1884,50 @@
                 }
                 Content::Seq(<span class="kw-2">ref </span>elements) =&gt; elements.serialize(serializer),
                 Content::Tuple(<span class="kw-2">ref </span>elements) =&gt; {
-                    <span class="kw">use </span>ser::SerializeTuple;
-                    <span class="kw">let </span><span class="kw-2">mut </span>tuple = <span class="macro">try!</span>(serializer.serialize_tuple(elements.len()));
+                    <span class="kw">use </span><span class="kw">crate</span>::ser::SerializeTuple;
+                    <span class="kw">let </span><span class="kw-2">mut </span>tuple = <span class="macro">tri!</span>(serializer.serialize_tuple(elements.len()));
                     <span class="kw">for </span>e <span class="kw">in </span>elements {
-                        <span class="macro">try!</span>(tuple.serialize_element(e));
+                        <span class="macro">tri!</span>(tuple.serialize_element(e));
                     }
                     tuple.end()
                 }
                 Content::TupleStruct(n, <span class="kw-2">ref </span>fields) =&gt; {
-                    <span class="kw">use </span>ser::SerializeTupleStruct;
-                    <span class="kw">let </span><span class="kw-2">mut </span>ts = <span class="macro">try!</span>(serializer.serialize_tuple_struct(n, fields.len()));
+                    <span class="kw">use </span><span class="kw">crate</span>::ser::SerializeTupleStruct;
+                    <span class="kw">let </span><span class="kw-2">mut </span>ts = <span class="macro">tri!</span>(serializer.serialize_tuple_struct(n, fields.len()));
                     <span class="kw">for </span>f <span class="kw">in </span>fields {
-                        <span class="macro">try!</span>(ts.serialize_field(f));
+                        <span class="macro">tri!</span>(ts.serialize_field(f));
                     }
                     ts.end()
                 }
                 Content::TupleVariant(n, i, v, <span class="kw-2">ref </span>fields) =&gt; {
-                    <span class="kw">use </span>ser::SerializeTupleVariant;
-                    <span class="kw">let </span><span class="kw-2">mut </span>tv = <span class="macro">try!</span>(serializer.serialize_tuple_variant(n, i, v, fields.len()));
+                    <span class="kw">use </span><span class="kw">crate</span>::ser::SerializeTupleVariant;
+                    <span class="kw">let </span><span class="kw-2">mut </span>tv = <span class="macro">tri!</span>(serializer.serialize_tuple_variant(n, i, v, fields.len()));
                     <span class="kw">for </span>f <span class="kw">in </span>fields {
-                        <span class="macro">try!</span>(tv.serialize_field(f));
+                        <span class="macro">tri!</span>(tv.serialize_field(f));
                     }
                     tv.end()
                 }
                 Content::Map(<span class="kw-2">ref </span>entries) =&gt; {
-                    <span class="kw">use </span>ser::SerializeMap;
-                    <span class="kw">let </span><span class="kw-2">mut </span>map = <span class="macro">try!</span>(serializer.serialize_map(<span class="prelude-val">Some</span>(entries.len())));
+                    <span class="kw">use </span><span class="kw">crate</span>::ser::SerializeMap;
+                    <span class="kw">let </span><span class="kw-2">mut </span>map = <span class="macro">tri!</span>(serializer.serialize_map(<span class="prelude-val">Some</span>(entries.len())));
                     <span class="kw">for </span>(k, v) <span class="kw">in </span>entries {
-                        <span class="macro">try!</span>(map.serialize_entry(k, v));
+                        <span class="macro">tri!</span>(map.serialize_entry(k, v));
                     }
                     map.end()
                 }
                 Content::Struct(n, <span class="kw-2">ref </span>fields) =&gt; {
-                    <span class="kw">use </span>ser::SerializeStruct;
-                    <span class="kw">let </span><span class="kw-2">mut </span>s = <span class="macro">try!</span>(serializer.serialize_struct(n, fields.len()));
+                    <span class="kw">use </span><span class="kw">crate</span>::ser::SerializeStruct;
+                    <span class="kw">let </span><span class="kw-2">mut </span>s = <span class="macro">tri!</span>(serializer.serialize_struct(n, fields.len()));
                     <span class="kw">for </span><span class="kw-2">&amp;</span>(k, <span class="kw-2">ref </span>v) <span class="kw">in </span>fields {
-                        <span class="macro">try!</span>(s.serialize_field(k, v));
+                        <span class="macro">tri!</span>(s.serialize_field(k, v));
                     }
                     s.end()
                 }
                 Content::StructVariant(n, i, v, <span class="kw-2">ref </span>fields) =&gt; {
-                    <span class="kw">use </span>ser::SerializeStructVariant;
-                    <span class="kw">let </span><span class="kw-2">mut </span>sv = <span class="macro">try!</span>(serializer.serialize_struct_variant(n, i, v, fields.len()));
+                    <span class="kw">use </span><span class="kw">crate</span>::ser::SerializeStructVariant;
+                    <span class="kw">let </span><span class="kw-2">mut </span>sv = <span class="macro">tri!</span>(serializer.serialize_struct_variant(n, i, v, fields.len()));
                     <span class="kw">for </span><span class="kw-2">&amp;</span>(k, <span class="kw-2">ref </span>v) <span class="kw">in </span>fields {
-                        <span class="macro">try!</span>(sv.serialize_field(k, v));
+                        <span class="macro">tri!</span>(sv.serialize_field(k, v));
                     }
                     sv.end()
                 }
@@ -1949,7 +2024,7 @@
         <span class="kw">where
             </span>T: Serialize,
         {
-            <span class="prelude-val">Ok</span>(Content::Some(Box::new(<span class="macro">try!</span>(value.serialize(<span class="self">self</span>)))))
+            <span class="prelude-val">Ok</span>(Content::Some(Box::new(<span class="macro">tri!</span>(value.serialize(<span class="self">self</span>)))))
         }
 
         <span class="kw">fn </span>serialize_unit(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Content, E&gt; {
@@ -1979,7 +2054,7 @@
         {
             <span class="prelude-val">Ok</span>(Content::NewtypeStruct(
                 name,
-                Box::new(<span class="macro">try!</span>(value.serialize(<span class="self">self</span>))),
+                Box::new(<span class="macro">tri!</span>(value.serialize(<span class="self">self</span>))),
             ))
         }
 
@@ -1997,7 +2072,7 @@
                 name,
                 variant_index,
                 variant,
-                Box::new(<span class="macro">try!</span>(value.serialize(<span class="self">self</span>))),
+                Box::new(<span class="macro">tri!</span>(value.serialize(<span class="self">self</span>))),
             ))
         }
 
@@ -2021,7 +2096,7 @@
             len: usize,
         ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::SerializeTupleStruct, E&gt; {
             <span class="prelude-val">Ok</span>(SerializeTupleStruct {
-                name: name,
+                name,
                 fields: Vec::with_capacity(len),
                 error: PhantomData,
             })
@@ -2035,9 +2110,9 @@
             len: usize,
         ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::SerializeTupleVariant, E&gt; {
             <span class="prelude-val">Ok</span>(SerializeTupleVariant {
-                name: name,
-                variant_index: variant_index,
-                variant: variant,
+                name,
+                variant_index,
+                variant,
                 fields: Vec::with_capacity(len),
                 error: PhantomData,
             })
@@ -2057,7 +2132,7 @@
             len: usize,
         ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::SerializeStruct, E&gt; {
             <span class="prelude-val">Ok</span>(SerializeStruct {
-                name: name,
+                name,
                 fields: Vec::with_capacity(len),
                 error: PhantomData,
             })
@@ -2071,9 +2146,9 @@
             len: usize,
         ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::SerializeStructVariant, E&gt; {
             <span class="prelude-val">Ok</span>(SerializeStructVariant {
-                name: name,
-                variant_index: variant_index,
-                variant: variant,
+                name,
+                variant_index,
+                variant,
                 fields: Vec::with_capacity(len),
                 error: PhantomData,
             })
@@ -2096,7 +2171,7 @@
         <span class="kw">where
             </span>T: Serialize,
         {
-            <span class="kw">let </span>value = <span class="macro">try!</span>(value.serialize(ContentSerializer::&lt;E&gt;::new()));
+            <span class="kw">let </span>value = <span class="macro">tri!</span>(value.serialize(ContentSerializer::&lt;E&gt;::new()));
             <span class="self">self</span>.elements.push(value);
             <span class="prelude-val">Ok</span>(())
         }
@@ -2122,7 +2197,7 @@
         <span class="kw">where
             </span>T: Serialize,
         {
-            <span class="kw">let </span>value = <span class="macro">try!</span>(value.serialize(ContentSerializer::&lt;E&gt;::new()));
+            <span class="kw">let </span>value = <span class="macro">tri!</span>(value.serialize(ContentSerializer::&lt;E&gt;::new()));
             <span class="self">self</span>.elements.push(value);
             <span class="prelude-val">Ok</span>(())
         }
@@ -2149,7 +2224,7 @@
         <span class="kw">where
             </span>T: Serialize,
         {
-            <span class="kw">let </span>value = <span class="macro">try!</span>(value.serialize(ContentSerializer::&lt;E&gt;::new()));
+            <span class="kw">let </span>value = <span class="macro">tri!</span>(value.serialize(ContentSerializer::&lt;E&gt;::new()));
             <span class="self">self</span>.fields.push(value);
             <span class="prelude-val">Ok</span>(())
         }
@@ -2178,7 +2253,7 @@
         <span class="kw">where
             </span>T: Serialize,
         {
-            <span class="kw">let </span>value = <span class="macro">try!</span>(value.serialize(ContentSerializer::&lt;E&gt;::new()));
+            <span class="kw">let </span>value = <span class="macro">tri!</span>(value.serialize(ContentSerializer::&lt;E&gt;::new()));
             <span class="self">self</span>.fields.push(value);
             <span class="prelude-val">Ok</span>(())
         }
@@ -2210,7 +2285,7 @@
         <span class="kw">where
             </span>T: Serialize,
         {
-            <span class="kw">let </span>key = <span class="macro">try!</span>(key.serialize(ContentSerializer::&lt;E&gt;::new()));
+            <span class="kw">let </span>key = <span class="macro">tri!</span>(key.serialize(ContentSerializer::&lt;E&gt;::new()));
             <span class="self">self</span>.key = <span class="prelude-val">Some</span>(key);
             <span class="prelude-val">Ok</span>(())
         }
@@ -2223,7 +2298,7 @@
                 </span>.key
                 .take()
                 .expect(<span class="string">&quot;serialize_value called before serialize_key&quot;</span>);
-            <span class="kw">let </span>value = <span class="macro">try!</span>(value.serialize(ContentSerializer::&lt;E&gt;::new()));
+            <span class="kw">let </span>value = <span class="macro">tri!</span>(value.serialize(ContentSerializer::&lt;E&gt;::new()));
             <span class="self">self</span>.entries.push((key, value));
             <span class="prelude-val">Ok</span>(())
         }
@@ -2237,8 +2312,8 @@
             </span>K: Serialize,
             V: Serialize,
         {
-            <span class="kw">let </span>key = <span class="macro">try!</span>(key.serialize(ContentSerializer::&lt;E&gt;::new()));
-            <span class="kw">let </span>value = <span class="macro">try!</span>(value.serialize(ContentSerializer::&lt;E&gt;::new()));
+            <span class="kw">let </span>key = <span class="macro">tri!</span>(key.serialize(ContentSerializer::&lt;E&gt;::new()));
+            <span class="kw">let </span>value = <span class="macro">tri!</span>(value.serialize(ContentSerializer::&lt;E&gt;::new()));
             <span class="self">self</span>.entries.push((key, value));
             <span class="prelude-val">Ok</span>(())
         }
@@ -2261,7 +2336,7 @@
         <span class="kw">where
             </span>T: Serialize,
         {
-            <span class="kw">let </span>value = <span class="macro">try!</span>(value.serialize(ContentSerializer::&lt;E&gt;::new()));
+            <span class="kw">let </span>value = <span class="macro">tri!</span>(value.serialize(ContentSerializer::&lt;E&gt;::new()));
             <span class="self">self</span>.fields.push((key, value));
             <span class="prelude-val">Ok</span>(())
         }
@@ -2290,7 +2365,7 @@
         <span class="kw">where
             </span>T: Serialize,
         {
-            <span class="kw">let </span>value = <span class="macro">try!</span>(value.serialize(ContentSerializer::&lt;E&gt;::new()));
+            <span class="kw">let </span>value = <span class="macro">tri!</span>(value.serialize(ContentSerializer::&lt;E&gt;::new()));
             <span class="self">self</span>.fields.push((key, value));
             <span class="prelude-val">Ok</span>(())
         }
@@ -2335,7 +2410,7 @@
     <span class="kw">type </span>SerializeTupleStruct = Impossible&lt;<span class="self">Self</span>::Ok, M::Error&gt;;
     <span class="kw">type </span>SerializeMap = FlatMapSerializeMap&lt;<span class="lifetime">&#39;a</span>, M&gt;;
     <span class="kw">type </span>SerializeStruct = FlatMapSerializeStruct&lt;<span class="lifetime">&#39;a</span>, M&gt;;
-    <span class="kw">type </span>SerializeTupleVariant = Impossible&lt;<span class="self">Self</span>::Ok, M::Error&gt;;
+    <span class="kw">type </span>SerializeTupleVariant = FlatMapSerializeTupleVariantAsMapValue&lt;<span class="lifetime">&#39;a</span>, M&gt;;
     <span class="kw">type </span>SerializeStructVariant = FlatMapSerializeStructVariantAsMapValue&lt;<span class="lifetime">&#39;a</span>, M&gt;;
 
     <span class="kw">fn </span>serialize_bool(<span class="self">self</span>, <span class="kw">_</span>: bool) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Ok, <span class="self">Self</span>::Error&gt; {
@@ -2443,7 +2518,7 @@
     <span class="kw">where
         </span>T: Serialize,
     {
-        <span class="macro">try!</span>(<span class="self">self</span>.<span class="number">0</span>.serialize_key(variant));
+        <span class="macro">tri!</span>(<span class="self">self</span>.<span class="number">0</span>.serialize_key(variant));
         <span class="self">self</span>.<span class="number">0</span>.serialize_value(value)
     }
 
@@ -2467,10 +2542,11 @@
         <span class="self">self</span>,
         <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
         <span class="kw">_</span>: u32,
-        <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
+        variant: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
         <span class="kw">_</span>: usize,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::SerializeTupleVariant, <span class="self">Self</span>::Error&gt; {
-        <span class="prelude-val">Err</span>(<span class="self">Self</span>::bad_type(Unsupported::Enum))
+        <span class="macro">tri!</span>(<span class="self">self</span>.<span class="number">0</span>.serialize_key(variant));
+        <span class="prelude-val">Ok</span>(FlatMapSerializeTupleVariantAsMapValue::new(<span class="self">self</span>.<span class="number">0</span>))
     }
 
     <span class="kw">fn </span>serialize_map(<span class="self">self</span>, <span class="kw">_</span>: <span class="prelude-ty">Option</span>&lt;usize&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::SerializeMap, <span class="self">Self</span>::Error&gt; {
@@ -2492,7 +2568,7 @@
         inner_variant: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
         <span class="kw">_</span>: usize,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::SerializeStructVariant, <span class="self">Self</span>::Error&gt; {
-        <span class="macro">try!</span>(<span class="self">self</span>.<span class="number">0</span>.serialize_key(inner_variant));
+        <span class="macro">tri!</span>(<span class="self">self</span>.<span class="number">0</span>.serialize_key(inner_variant));
         <span class="prelude-val">Ok</span>(FlatMapSerializeStructVariantAsMapValue::new(
             <span class="self">self</span>.<span class="number">0</span>,
             inner_variant,
@@ -2569,7 +2645,53 @@
     }
 }
 
+<span class="comment">////////////////////////////////////////////////////////////////////////////////////////////////////
+
+</span><span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+</span><span class="kw">pub struct </span>FlatMapSerializeTupleVariantAsMapValue&lt;<span class="lifetime">&#39;a</span>, M: <span class="lifetime">&#39;a</span>&gt; {
+    map: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>M,
+    fields: Vec&lt;Content&gt;,
+}
+
 <span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, M&gt; FlatMapSerializeTupleVariantAsMapValue&lt;<span class="lifetime">&#39;a</span>, M&gt;
+<span class="kw">where
+    </span>M: SerializeMap + <span class="lifetime">&#39;a</span>,
+{
+    <span class="kw">fn </span>new(map: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>M) -&gt; <span class="self">Self </span>{
+        FlatMapSerializeTupleVariantAsMapValue {
+            map,
+            fields: Vec::new(),
+        }
+    }
+}
+
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, M&gt; ser::SerializeTupleVariant <span class="kw">for </span>FlatMapSerializeTupleVariantAsMapValue&lt;<span class="lifetime">&#39;a</span>, M&gt;
+<span class="kw">where
+    </span>M: SerializeMap + <span class="lifetime">&#39;a</span>,
+{
+    <span class="kw">type </span><span class="prelude-val">Ok </span>= ();
+    <span class="kw">type </span>Error = M::Error;
+
+    <span class="kw">fn </span>serialize_field&lt;T: <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;
+    <span class="kw">where
+        </span>T: Serialize,
+    {
+        <span class="kw">let </span>value = <span class="macro">tri!</span>(value.serialize(ContentSerializer::&lt;M::Error&gt;::new()));
+        <span class="self">self</span>.fields.push(value);
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">fn </span>end(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
+        <span class="macro">tri!</span>(<span class="self">self</span>.map.serialize_value(<span class="kw-2">&amp;</span>Content::Seq(<span class="self">self</span>.fields)));
+        <span class="prelude-val">Ok</span>(())
+    }
+}
+
+<span class="comment">////////////////////////////////////////////////////////////////////////////////////////////////////
+
+</span><span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="kw">pub struct </span>FlatMapSerializeStructVariantAsMapValue&lt;<span class="lifetime">&#39;a</span>, M: <span class="lifetime">&#39;a</span>&gt; {
     map: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>M,
     name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
@@ -2583,8 +2705,8 @@
 {
     <span class="kw">fn </span>new(map: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>M, name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str) -&gt; FlatMapSerializeStructVariantAsMapValue&lt;<span class="lifetime">&#39;a</span>, M&gt; {
         FlatMapSerializeStructVariantAsMapValue {
-            map: map,
-            name: name,
+            map,
+            name,
             fields: Vec::new(),
         }
     }
@@ -2606,16 +2728,44 @@
     <span class="kw">where
         </span>T: Serialize,
     {
-        <span class="kw">let </span>value = <span class="macro">try!</span>(value.serialize(ContentSerializer::&lt;M::Error&gt;::new()));
+        <span class="kw">let </span>value = <span class="macro">tri!</span>(value.serialize(ContentSerializer::&lt;M::Error&gt;::new()));
         <span class="self">self</span>.fields.push((key, value));
         <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">fn </span>end(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
-        <span class="macro">try!</span>(<span class="self">self
+        <span class="macro">tri!</span>(<span class="self">self
             </span>.map
             .serialize_value(<span class="kw-2">&amp;</span>Content::Struct(<span class="self">self</span>.name, <span class="self">self</span>.fields)));
         <span class="prelude-val">Ok</span>(())
+    }
+}
+
+<span class="kw">pub struct </span>AdjacentlyTaggedEnumVariant {
+    <span class="kw">pub </span>enum_name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
+    <span class="kw">pub </span>variant_index: u32,
+    <span class="kw">pub </span>variant_name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
+}
+
+<span class="kw">impl </span>Serialize <span class="kw">for </span>AdjacentlyTaggedEnumVariant {
+    <span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>S: Serializer,
+    {
+        serializer.serialize_unit_variant(<span class="self">self</span>.enum_name, <span class="self">self</span>.variant_index, <span class="self">self</span>.variant_name)
+    }
+}
+
+<span class="comment">// Error when Serialize for a non_exhaustive remote enum encounters a variant
+// that is not recognized.
+</span><span class="kw">pub struct </span>CannotSerializeVariant&lt;T&gt;(<span class="kw">pub </span>T);
+
+<span class="kw">impl</span>&lt;T&gt; Display <span class="kw">for </span>CannotSerializeVariant&lt;T&gt;
+<span class="kw">where
+    </span>T: Debug,
+{
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
+        <span class="macro">write!</span>(formatter, <span class="string">&quot;enum variant cannot be serialized: {:?}&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
     }
 }
 </code></pre></div></section></main></body></html>

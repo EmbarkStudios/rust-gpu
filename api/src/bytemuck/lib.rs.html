@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bytemuck-1.12.3/src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="bytemuck" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../bytemuck/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bytemuck-1.14.0/src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="bytemuck" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../bytemuck/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -384,10 +384,84 @@
 <a href="#384" id="384">384</a>
 <a href="#385" id="385">385</a>
 <a href="#386" id="386">386</a>
+<a href="#387" id="387">387</a>
+<a href="#388" id="388">388</a>
+<a href="#389" id="389">389</a>
+<a href="#390" id="390">390</a>
+<a href="#391" id="391">391</a>
+<a href="#392" id="392">392</a>
+<a href="#393" id="393">393</a>
+<a href="#394" id="394">394</a>
+<a href="#395" id="395">395</a>
+<a href="#396" id="396">396</a>
+<a href="#397" id="397">397</a>
+<a href="#398" id="398">398</a>
+<a href="#399" id="399">399</a>
+<a href="#400" id="400">400</a>
+<a href="#401" id="401">401</a>
+<a href="#402" id="402">402</a>
+<a href="#403" id="403">403</a>
+<a href="#404" id="404">404</a>
+<a href="#405" id="405">405</a>
+<a href="#406" id="406">406</a>
+<a href="#407" id="407">407</a>
+<a href="#408" id="408">408</a>
+<a href="#409" id="409">409</a>
+<a href="#410" id="410">410</a>
+<a href="#411" id="411">411</a>
+<a href="#412" id="412">412</a>
+<a href="#413" id="413">413</a>
+<a href="#414" id="414">414</a>
+<a href="#415" id="415">415</a>
+<a href="#416" id="416">416</a>
+<a href="#417" id="417">417</a>
+<a href="#418" id="418">418</a>
+<a href="#419" id="419">419</a>
+<a href="#420" id="420">420</a>
+<a href="#421" id="421">421</a>
+<a href="#422" id="422">422</a>
+<a href="#423" id="423">423</a>
+<a href="#424" id="424">424</a>
+<a href="#425" id="425">425</a>
+<a href="#426" id="426">426</a>
+<a href="#427" id="427">427</a>
+<a href="#428" id="428">428</a>
+<a href="#429" id="429">429</a>
+<a href="#430" id="430">430</a>
+<a href="#431" id="431">431</a>
+<a href="#432" id="432">432</a>
+<a href="#433" id="433">433</a>
+<a href="#434" id="434">434</a>
+<a href="#435" id="435">435</a>
+<a href="#436" id="436">436</a>
+<a href="#437" id="437">437</a>
+<a href="#438" id="438">438</a>
+<a href="#439" id="439">439</a>
+<a href="#440" id="440">440</a>
+<a href="#441" id="441">441</a>
+<a href="#442" id="442">442</a>
+<a href="#443" id="443">443</a>
+<a href="#444" id="444">444</a>
+<a href="#445" id="445">445</a>
+<a href="#446" id="446">446</a>
+<a href="#447" id="447">447</a>
+<a href="#448" id="448">448</a>
+<a href="#449" id="449">449</a>
+<a href="#450" id="450">450</a>
+<a href="#451" id="451">451</a>
+<a href="#452" id="452">452</a>
+<a href="#453" id="453">453</a>
+<a href="#454" id="454">454</a>
+<a href="#455" id="455">455</a>
+<a href="#456" id="456">456</a>
+<a href="#457" id="457">457</a>
 </pre></div><pre class="rust"><code><span class="attr">#![no_std]
 #![warn(missing_docs)]
 #![allow(clippy::match_like_matches_macro)]
+#![allow(clippy::uninlined_format_args)]
+#![cfg_attr(feature = <span class="string">&quot;nightly_docs&quot;</span>, feature(doc_cfg))]
 #![cfg_attr(feature = <span class="string">&quot;nightly_portable_simd&quot;</span>, feature(portable_simd))]
+#![cfg_attr(feature = <span class="string">&quot;nightly_stdsimd&quot;</span>, feature(stdsimd))]
 
 </span><span class="doccomment">//! This crate gives small utilities for casting between plain data types.
 //!
@@ -457,12 +531,28 @@
   };
 }
 
+<span class="doccomment">/// A macro to implement marker traits for various simd types.
+/// #[allow(unused)] because the impls are only compiled on relevant platforms
+/// with relevant cargo features enabled.
+</span><span class="attr">#[allow(unused)]
+</span><span class="macro">macro_rules! </span>impl_unsafe_marker_for_simd {
+  ($(<span class="attr">#[cfg(<span class="macro-nonterminal">$cfg_predicate</span>:meta)]</span>)<span class="question-mark">? </span><span class="kw">unsafe impl </span><span class="macro-nonterminal">$</span><span class="kw">trait</span>:<span class="macro-nonterminal">ident </span><span class="kw">for </span><span class="macro-nonterminal">$platform</span>:ident :: {}) =&gt; {};
+  ($(<span class="attr">#[cfg(<span class="macro-nonterminal">$cfg_predicate</span>:meta)]</span>)<span class="question-mark">? </span><span class="kw">unsafe impl </span><span class="macro-nonterminal">$</span><span class="kw">trait</span>:<span class="macro-nonterminal">ident </span><span class="kw">for </span><span class="macro-nonterminal">$platform</span>:ident :: { <span class="macro-nonterminal">$first_type</span>:ident $(, <span class="macro-nonterminal">$types</span>:ident)* $(,)<span class="question-mark">? </span>}) =&gt; {
+    $( <span class="attr">#[cfg(<span class="macro-nonterminal">$cfg_predicate</span>)] </span>)<span class="question-mark">?
+    </span>$( <span class="attr">#[cfg_attr(feature = <span class="string">&quot;nightly_docs&quot;</span>, doc(cfg(<span class="macro-nonterminal">$cfg_predicate</span>)))] </span>)<span class="question-mark">?
+    </span><span class="kw">unsafe impl </span><span class="macro-nonterminal">$</span><span class="kw">trait for </span><span class="macro-nonterminal">$platform</span>::<span class="macro-nonterminal">$first_type </span>{}
+    $( <span class="attr">#[cfg(<span class="macro-nonterminal">$cfg_predicate</span>)] </span>)<span class="question-mark">? </span><span class="comment">// To prevent recursion errors if nothing is going to be expanded anyway.
+    </span><span class="macro">impl_unsafe_marker_for_simd!</span>($( <span class="attr">#[cfg(<span class="macro-nonterminal">$cfg_predicate</span>)] </span>)<span class="question-mark">? </span><span class="kw">unsafe impl </span><span class="macro-nonterminal">$</span><span class="kw">trait for </span><span class="macro-nonterminal">$platform</span>::{ $( <span class="macro-nonterminal">$types </span>),* });
+  };
+}
+
 <span class="attr">#[cfg(feature = <span class="string">&quot;extern_crate_std&quot;</span>)]
 </span><span class="kw">extern crate </span>std;
 
 <span class="attr">#[cfg(feature = <span class="string">&quot;extern_crate_alloc&quot;</span>)]
 </span><span class="kw">extern crate </span>alloc;
 <span class="attr">#[cfg(feature = <span class="string">&quot;extern_crate_alloc&quot;</span>)]
+#[cfg_attr(feature = <span class="string">&quot;nightly_docs&quot;</span>, doc(cfg(feature = <span class="string">&quot;extern_crate_alloc&quot;</span>)))]
 </span><span class="kw">pub mod </span>allocation;
 <span class="attr">#[cfg(feature = <span class="string">&quot;extern_crate_alloc&quot;</span>)]
 </span><span class="kw">pub use </span>allocation::<span class="kw-2">*</span>;
@@ -485,6 +575,12 @@
 <span class="kw">mod </span>pod_in_option;
 <span class="kw">pub use </span>pod_in_option::<span class="kw-2">*</span>;
 
+<span class="attr">#[cfg(feature = <span class="string">&quot;must_cast&quot;</span>)]
+</span><span class="kw">mod </span>must;
+<span class="attr">#[cfg(feature = <span class="string">&quot;must_cast&quot;</span>)]
+#[cfg_attr(feature = <span class="string">&quot;nightly_docs&quot;</span>, doc(cfg(feature = <span class="string">&quot;must_cast&quot;</span>)))]
+</span><span class="kw">pub use </span>must::<span class="kw-2">*</span>;
+
 <span class="kw">mod </span>no_uninit;
 <span class="kw">pub use </span>no_uninit::<span class="kw-2">*</span>;
 
@@ -498,9 +594,10 @@
 <span class="kw">pub use </span>transparent::<span class="kw-2">*</span>;
 
 <span class="attr">#[cfg(feature = <span class="string">&quot;derive&quot;</span>)]
+#[cfg_attr(feature = <span class="string">&quot;nightly_docs&quot;</span>, doc(cfg(feature = <span class="string">&quot;derive&quot;</span>)))]
 </span><span class="kw">pub use </span>bytemuck_derive::{
-  AnyBitPattern, CheckedBitPattern, Contiguous, NoUninit, Pod,
-  TransparentWrapper, Zeroable,
+  AnyBitPattern, ByteEq, ByteHash, CheckedBitPattern, Contiguous, NoUninit,
+  Pod, TransparentWrapper, Zeroable,
 };
 
 <span class="doccomment">/// The things that can go wrong when casting between [`Pod`] data forms.
@@ -532,6 +629,7 @@
   }
 }
 <span class="attr">#[cfg(feature = <span class="string">&quot;extern_crate_std&quot;</span>)]
+#[cfg_attr(feature = <span class="string">&quot;nightly_docs&quot;</span>, doc(cfg(feature = <span class="string">&quot;extern_crate_std&quot;</span>)))]
 </span><span class="kw">impl </span>std::error::Error <span class="kw">for </span>PodCastError {}
 
 <span class="doccomment">/// Re-interprets `&amp;T` as `&amp;[u8]`.
@@ -769,5 +867,49 @@
   a: <span class="kw-2">&amp;mut </span>[A],
 ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;mut </span>[B], PodCastError&gt; {
   <span class="kw">unsafe </span>{ internal::try_cast_slice_mut(a) }
+}
+
+<span class="doccomment">/// Fill all bytes of `target` with zeroes (see [`Zeroable`]).
+///
+/// This is similar to `*target = Zeroable::zeroed()`, but guarantees that any
+/// padding bytes in `target` are zeroed as well.
+///
+/// See also [`fill_zeroes`], if you have a slice rather than a single value.
+</span><span class="attr">#[inline]
+</span><span class="kw">pub fn </span>write_zeroes&lt;T: Zeroable&gt;(target: <span class="kw-2">&amp;mut </span>T) {
+  <span class="kw">struct </span>EnsureZeroWrite&lt;T&gt;(<span class="kw-2">*mut </span>T);
+  <span class="kw">impl</span>&lt;T&gt; Drop <span class="kw">for </span>EnsureZeroWrite&lt;T&gt; {
+    <span class="attr">#[inline(always)]
+    </span><span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+      <span class="kw">unsafe </span>{
+        core::ptr::write_bytes(<span class="self">self</span>.<span class="number">0</span>, <span class="number">0u8</span>, <span class="number">1</span>);
+      }
+    }
+  }
+  <span class="kw">unsafe </span>{
+    <span class="kw">let </span>guard = EnsureZeroWrite(target);
+    core::ptr::drop_in_place(guard.<span class="number">0</span>);
+    drop(guard);
+  }
+}
+
+<span class="doccomment">/// Fill all bytes of `slice` with zeroes (see [`Zeroable`]).
+///
+/// This is similar to `slice.fill(Zeroable::zeroed())`, but guarantees that any
+/// padding bytes in `slice` are zeroed as well.
+///
+/// See also [`write_zeroes`], which zeroes all bytes of a single value rather
+/// than a slice.
+</span><span class="attr">#[inline]
+</span><span class="kw">pub fn </span>fill_zeroes&lt;T: Zeroable&gt;(slice: <span class="kw-2">&amp;mut </span>[T]) {
+  <span class="kw">if </span>core::mem::needs_drop::&lt;T&gt;() {
+    <span class="comment">// If `T` needs to be dropped then we have to do this one item at a time, in
+    // case one of the intermediate drops does a panic.
+    </span>slice.iter_mut().for_each(write_zeroes);
+  } <span class="kw">else </span>{
+    <span class="comment">// Otherwise we can be really fast and just fill everthing with zeros.
+    </span><span class="kw">let </span>len = core::mem::size_of_val::&lt;[T]&gt;(slice);
+    <span class="kw">unsafe </span>{ core::ptr::write_bytes(slice.as_mut_ptr() <span class="kw">as </span><span class="kw-2">*mut </span>u8, <span class="number">0u8</span>, len) }
+  }
 }
 </code></pre></div></section></main></body></html>

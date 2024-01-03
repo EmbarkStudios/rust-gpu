@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/regex-syntax-0.6.27/src/ast/visitor.rs`."><title>visitor.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="regex_syntax" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../regex_syntax/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/regex-syntax-0.8.2/src/ast/visitor.rs`."><title>visitor.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="regex_syntax" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../regex_syntax/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -515,7 +515,12 @@
 <a href="#515" id="515">515</a>
 <a href="#516" id="516">516</a>
 <a href="#517" id="517">517</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::fmt;
+<a href="#518" id="518">518</a>
+<a href="#519" id="519">519</a>
+<a href="#520" id="520">520</a>
+<a href="#521" id="521">521</a>
+<a href="#522" id="522">522</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{vec, vec::Vec};
 
 <span class="kw">use </span><span class="kw">crate</span>::ast::{<span class="self">self</span>, Ast};
 
@@ -528,15 +533,12 @@
 /// may be proportional to end user input.
 ///
 /// Typical usage of this trait involves providing an implementation and then
-/// running it using the [`visit`](fn.visit.html) function.
+/// running it using the [`visit`] function.
 ///
 /// Note that the abstract syntax tree for a regular expression is quite
-/// complex. Unless you specifically need it, you might be able to use the
-/// much simpler
-/// [high-level intermediate representation](../hir/struct.Hir.html)
-/// and its
-/// [corresponding `Visitor` trait](../hir/trait.Visitor.html)
-/// instead.
+/// complex. Unless you specifically need it, you might be able to use the much
+/// simpler [high-level intermediate representation](crate::hir::Hir) and its
+/// [corresponding `Visitor` trait](crate::hir::Visitor) instead.
 </span><span class="kw">pub trait </span>Visitor {
     <span class="doccomment">/// The result of visiting an AST.
     </span><span class="kw">type </span>Output;
@@ -563,13 +565,17 @@
     }
 
     <span class="doccomment">/// This method is called between child nodes of an
-    /// [`Alternation`](struct.Alternation.html).
+    /// [`Alternation`](ast::Alternation).
     </span><span class="kw">fn </span>visit_alternation_in(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Err&gt; {
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// This method is called on every
-    /// [`ClassSetItem`](enum.ClassSetItem.html)
+    <span class="doccomment">/// This method is called between child nodes of a concatenation.
+    </span><span class="kw">fn </span>visit_concat_in(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Err&gt; {
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="doccomment">/// This method is called on every [`ClassSetItem`](ast::ClassSetItem)
     /// before descending into child nodes.
     </span><span class="kw">fn </span>visit_class_set_item_pre(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
@@ -578,8 +584,7 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// This method is called on every
-    /// [`ClassSetItem`](enum.ClassSetItem.html)
+    <span class="doccomment">/// This method is called on every [`ClassSetItem`](ast::ClassSetItem)
     /// after descending into child nodes.
     </span><span class="kw">fn </span>visit_class_set_item_post(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
@@ -589,8 +594,8 @@
     }
 
     <span class="doccomment">/// This method is called on every
-    /// [`ClassSetBinaryOp`](struct.ClassSetBinaryOp.html)
-    /// before descending into child nodes.
+    /// [`ClassSetBinaryOp`](ast::ClassSetBinaryOp) before descending into
+    /// child nodes.
     </span><span class="kw">fn </span>visit_class_set_binary_op_pre(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         _ast: <span class="kw-2">&amp;</span>ast::ClassSetBinaryOp,
@@ -599,8 +604,8 @@
     }
 
     <span class="doccomment">/// This method is called on every
-    /// [`ClassSetBinaryOp`](struct.ClassSetBinaryOp.html)
-    /// after descending into child nodes.
+    /// [`ClassSetBinaryOp`](ast::ClassSetBinaryOp) after descending into child
+    /// nodes.
     </span><span class="kw">fn </span>visit_class_set_binary_op_post(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         _ast: <span class="kw-2">&amp;</span>ast::ClassSetBinaryOp,
@@ -609,7 +614,7 @@
     }
 
     <span class="doccomment">/// This method is called between the left hand and right hand child nodes
-    /// of a [`ClassSetBinaryOp`](struct.ClassSetBinaryOp.html).
+    /// of a [`ClassSetBinaryOp`](ast::ClassSetBinaryOp).
     </span><span class="kw">fn </span>visit_class_set_binary_op_in(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         _ast: <span class="kw-2">&amp;</span>ast::ClassSetBinaryOp,
@@ -621,8 +626,7 @@
 <span class="doccomment">/// Executes an implementation of `Visitor` in constant stack space.
 ///
 /// This function will visit every node in the given `Ast` while calling the
-/// appropriate methods provided by the
-/// [`Visitor`](trait.Visitor.html) trait.
+/// appropriate methods provided by the [`Visitor`] trait.
 ///
 /// The primary use case for this method is when one wants to perform case
 /// analysis over an `Ast` without using a stack size proportional to the depth
@@ -751,8 +755,14 @@
                 <span class="comment">// If this is a concat/alternate, then we might have additional
                 // inductive steps to process.
                 </span><span class="kw">if let </span><span class="prelude-val">Some</span>(x) = <span class="self">self</span>.pop(frame) {
-                    <span class="kw">if let </span>Frame::Alternation { .. } = x {
-                        visitor.visit_alternation_in()<span class="question-mark">?</span>;
+                    <span class="kw">match </span>x {
+                        Frame::Alternation { .. } =&gt; {
+                            visitor.visit_alternation_in()<span class="question-mark">?</span>;
+                        }
+                        Frame::Concat { .. } =&gt; {
+                            visitor.visit_concat_in()<span class="question-mark">?</span>;
+                        }
+                        <span class="kw">_ </span>=&gt; {}
                     }
                     ast = x.child();
                     <span class="self">self</span>.stack.push((post_ast, x));
@@ -776,7 +786,7 @@
         visitor: <span class="kw-2">&amp;mut </span>V,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Frame&lt;<span class="lifetime">&#39;a</span>&gt;&gt;, V::Err&gt; {
         <span class="prelude-val">Ok</span>(<span class="kw">match </span><span class="kw-2">*</span>ast {
-            Ast::Class(ast::Class::Bracketed(<span class="kw-2">ref </span>x)) =&gt; {
+            Ast::ClassBracketed(<span class="kw-2">ref </span>x) =&gt; {
                 <span class="self">self</span>.visit_class(x, visitor)<span class="question-mark">?</span>;
                 <span class="prelude-val">None
             </span>}
@@ -992,8 +1002,8 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; fmt::Debug <span class="kw">for </span>ClassFrame&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; core::fmt::Debug <span class="kw">for </span>ClassFrame&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>core::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; core::fmt::Result {
         <span class="kw">let </span>x = <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
             ClassFrame::Union { .. } =&gt; <span class="string">&quot;Union&quot;</span>,
             ClassFrame::Binary { .. } =&gt; <span class="string">&quot;Binary&quot;</span>,
@@ -1004,8 +1014,8 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; fmt::Debug <span class="kw">for </span>ClassInduct&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; core::fmt::Debug <span class="kw">for </span>ClassInduct&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>core::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; core::fmt::Result {
         <span class="kw">let </span>x = <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
             ClassInduct::Item(it) =&gt; <span class="kw">match </span><span class="kw-2">*</span>it {
                 ast::ClassSetItem::Empty(<span class="kw">_</span>) =&gt; <span class="string">&quot;Item(Empty)&quot;</span>,

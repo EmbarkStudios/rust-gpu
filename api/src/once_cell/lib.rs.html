@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/once_cell-1.17.1/src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="once_cell" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../once_cell/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/once_cell-1.19.0/src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="once_cell" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../once_cell/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1385,11 +1385,38 @@
 <a href="#1385" id="1385">1385</a>
 <a href="#1386" id="1386">1386</a>
 <a href="#1387" id="1387">1387</a>
+<a href="#1388" id="1388">1388</a>
+<a href="#1389" id="1389">1389</a>
+<a href="#1390" id="1390">1390</a>
+<a href="#1391" id="1391">1391</a>
+<a href="#1392" id="1392">1392</a>
+<a href="#1393" id="1393">1393</a>
+<a href="#1394" id="1394">1394</a>
+<a href="#1395" id="1395">1395</a>
+<a href="#1396" id="1396">1396</a>
+<a href="#1397" id="1397">1397</a>
+<a href="#1398" id="1398">1398</a>
+<a href="#1399" id="1399">1399</a>
+<a href="#1400" id="1400">1400</a>
+<a href="#1401" id="1401">1401</a>
+<a href="#1402" id="1402">1402</a>
+<a href="#1403" id="1403">1403</a>
+<a href="#1404" id="1404">1404</a>
+<a href="#1405" id="1405">1405</a>
+<a href="#1406" id="1406">1406</a>
+<a href="#1407" id="1407">1407</a>
+<a href="#1408" id="1408">1408</a>
+<a href="#1409" id="1409">1409</a>
+<a href="#1410" id="1410">1410</a>
+<a href="#1411" id="1411">1411</a>
+<a href="#1412" id="1412">1412</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! # Overview
 //!
-//! `once_cell` provides two new cell-like types, [`unsync::OnceCell`] and [`sync::OnceCell`]. A `OnceCell`
-//! might store arbitrary non-`Copy` types, can be assigned to at most once and provides direct access
-//! to the stored contents. The core API looks *roughly* like this (and there&#39;s much more inside, read on!):
+//! `once_cell` provides two new cell-like types, [`unsync::OnceCell`] and
+//! [`sync::OnceCell`]. A `OnceCell` might store arbitrary non-`Copy` types, can
+//! be assigned to at most once and provides direct access to the stored
+//! contents. The core API looks *roughly* like this (and there&#39;s much more
+//! inside, read on!):
 //!
 //! ```rust,ignore
 //! impl&lt;T&gt; OnceCell&lt;T&gt; {
@@ -1399,11 +1426,12 @@
 //! }
 //! ```
 //!
-//! Note that, like with [`RefCell`] and [`Mutex`], the `set` method requires only a shared reference.
-//! Because of the single assignment restriction `get` can return a `&amp;T` instead of `Ref&lt;T&gt;`
-//! or `MutexGuard&lt;T&gt;`.
+//! Note that, like with [`RefCell`] and [`Mutex`], the `set` method requires
+//! only a shared reference. Because of the single assignment restriction `get`
+//! can return a `&amp;T` instead of `Ref&lt;T&gt;` or `MutexGuard&lt;T&gt;`.
 //!
-//! The `sync` flavor is thread-safe (that is, implements the [`Sync`] trait), while the `unsync` one is not.
+//! The `sync` flavor is thread-safe (that is, implements the [`Sync`] trait),
+//! while the `unsync` one is not.
 //!
 //! [`unsync::OnceCell`]: unsync/struct.OnceCell.html
 //! [`sync::OnceCell`]: sync/struct.OnceCell.html
@@ -1466,7 +1494,8 @@
 //! }
 //! ```
 //!
-//! There are also the [`sync::Lazy`] and [`unsync::Lazy`] convenience types to streamline this pattern:
+//! There are also the [`sync::Lazy`] and [`unsync::Lazy`] convenience types to
+//! streamline this pattern:
 //!
 //! ```rust
 //! use std::{sync::Mutex, collections::HashMap};
@@ -1507,7 +1536,8 @@
 //! ```
 //!
 //! If you need a lazy field in a struct, you probably should use `OnceCell`
-//! directly, because that will allow you to access `self` during initialization.
+//! directly, because that will allow you to access `self` during
+//! initialization.
 //!
 //! ```rust
 //! use std::{fs, path::PathBuf};
@@ -1543,7 +1573,8 @@
 //! }
 //! ```
 //!
-//! This macro can be useful to avoid the &quot;compile regex on every loop iteration&quot; problem.
+//! This macro can be useful to avoid the &quot;compile regex on every loop
+//! iteration&quot; problem.
 //!
 //! ## Runtime `include_bytes!`
 //!
@@ -1630,7 +1661,7 @@
 //!     let b = B::default();
 //!     a.b.init(&amp;b);
 //!     b.a.init(&amp;a);
-//!     
+//!
 //!     let _a = &amp;a.b.a.b.a;
 //! }
 //! ```
@@ -1649,23 +1680,26 @@
 //! |`Mutex&lt;T&gt;`            | `MutexGuard&lt;T&gt;`        | may deadlock at runtime, may block the thread |
 //! |`sync::OnceCell&lt;T&gt;`   | `&amp;T`                   | assignable only once, may block the thread    |
 //!
-//! Technically, calling `get_or_init` will also cause a panic or a deadlock if it recursively calls
-//! itself. However, because the assignment can happen only once, such cases should be more rare than
-//! equivalents with `RefCell` and `Mutex`.
+//! Technically, calling `get_or_init` will also cause a panic or a deadlock if
+//! it recursively calls itself. However, because the assignment can happen only
+//! once, such cases should be more rare than equivalents with `RefCell` and
+//! `Mutex`.
 //!
 //! # Minimum Supported `rustc` Version
 //!
-//! This crate&#39;s minimum supported `rustc` version is `1.56.0`.
-//!
-//! If only the `std` feature is enabled, MSRV will be updated conservatively, supporting at least latest 8 versions of the compiler.
-//! When using other features, like `parking_lot`, MSRV might be updated more frequently, up to the latest stable.
-//! In both cases, increasing MSRV is *not* considered a semver-breaking change.
+//! If only the `std`, `alloc`, or `race` features are enabled, MSRV will be
+//! updated conservatively, supporting at least latest 8 versions of the compiler.
+//! When using other features, like `parking_lot`, MSRV might be updated more
+//! frequently, up to the latest stable. In both cases, increasing MSRV is *not*
+//! considered a semver-breaking change and requires only a minor version bump.
 //!
 //! # Implementation details
 //!
-//! The implementation is based on the [`lazy_static`](https://github.com/rust-lang-nursery/lazy-static.rs/)
-//! and [`lazy_cell`](https://github.com/indiv0/lazycell/) crates and [`std::sync::Once`]. In some sense,
-//! `once_cell` just streamlines and unifies those APIs.
+//! The implementation is based on the
+//! [`lazy_static`](https://github.com/rust-lang-nursery/lazy-static.rs/) and
+//! [`lazy_cell`](https://github.com/indiv0/lazycell/) crates and
+//! [`std::sync::Once`]. In some sense, `once_cell` just streamlines and unifies
+//! those APIs.
 //!
 //! To implement a sync flavor of `OnceCell`, this crates uses either a custom
 //! re-implementation of `std::sync::Once` or `parking_lot::Mutex`. This is
@@ -1679,46 +1713,66 @@
 //!
 //! # F.A.Q.
 //!
-//! **Should I use lazy_static or once_cell?**
-//!
-//! To the first approximation, `once_cell` is both more flexible and more convenient than `lazy_static`
-//! and should be preferred.
-//!
-//! Unlike `once_cell`, `lazy_static` supports spinlock-based implementation of blocking which works with
-//! `#![no_std]`.
-//!
-//! `lazy_static` has received significantly more real world testing, but `once_cell` is also a widely
-//! used crate.
-//!
 //! **Should I use the sync or unsync flavor?**
 //!
-//! Because Rust compiler checks thread safety for you, it&#39;s impossible to accidentally use `unsync` where
-//! `sync` is required. So, use `unsync` in single-threaded code and `sync` in multi-threaded. It&#39;s easy
-//! to switch between the two if code becomes multi-threaded later.
+//! Because Rust compiler checks thread safety for you, it&#39;s impossible to
+//! accidentally use `unsync` where `sync` is required. So, use `unsync` in
+//! single-threaded code and `sync` in multi-threaded. It&#39;s easy to switch
+//! between the two if code becomes multi-threaded later.
 //!
-//! At the moment, `unsync` has an additional benefit that reentrant initialization causes a panic, which
-//! might be easier to debug than a deadlock.
+//! At the moment, `unsync` has an additional benefit that reentrant
+//! initialization causes a panic, which might be easier to debug than a
+//! deadlock.
 //!
 //! **Does this crate support async?**
 //!
-//! No, but you can use [`async_once_cell`](https://crates.io/crates/async_once_cell) instead.
+//! No, but you can use
+//! [`async_once_cell`](https://crates.io/crates/async_once_cell) instead.
+//!
+//! **Does this crate support `no_std`?**
+//!
+//! Yes, but with caveats. `OnceCell` is a synchronization primitive which
+//! _semantically_ relies on blocking. `OnceCell` guarantees that at most one
+//! `f` will be called to compute the value. If two threads of execution call
+//! `get_or_init` concurrently, one of them has to wait.
+//!
+//! Waiting fundamentally requires OS support. Execution environment needs to
+//! understand who waits on whom to prevent deadlocks due to priority inversion.
+//! You _could_ make code to compile by blindly using pure spinlocks, but the
+//! runtime behavior would be subtly wrong.
+//!
+//! Given these constraints, `once_cell` provides the following options:
+//!
+//! - The `race` module provides similar, but distinct synchronization primitive
+//!   which is compatible with `no_std`. With `race`, the `f` function can be
+//!   called multiple times by different threads, but only one thread will win
+//!   to install the value.
+//! - `critical-section` feature (with a `-`, not `_`) uses `critical_section`
+//!   to implement blocking.
 //!
 //! **Can I bring my own mutex?**
 //!
-//! There is [generic_once_cell](https://crates.io/crates/generic_once_cell) to allow just that.
+//! There is [generic_once_cell](https://crates.io/crates/generic_once_cell) to
+//! allow just that.
+//!
+//! **Should I use `std::cell::OnceCell`, `once_cell`, or `lazy_static`?**
+//!
+//! If you can use `std` version (your MSRV is at least 1.70, and you don&#39;t need
+//! extra features `once_cell` provides), use `std`. Otherwise, use `once_cell`.
+//! Don&#39;t use `lazy_static`.
 //!
 //! # Related crates
 //!
+//! * Most of this crate&#39;s functionality is available in `std` starting with
+//!   Rust 1.70. See `std::cell::OnceCell` and `std::sync::OnceLock`.
 //! * [double-checked-cell](https://github.com/niklasf/double-checked-cell)
 //! * [lazy-init](https://crates.io/crates/lazy-init)
 //! * [lazycell](https://crates.io/crates/lazycell)
 //! * [mitochondria](https://crates.io/crates/mitochondria)
 //! * [lazy_static](https://crates.io/crates/lazy_static)
 //! * [async_once_cell](https://crates.io/crates/async_once_cell)
-//! * [generic_once_cell](https://crates.io/crates/generic_once_cell) (bring your own mutex)
-//!
-//! Most of this crate&#39;s functionality is available in `std` in nightly Rust.
-//! See the [tracking issue](https://github.com/rust-lang/rust/issues/74465).
+//! * [generic_once_cell](https://crates.io/crates/generic_once_cell) (bring
+//!   your own mutex)
 
 </span><span class="attr">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
@@ -1745,8 +1799,6 @@
         ops::{Deref, DerefMut},
         panic::{RefUnwindSafe, UnwindSafe},
     };
-
-    <span class="kw">use </span><span class="kw">super</span>::unwrap_unchecked;
 
     <span class="doccomment">/// A cell which can be written to only once. It is not thread safe.
     ///
@@ -1919,7 +1971,7 @@
             // checked that slot is currently `None`, so this write
             // maintains the `inner`&#39;s invariant.
             </span><span class="kw-2">*</span>slot = <span class="prelude-val">Some</span>(value);
-            <span class="prelude-val">Ok</span>(<span class="kw">unsafe </span>{ unwrap_unchecked(slot.as_ref()) })
+            <span class="prelude-val">Ok</span>(<span class="kw">unsafe </span>{ slot.as_ref().unwrap_unchecked() })
         }
 
         <span class="doccomment">/// Gets the contents of the cell, initializing it with `f`
@@ -1992,7 +2044,7 @@
             // `assert`, while keeping `set/get` would be sound, but it seems
             // better to panic, rather than to silently use an old value.
             </span><span class="macro">assert!</span>(<span class="self">self</span>.set(val).is_ok(), <span class="string">&quot;reentrant init&quot;</span>);
-            <span class="prelude-val">Ok</span>(<span class="kw">unsafe </span>{ unwrap_unchecked(<span class="self">self</span>.get()) })
+            <span class="prelude-val">Ok</span>(<span class="kw">unsafe </span>{ <span class="self">self</span>.get().unwrap_unchecked() })
         }
 
         <span class="doccomment">/// Takes the value out of this `OnceCell`, moving it back to an uninitialized state.
@@ -2025,7 +2077,7 @@
         /// cell = OnceCell::new();
         /// ```
         </span><span class="kw">pub fn </span>take(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;T&gt; {
-            mem::replace(<span class="self">self</span>, <span class="self">Self</span>::default()).into_inner()
+            mem::take(<span class="self">self</span>).into_inner()
         }
 
         <span class="doccomment">/// Consumes the `OnceCell`, returning the wrapped value.
@@ -2152,8 +2204,14 @@
         /// assert_eq!(*lazy, 92);
         /// ```
         </span><span class="kw">pub fn </span>force_mut(this: <span class="kw-2">&amp;mut </span>Lazy&lt;T, F&gt;) -&gt; <span class="kw-2">&amp;mut </span>T {
-            <span class="self">Self</span>::force(this);
-            <span class="self">Self</span>::get_mut(this).unwrap_or_else(|| <span class="macro">unreachable!</span>())
+            <span class="kw">if </span>this.cell.get_mut().is_none() {
+                <span class="kw">let </span>value = <span class="kw">match </span>this.init.get_mut().take() {
+                    <span class="prelude-val">Some</span>(f) =&gt; f(),
+                    <span class="prelude-val">None </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Lazy instance has previously been poisoned&quot;</span>),
+                };
+                this.cell = OnceCell::with_value(value);
+            }
+            this.cell.get_mut().unwrap_or_else(|| <span class="macro">unreachable!</span>())
         }
 
         <span class="doccomment">/// Gets the reference to the result of this lazy value if
@@ -2200,8 +2258,7 @@
 
     <span class="kw">impl</span>&lt;T, F: FnOnce() -&gt; T&gt; DerefMut <span class="kw">for </span>Lazy&lt;T, F&gt; {
         <span class="kw">fn </span>deref_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>T {
-            Lazy::force(<span class="self">self</span>);
-            <span class="self">self</span>.cell.get_mut().unwrap_or_else(|| <span class="macro">unreachable!</span>())
+            Lazy::force_mut(<span class="self">self</span>)
         }
     }
 
@@ -2223,7 +2280,7 @@
         panic::RefUnwindSafe,
     };
 
-    <span class="kw">use super</span>::{imp::OnceCell <span class="kw">as </span>Imp, unwrap_unchecked};
+    <span class="kw">use </span><span class="kw">super</span>::imp::OnceCell <span class="kw">as </span>Imp;
 
     <span class="doccomment">/// A thread-safe cell which can be written to only once.
     ///
@@ -2434,7 +2491,7 @@
         /// ```
         </span><span class="kw">pub fn </span>try_insert(<span class="kw-2">&amp;</span><span class="self">self</span>, value: T) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>T, (<span class="kw-2">&amp;</span>T, T)&gt; {
             <span class="kw">let </span><span class="kw-2">mut </span>value = <span class="prelude-val">Some</span>(value);
-            <span class="kw">let </span>res = <span class="self">self</span>.get_or_init(|| <span class="kw">unsafe </span>{ unwrap_unchecked(value.take()) });
+            <span class="kw">let </span>res = <span class="self">self</span>.get_or_init(|| <span class="kw">unsafe </span>{ value.take().unwrap_unchecked() });
             <span class="kw">match </span>value {
                 <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(res),
                 <span class="prelude-val">Some</span>(value) =&gt; <span class="prelude-val">Err</span>((res, value)),
@@ -2550,7 +2607,7 @@
         /// cell = OnceCell::new();
         /// ```
         </span><span class="kw">pub fn </span>take(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;T&gt; {
-            mem::replace(<span class="self">self</span>, <span class="self">Self</span>::default()).into_inner()
+            mem::take(<span class="self">self</span>).into_inner()
         }
 
         <span class="doccomment">/// Consumes the `OnceCell`, returning the wrapped value. Returns
@@ -2680,8 +2737,14 @@
         /// assert_eq!(Lazy::force_mut(&amp;mut lazy), &amp;mut 92);
         /// ```
         </span><span class="kw">pub fn </span>force_mut(this: <span class="kw-2">&amp;mut </span>Lazy&lt;T, F&gt;) -&gt; <span class="kw-2">&amp;mut </span>T {
-            <span class="self">Self</span>::force(this);
-            <span class="self">Self</span>::get_mut(this).unwrap_or_else(|| <span class="macro">unreachable!</span>())
+            <span class="kw">if </span>this.cell.get_mut().is_none() {
+                <span class="kw">let </span>value = <span class="kw">match </span>this.init.get_mut().take() {
+                    <span class="prelude-val">Some</span>(f) =&gt; f(),
+                    <span class="prelude-val">None </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Lazy instance has previously been poisoned&quot;</span>),
+                };
+                this.cell = OnceCell::with_value(value);
+            }
+            this.cell.get_mut().unwrap_or_else(|| <span class="macro">unreachable!</span>())
         }
 
         <span class="doccomment">/// Gets the reference to the result of this lazy value if
@@ -2728,8 +2791,7 @@
 
     <span class="kw">impl</span>&lt;T, F: FnOnce() -&gt; T&gt; DerefMut <span class="kw">for </span>Lazy&lt;T, F&gt; {
         <span class="kw">fn </span>deref_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>T {
-            Lazy::force(<span class="self">self</span>);
-            <span class="self">self</span>.cell.get_mut().unwrap_or_else(|| <span class="macro">unreachable!</span>())
+            Lazy::force_mut(<span class="self">self</span>)
         }
     }
 
@@ -2760,16 +2822,4 @@
 
 <span class="attr">#[cfg(feature = <span class="string">&quot;race&quot;</span>)]
 </span><span class="kw">pub mod </span>race;
-
-<span class="comment">// Remove once MSRV is at least 1.58.
-</span><span class="attr">#[inline]
-</span><span class="kw">unsafe fn </span>unwrap_unchecked&lt;T&gt;(val: <span class="prelude-ty">Option</span>&lt;T&gt;) -&gt; T {
-    <span class="kw">match </span>val {
-        <span class="prelude-val">Some</span>(value) =&gt; value,
-        <span class="prelude-val">None </span>=&gt; {
-            <span class="macro">debug_assert!</span>(<span class="bool-val">false</span>);
-            core::hint::unreachable_unchecked()
-        }
-    }
-}
 </code></pre></div></section></main></body></html>

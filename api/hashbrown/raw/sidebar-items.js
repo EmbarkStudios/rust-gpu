@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["Bucket","RawDrain","RawIntoIter","RawIter","RawIterHash","RawTable"]};
+window.SIDEBAR_ITEMS = {"struct":["Bucket","InsertSlot","RawDrain","RawIntoIter","RawIter","RawIterHash","RawTable"]};

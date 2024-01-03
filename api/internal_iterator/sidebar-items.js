@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["Chain","Cloned","Copied","Enumerate","Filter","FilterMap","FlatMap","Inspect","Internal","Map","Skip","Take"],"trait":["FromInternalIterator","InternalIterator","IntoInternalIterator","IteratorExt"]};
+window.SIDEBAR_ITEMS = {"fn":["from_fn"],"struct":["BreakValue","Chain","Cloned","Copied","Enumerate","Filter","FilterMap","FlatMap","FromFn","Inspect","Internal","Map","Skip","Take"],"trait":["FromInternalIterator","InternalIterator","IntoInternalIterator","IteratorExt"]};

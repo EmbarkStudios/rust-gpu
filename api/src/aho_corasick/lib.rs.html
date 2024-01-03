@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/aho-corasick-0.7.18/src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="aho_corasick" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../aho_corasick/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/aho-corasick-1.1.2/src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="aho_corasick" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../aho_corasick/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -295,6 +295,35 @@
 <a href="#295" id="295">295</a>
 <a href="#296" id="296">296</a>
 <a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a>
+<a href="#316" id="316">316</a>
+<a href="#317" id="317">317</a>
+<a href="#318" id="318">318</a>
+<a href="#319" id="319">319</a>
+<a href="#320" id="320">320</a>
+<a href="#321" id="321">321</a>
+<a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
+<a href="#326" id="326">326</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 A library for finding occurrences of many patterns at once. This library
 provides multiple pattern search principally through an implementation of the
@@ -307,32 +336,24 @@ off. Other features include simple ASCII case insensitive matching, finding
 overlapping matches, replacements, searching streams and even searching and
 replacing text in streams.
 
-Finally, unlike all other (known) Aho-Corasick implementations, this one
-supports enabling
-[leftmost-first](enum.MatchKind.html#variant.LeftmostFirst)
-or
-[leftmost-longest](enum.MatchKind.html#variant.LeftmostFirst)
-match semantics, using a (seemingly) novel alternative construction algorithm.
-For more details on what match semantics means, see the
-[`MatchKind`](enum.MatchKind.html)
-type.
+Finally, unlike most other Aho-Corasick implementations, this one
+supports enabling [leftmost-first](MatchKind::LeftmostFirst) or
+[leftmost-longest](MatchKind::LeftmostLongest) match semantics, using a
+(seemingly) novel alternative construction algorithm. For more details on what
+match semantics means, see the [`MatchKind`] type.
 
 # Overview
 
 This section gives a brief overview of the primary types in this crate:
 
-* [`AhoCorasick`](struct.AhoCorasick.html) is the primary type and represents
-  an Aho-Corasick automaton. This is the type you use to execute searches.
-* [`AhoCorasickBuilder`](struct.AhoCorasickBuilder.html) can be used to build
-  an Aho-Corasick automaton, and supports configuring a number of options.
-* [`Match`](struct.Match.html) represents a single match reported by an
-  Aho-Corasick automaton. Each match has two pieces of information: the pattern
-  that matched and the start and end byte offsets corresponding to the position
-  in the haystack at which it matched.
-
-Additionally, the [`packed`](packed/index.html) sub-module contains a lower
-level API for using fast vectorized routines for finding a small number of
-patterns in a haystack.
+* [`AhoCorasick`] is the primary type and represents an Aho-Corasick automaton.
+This is the type you use to execute searches.
+* [`AhoCorasickBuilder`] can be used to build an Aho-Corasick automaton, and
+supports configuring a number of options.
+* [`Match`] represents a single match reported by an Aho-Corasick automaton.
+Each match has two pieces of information: the pattern that matched and the
+start and end byte offsets corresponding to the position in the haystack at
+which it matched.
 
 # Example: basic searching
 
@@ -341,20 +362,20 @@ simultaneously. Each match includes the pattern that matched along with the
 byte offsets of the match.
 
 ```
-use aho_corasick::AhoCorasick;
+use aho_corasick::{AhoCorasick, PatternID};
 
 let patterns = &amp;[&quot;apple&quot;, &quot;maple&quot;, &quot;Snapple&quot;];
 let haystack = &quot;Nobody likes maple in their apple flavored Snapple.&quot;;
 
-let ac = AhoCorasick::new(patterns);
+let ac = AhoCorasick::new(patterns).unwrap();
 let mut matches = vec![];
 for mat in ac.find_iter(haystack) {
     matches.push((mat.pattern(), mat.start(), mat.end()));
 }
 assert_eq!(matches, vec![
-    (1, 13, 18),
-    (0, 28, 33),
-    (2, 43, 50),
+    (PatternID::must(1), 13, 18),
+    (PatternID::must(0), 28, 33),
+    (PatternID::must(2), 43, 50),
 ]);
 ```
 
@@ -364,22 +385,23 @@ This is like the previous example, but matches `Snapple` case insensitively
 using `AhoCorasickBuilder`:
 
 ```
-use aho_corasick::AhoCorasickBuilder;
+use aho_corasick::{AhoCorasick, PatternID};
 
 let patterns = &amp;[&quot;apple&quot;, &quot;maple&quot;, &quot;snapple&quot;];
 let haystack = &quot;Nobody likes maple in their apple flavored Snapple.&quot;;
 
-let ac = AhoCorasickBuilder::new()
+let ac = AhoCorasick::builder()
     .ascii_case_insensitive(true)
-    .build(patterns);
+    .build(patterns)
+    .unwrap();
 let mut matches = vec![];
 for mat in ac.find_iter(haystack) {
     matches.push((mat.pattern(), mat.start(), mat.end()));
 }
 assert_eq!(matches, vec![
-    (1, 13, 18),
-    (0, 28, 33),
-    (2, 43, 50),
+    (PatternID::must(1), 13, 18),
+    (PatternID::must(0), 28, 33),
+    (PatternID::must(2), 43, 50),
 ]);
 ```
 
@@ -389,9 +411,10 @@ This example shows how to execute a search and replace on a stream without
 loading the entire stream into memory first.
 
 ```
+# #[cfg(feature = &quot;std&quot;)] {
 use aho_corasick::AhoCorasick;
 
-# fn example() -&gt; Result&lt;(), ::std::io::Error&gt; {
+# fn example() -&gt; Result&lt;(), std::io::Error&gt; {
 let patterns = &amp;[&quot;fox&quot;, &quot;brown&quot;, &quot;quick&quot;];
 let replace_with = &amp;[&quot;sloth&quot;, &quot;grey&quot;, &quot;slow&quot;];
 
@@ -400,10 +423,11 @@ let replace_with = &amp;[&quot;sloth&quot;, &quot;grey&quot;, &quot;slow&quot;];
 let rdr = &quot;The quick brown fox.&quot;;
 let mut wtr = vec![];
 
-let ac = AhoCorasick::new(patterns);
-ac.stream_replace_all(rdr.as_bytes(), &amp;mut wtr, replace_with)?;
+let ac = AhoCorasick::new(patterns).unwrap();
+ac.try_stream_replace_all(rdr.as_bytes(), &amp;mut wtr, replace_with)?;
 assert_eq!(b&quot;The slow grey sloth.&quot;.to_vec(), wtr);
 # Ok(()) }; example().unwrap()
+# }
 ```
 
 # Example: finding the leftmost first match
@@ -431,7 +455,7 @@ use aho_corasick::AhoCorasick;
 let patterns = &amp;[&quot;Samwise&quot;, &quot;Sam&quot;];
 let haystack = &quot;Samwise&quot;;
 
-let ac = AhoCorasick::new(patterns);
+let ac = AhoCorasick::new(patterns).unwrap();
 let mat = ac.find(haystack).expect(&quot;should have a match&quot;);
 assert_eq!(&quot;Sam&quot;, &amp;haystack[mat.start()..mat.end()]);
 ```
@@ -440,23 +464,22 @@ And now here&#39;s the leftmost-first version, which matches how a Perl-like
 regex will work:
 
 ```
-use aho_corasick::{AhoCorasickBuilder, MatchKind};
+use aho_corasick::{AhoCorasick, MatchKind};
 
 let patterns = &amp;[&quot;Samwise&quot;, &quot;Sam&quot;];
 let haystack = &quot;Samwise&quot;;
 
-let ac = AhoCorasickBuilder::new()
+let ac = AhoCorasick::builder()
     .match_kind(MatchKind::LeftmostFirst)
-    .build(patterns);
+    .build(patterns)
+    .unwrap();
 let mat = ac.find(haystack).expect(&quot;should have a match&quot;);
 assert_eq!(&quot;Samwise&quot;, &amp;haystack[mat.start()..mat.end()]);
 ```
 
 In addition to leftmost-first semantics, this library also supports
 leftmost-longest semantics, which match the POSIX behavior of a regular
-expression alternation. See
-[`MatchKind`](enum.MatchKind.html)
-for more details.
+expression alternation. See [`MatchKind`] for more details.
 
 # Prefilters
 
@@ -472,124 +495,159 @@ number of patterns gets too big, prefilters are no longer used.
 While a prefilter is generally good to have on by default since it works
 well in the common case, it can lead to less predictable or even sub-optimal
 performance in some cases. For that reason, prefilters can be explicitly
-disabled via
-[`AhoCorasickBuilder::prefilter`](struct.AhoCorasickBuilder.html#method.prefilter).
+disabled via [`AhoCorasickBuilder::prefilter`].
+
+# Lower level APIs
+
+This crate also provides several sub-modules that collectively expose many of
+the implementation details of the main [`AhoCorasick`] type. Most users of this
+library can completely ignore the submodules and their contents, but if you
+needed finer grained control, some parts of them may be useful to you. Here is
+a brief overview of each and why you might want to use them:
+
+* The [`packed`] sub-module contains a lower level API for using fast
+vectorized routines for finding a small number of patterns in a haystack.
+You might want to use this API when you want to completely side-step using
+Aho-Corasick automata. Otherwise, the fast vectorized routines are used
+automatically as prefilters for `AhoCorasick` searches whenever possible.
+* The [`automaton`] sub-module provides a lower level finite state
+machine interface that the various Aho-Corasick implementations in
+this crate implement. This sub-module&#39;s main contribution is the
+[`Automaton`](automaton::Automaton) trait, which permits manually walking the
+state transitions of an Aho-Corasick automaton.
+* The [`dfa`] and [`nfa`] sub-modules provide DFA and NFA implementations of
+the aforementioned `Automaton` trait. The main reason one might want to use
+these sub-modules is to get access to a type that implements the `Automaton`
+trait. (The top-level `AhoCorasick` type does not implement the `Automaton`
+trait.)
+
+As mentioned above, if you aren&#39;t sure whether you need these sub-modules,
+you should be able to safely ignore them and just focus on the [`AhoCorasick`]
+type.
+
+# Crate features
+
+This crate exposes a few features for controlling dependency usage and whether
+this crate can be used without the standard library.
+
+* **std** -
+  Enables support for the standard library. This feature is enabled by
+  default. When disabled, only `core` and `alloc` are used. At an API
+  level, enabling `std` enables `std::error::Error` trait impls for the
+  various error types, and higher level stream search routines such as
+  [`AhoCorasick::try_stream_find_iter`]. But the `std` feature is also required
+  to enable vectorized prefilters. Prefilters can greatly accelerate searches,
+  but generally only apply when the number of patterns is small (less than
+  ~100).
+* **perf-literal** -
+  Enables support for literal prefilters that use vectorized routines from
+  external crates. This feature is enabled by default. If you&#39;re only using
+  Aho-Corasick for large numbers of patterns or otherwise can abide lower
+  throughput when searching with a small number of patterns, then it is
+  reasonable to disable this feature.
+* **logging** -
+  Enables a dependency on the `log` crate and emits messages to aide in
+  diagnostics. This feature is disabled by default.
 */
 
-</span><span class="attr">#![deny(missing_docs)]
+</span><span class="attr">#![no_std]
+#![deny(missing_docs)]
+#![deny(rustdoc::broken_intra_doc_links)]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
-</span><span class="comment">// We can never be truly no_std, but we could be alloc-only some day, so
-// require the std feature for now.
-</span><span class="attr">#[cfg(not(feature = <span class="string">&quot;std&quot;</span>))]
-</span><span class="macro">compile_error!</span>(<span class="string">&quot;`std` feature is currently required to build this crate&quot;</span>);
+</span><span class="kw">extern crate </span>alloc;
+<span class="attr">#[cfg(any(test, feature = <span class="string">&quot;std&quot;</span>))]
+</span><span class="kw">extern crate </span>std;
 
-<span class="comment">// #[cfg(doctest)]
-// #[macro_use]
-// extern crate doc_comment;
+<span class="attr">#[cfg(doctest)]
+</span><span class="macro">doc_comment::doctest!</span>(<span class="string">&quot;../README.md&quot;</span>);
 
-// #[cfg(doctest)]
-// doctest!(&quot;../README.md&quot;);
-
-</span><span class="kw">pub use </span><span class="kw">crate</span>::ahocorasick::{
-    AhoCorasick, AhoCorasickBuilder, FindIter, FindOverlappingIter, MatchKind,
-    StreamFindIter,
+<span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="kw">pub use </span><span class="kw">crate</span>::ahocorasick::StreamFindIter;
+<span class="kw">pub use crate</span>::{
+    ahocorasick::{
+        AhoCorasick, AhoCorasickBuilder, AhoCorasickKind, FindIter,
+        FindOverlappingIter,
+    },
+    util::{
+        error::{BuildError, MatchError, MatchErrorKind},
+        primitives::{PatternID, PatternIDError},
+        search::{Anchored, Input, Match, MatchKind, Span, StartKind},
+    },
 };
-<span class="kw">pub use </span><span class="kw">crate</span>::error::{Error, ErrorKind};
-<span class="kw">pub use </span><span class="kw">crate</span>::state_id::StateID;
+
+<span class="attr">#[macro_use]
+</span><span class="kw">mod </span>macros;
 
 <span class="kw">mod </span>ahocorasick;
-<span class="kw">mod </span>automaton;
-<span class="kw">mod </span>buffer;
-<span class="kw">mod </span>byte_frequencies;
-<span class="kw">mod </span>classes;
-<span class="kw">mod </span>dfa;
-<span class="kw">mod </span>error;
-<span class="kw">mod </span>nfa;
+<span class="kw">pub mod </span>automaton;
+<span class="kw">pub mod </span>dfa;
+<span class="kw">pub mod </span>nfa;
 <span class="kw">pub mod </span>packed;
-<span class="kw">mod </span>prefilter;
-<span class="kw">mod </span>state_id;
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests;
+<span class="comment">// I wrote out the module for implementing fst::Automaton only to later realize
+// that this would make fst a public dependency and fst is not at 1.0 yet. I
+// decided to just keep the code in tree, but build it only during tests.
+//
+// TODO: I think I&#39;ve changed my mind again. I&#39;m considering pushing it out
+// into either a separate crate or into &#39;fst&#39; directly as an optional feature.
+// #[cfg(test)]
+// #[allow(dead_code)]
+// mod transducer;
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>util;
 
-<span class="doccomment">/// A representation of a match reported by an Aho-Corasick automaton.
-///
-/// A match has two essential pieces of information: the identifier of the
-/// pattern that matched, along with the start and end offsets of the match
-/// in the haystack.
-///
-/// # Examples
-///
-/// Basic usage:
-///
-/// ```
-/// use aho_corasick::AhoCorasick;
-///
-/// let ac = AhoCorasick::new(&amp;[
-///     &quot;foo&quot;, &quot;bar&quot;, &quot;baz&quot;,
-/// ]);
-/// let mat = ac.find(&quot;xxx bar xxx&quot;).expect(&quot;should have a match&quot;);
-/// assert_eq!(1, mat.pattern());
-/// assert_eq!(4, mat.start());
-/// assert_eq!(7, mat.end());
-/// ```
-</span><span class="attr">#[derive(Clone, Debug, Eq, Hash, PartialEq)]
-</span><span class="kw">pub struct </span>Match {
-    <span class="doccomment">/// The pattern id.
-    </span>pattern: usize,
-    <span class="doccomment">/// The length of this match, such that the starting position of the match
-    /// is `end - len`.
-    ///
-    /// We use length here because, other than the pattern id, the only
-    /// information about each pattern that the automaton stores is its length.
-    /// So using the length here is just a bit more natural. But it isn&#39;t
-    /// technically required.
-    </span>len: usize,
-    <span class="doccomment">/// The end offset of the match, exclusive.
-    </span>end: usize,
-}
+<span class="attr">#[cfg(test)]
+</span><span class="kw">mod </span>testoibits {
+    <span class="kw">use </span>std::panic::{RefUnwindSafe, UnwindSafe};
 
-<span class="kw">impl </span>Match {
-    <span class="doccomment">/// Returns the identifier of the pattern that matched.
-    ///
-    /// The identifier of a pattern is derived from the position in which it
-    /// was originally inserted into the corresponding automaton. The first
-    /// pattern has identifier `0`, and each subsequent pattern is `1`, `2`
-    /// and so on.
-    </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>pattern(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
-        <span class="self">self</span>.pattern
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+
+    <span class="kw">fn </span>assert_all&lt;T: Send + Sync + UnwindSafe + RefUnwindSafe&gt;() {}
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>oibits_main() {
+        assert_all::&lt;AhoCorasick&gt;();
+        assert_all::&lt;AhoCorasickBuilder&gt;();
+        assert_all::&lt;AhoCorasickKind&gt;();
+        assert_all::&lt;FindIter&gt;();
+        assert_all::&lt;FindOverlappingIter&gt;();
+
+        assert_all::&lt;BuildError&gt;();
+        assert_all::&lt;MatchError&gt;();
+        assert_all::&lt;MatchErrorKind&gt;();
+
+        assert_all::&lt;Anchored&gt;();
+        assert_all::&lt;Input&gt;();
+        assert_all::&lt;Match&gt;();
+        assert_all::&lt;MatchKind&gt;();
+        assert_all::&lt;Span&gt;();
+        assert_all::&lt;StartKind&gt;();
     }
 
-    <span class="doccomment">/// The starting position of the match.
-    </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>start(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
-        <span class="self">self</span>.end - <span class="self">self</span>.len
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>oibits_automaton() {
+        <span class="kw">use crate</span>::{automaton, dfa::DFA};
+
+        assert_all::&lt;automaton::FindIter&lt;DFA&gt;&gt;();
+        assert_all::&lt;automaton::FindOverlappingIter&lt;DFA&gt;&gt;();
+        <span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+        </span>assert_all::&lt;automaton::StreamFindIter&lt;DFA, std::io::Stdin&gt;&gt;();
+        assert_all::&lt;automaton::OverlappingState&gt;();
+
+        assert_all::&lt;automaton::Prefilter&gt;();
+        assert_all::&lt;automaton::Candidate&gt;();
     }
 
-    <span class="doccomment">/// The ending position of the match.
-    </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>end(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
-        <span class="self">self</span>.end
-    }
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>oibits_packed() {
+        <span class="kw">use </span><span class="kw">crate</span>::packed;
 
-    <span class="doccomment">/// Returns true if and only if this match is empty. That is, when
-    /// `start() == end()`.
-    ///
-    /// An empty match can only be returned when the empty string was among
-    /// the patterns used to build the Aho-Corasick automaton.
-    </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>is_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="self">self</span>.len == <span class="number">0
-    </span>}
-
-    <span class="attr">#[inline]
-    </span><span class="kw">fn </span>increment(<span class="kw-2">&amp;</span><span class="self">self</span>, by: usize) -&gt; Match {
-        Match { pattern: <span class="self">self</span>.pattern, len: <span class="self">self</span>.len, end: <span class="self">self</span>.end + by }
-    }
-
-    <span class="attr">#[inline]
-    </span><span class="kw">fn </span>from_span(id: usize, start: usize, end: usize) -&gt; Match {
-        Match { pattern: id, len: end - start, end }
+        assert_all::&lt;packed::Config&gt;();
+        assert_all::&lt;packed::Builder&gt;();
+        assert_all::&lt;packed::Searcher&gt;();
+        assert_all::&lt;packed::FindIter&gt;();
+        assert_all::&lt;packed::MatchKind&gt;();
     }
 }
 </code></pre></div></section></main></body></html>

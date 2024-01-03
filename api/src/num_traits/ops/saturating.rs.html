@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/num-traits-0.2.15/src/ops/saturating.rs`."><title>saturating.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="num_traits" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../num_traits/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/num-traits-0.2.17/src/ops/saturating.rs`."><title>saturating.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="num_traits" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../num_traits/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -128,13 +128,6 @@
 <a href="#128" id="128">128</a>
 <a href="#129" id="129">129</a>
 <a href="#130" id="130">130</a>
-<a href="#131" id="131">131</a>
-<a href="#132" id="132">132</a>
-<a href="#133" id="133">133</a>
-<a href="#134" id="134">134</a>
-<a href="#135" id="135">135</a>
-<a href="#136" id="136">136</a>
-<a href="#137" id="137">137</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::ops::{Add, Mul, Sub};
 
 <span class="doccomment">/// Saturating math operations. Deprecated, use `SaturatingAdd`, `SaturatingSub` and
@@ -165,9 +158,8 @@
     )<span class="kw-2">*</span>}
 }
 
-<span class="macro">deprecated_saturating_impl!</span>(Saturating <span class="kw">for </span>isize usize i8 u8 i16 u16 i32 u32 i64 u64);
-<span class="attr">#[cfg(has_i128)]
-</span><span class="macro">deprecated_saturating_impl!</span>(Saturating <span class="kw">for </span>i128 u128);
+<span class="macro">deprecated_saturating_impl!</span>(Saturating <span class="kw">for </span>isize i8 i16 i32 i64 i128);
+<span class="macro">deprecated_saturating_impl!</span>(Saturating <span class="kw">for </span>usize u8 u16 u32 u64 u128);
 
 <span class="macro">macro_rules! </span>saturating_impl {
     (<span class="macro-nonterminal">$trait_name</span>:ident, <span class="macro-nonterminal">$method</span>:ident, <span class="macro-nonterminal">$t</span>:ty) =&gt; {
@@ -192,16 +184,14 @@
 <span class="macro">saturating_impl!</span>(SaturatingAdd, saturating_add, u32);
 <span class="macro">saturating_impl!</span>(SaturatingAdd, saturating_add, u64);
 <span class="macro">saturating_impl!</span>(SaturatingAdd, saturating_add, usize);
-<span class="attr">#[cfg(has_i128)]
-</span><span class="macro">saturating_impl!</span>(SaturatingAdd, saturating_add, u128);
+<span class="macro">saturating_impl!</span>(SaturatingAdd, saturating_add, u128);
 
 <span class="macro">saturating_impl!</span>(SaturatingAdd, saturating_add, i8);
 <span class="macro">saturating_impl!</span>(SaturatingAdd, saturating_add, i16);
 <span class="macro">saturating_impl!</span>(SaturatingAdd, saturating_add, i32);
 <span class="macro">saturating_impl!</span>(SaturatingAdd, saturating_add, i64);
 <span class="macro">saturating_impl!</span>(SaturatingAdd, saturating_add, isize);
-<span class="attr">#[cfg(has_i128)]
-</span><span class="macro">saturating_impl!</span>(SaturatingAdd, saturating_add, i128);
+<span class="macro">saturating_impl!</span>(SaturatingAdd, saturating_add, i128);
 
 <span class="doccomment">/// Performs subtraction that saturates at the numeric bounds instead of overflowing.
 </span><span class="kw">pub trait </span>SaturatingSub: Sized + Sub&lt;<span class="self">Self</span>, Output = <span class="self">Self</span>&gt; {
@@ -215,16 +205,14 @@
 <span class="macro">saturating_impl!</span>(SaturatingSub, saturating_sub, u32);
 <span class="macro">saturating_impl!</span>(SaturatingSub, saturating_sub, u64);
 <span class="macro">saturating_impl!</span>(SaturatingSub, saturating_sub, usize);
-<span class="attr">#[cfg(has_i128)]
-</span><span class="macro">saturating_impl!</span>(SaturatingSub, saturating_sub, u128);
+<span class="macro">saturating_impl!</span>(SaturatingSub, saturating_sub, u128);
 
 <span class="macro">saturating_impl!</span>(SaturatingSub, saturating_sub, i8);
 <span class="macro">saturating_impl!</span>(SaturatingSub, saturating_sub, i16);
 <span class="macro">saturating_impl!</span>(SaturatingSub, saturating_sub, i32);
 <span class="macro">saturating_impl!</span>(SaturatingSub, saturating_sub, i64);
 <span class="macro">saturating_impl!</span>(SaturatingSub, saturating_sub, isize);
-<span class="attr">#[cfg(has_i128)]
-</span><span class="macro">saturating_impl!</span>(SaturatingSub, saturating_sub, i128);
+<span class="macro">saturating_impl!</span>(SaturatingSub, saturating_sub, i128);
 
 <span class="doccomment">/// Performs multiplication that saturates at the numeric bounds instead of overflowing.
 </span><span class="kw">pub trait </span>SaturatingMul: Sized + Mul&lt;<span class="self">Self</span>, Output = <span class="self">Self</span>&gt; {
@@ -238,16 +226,14 @@
 <span class="macro">saturating_impl!</span>(SaturatingMul, saturating_mul, u32);
 <span class="macro">saturating_impl!</span>(SaturatingMul, saturating_mul, u64);
 <span class="macro">saturating_impl!</span>(SaturatingMul, saturating_mul, usize);
-<span class="attr">#[cfg(has_i128)]
-</span><span class="macro">saturating_impl!</span>(SaturatingMul, saturating_mul, u128);
+<span class="macro">saturating_impl!</span>(SaturatingMul, saturating_mul, u128);
 
 <span class="macro">saturating_impl!</span>(SaturatingMul, saturating_mul, i8);
 <span class="macro">saturating_impl!</span>(SaturatingMul, saturating_mul, i16);
 <span class="macro">saturating_impl!</span>(SaturatingMul, saturating_mul, i32);
 <span class="macro">saturating_impl!</span>(SaturatingMul, saturating_mul, i64);
 <span class="macro">saturating_impl!</span>(SaturatingMul, saturating_mul, isize);
-<span class="attr">#[cfg(has_i128)]
-</span><span class="macro">saturating_impl!</span>(SaturatingMul, saturating_mul, i128);
+<span class="macro">saturating_impl!</span>(SaturatingMul, saturating_mul, i128);
 
 <span class="comment">// TODO: add SaturatingNeg for signed integer primitives once the saturating_neg() API is stable.
 

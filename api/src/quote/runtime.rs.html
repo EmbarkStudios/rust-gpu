@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quote-1.0.14/src/runtime.rs`."><title>runtime.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="quote" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../quote/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quote-1.0.35/src/runtime.rs`."><title>runtime.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="quote" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../quote/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -468,14 +468,88 @@
 <a href="#468" id="468">468</a>
 <a href="#469" id="469">469</a>
 <a href="#470" id="470">470</a>
-</pre></div><pre class="rust"><code><span class="kw">use crate</span>::{IdentFragment, ToTokens, TokenStreamExt};
-<span class="kw">use </span>std::fmt;
-<span class="kw">use </span>std::iter;
-<span class="kw">use </span>std::ops::BitOr;
+<a href="#471" id="471">471</a>
+<a href="#472" id="472">472</a>
+<a href="#473" id="473">473</a>
+<a href="#474" id="474">474</a>
+<a href="#475" id="475">475</a>
+<a href="#476" id="476">476</a>
+<a href="#477" id="477">477</a>
+<a href="#478" id="478">478</a>
+<a href="#479" id="479">479</a>
+<a href="#480" id="480">480</a>
+<a href="#481" id="481">481</a>
+<a href="#482" id="482">482</a>
+<a href="#483" id="483">483</a>
+<a href="#484" id="484">484</a>
+<a href="#485" id="485">485</a>
+<a href="#486" id="486">486</a>
+<a href="#487" id="487">487</a>
+<a href="#488" id="488">488</a>
+<a href="#489" id="489">489</a>
+<a href="#490" id="490">490</a>
+<a href="#491" id="491">491</a>
+<a href="#492" id="492">492</a>
+<a href="#493" id="493">493</a>
+<a href="#494" id="494">494</a>
+<a href="#495" id="495">495</a>
+<a href="#496" id="496">496</a>
+<a href="#497" id="497">497</a>
+<a href="#498" id="498">498</a>
+<a href="#499" id="499">499</a>
+<a href="#500" id="500">500</a>
+<a href="#501" id="501">501</a>
+<a href="#502" id="502">502</a>
+<a href="#503" id="503">503</a>
+<a href="#504" id="504">504</a>
+<a href="#505" id="505">505</a>
+<a href="#506" id="506">506</a>
+<a href="#507" id="507">507</a>
+<a href="#508" id="508">508</a>
+<a href="#509" id="509">509</a>
+<a href="#510" id="510">510</a>
+<a href="#511" id="511">511</a>
+<a href="#512" id="512">512</a>
+<a href="#513" id="513">513</a>
+<a href="#514" id="514">514</a>
+<a href="#515" id="515">515</a>
+<a href="#516" id="516">516</a>
+<a href="#517" id="517">517</a>
+<a href="#518" id="518">518</a>
+<a href="#519" id="519">519</a>
+<a href="#520" id="520">520</a>
+<a href="#521" id="521">521</a>
+<a href="#522" id="522">522</a>
+<a href="#523" id="523">523</a>
+<a href="#524" id="524">524</a>
+<a href="#525" id="525">525</a>
+<a href="#526" id="526">526</a>
+<a href="#527" id="527">527</a>
+<a href="#528" id="528">528</a>
+<a href="#529" id="529">529</a>
+<a href="#530" id="530">530</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="self">self</span>::get_span::{GetSpan, GetSpanBase, GetSpanInner};
+<span class="kw">use crate</span>::{IdentFragment, ToTokens, TokenStreamExt};
+<span class="kw">use </span>core::fmt;
+<span class="kw">use </span>core::iter;
+<span class="kw">use </span>core::ops::BitOr;
+<span class="kw">use </span>proc_macro2::{Group, Ident, Punct, Spacing, TokenTree};
 
-<span class="kw">pub use </span>proc_macro2::<span class="kw-2">*</span>;
+<span class="attr">#[doc(hidden)]
+</span><span class="kw">pub use </span>alloc::format;
+<span class="attr">#[doc(hidden)]
+</span><span class="kw">pub use </span>core::option::Option;
 
-<span class="kw">pub struct </span>HasIterator; <span class="comment">// True
+<span class="attr">#[doc(hidden)]
+</span><span class="kw">pub type </span>Delimiter = proc_macro2::Delimiter;
+<span class="attr">#[doc(hidden)]
+</span><span class="kw">pub type </span>Span = proc_macro2::Span;
+<span class="attr">#[doc(hidden)]
+</span><span class="kw">pub type </span>TokenStream = proc_macro2::TokenStream;
+
+<span class="attr">#[doc(hidden)]
+</span><span class="kw">pub struct </span>HasIterator; <span class="comment">// True
+</span><span class="attr">#[doc(hidden)]
 </span><span class="kw">pub struct </span>ThereIsNoIteratorInRepetition; <span class="comment">// False
 
 </span><span class="kw">impl </span>BitOr&lt;ThereIsNoIteratorInRepetition&gt; <span class="kw">for </span>ThereIsNoIteratorInRepetition {
@@ -512,14 +586,16 @@
 /// These traits expose a `quote_into_iter` method which should allow calling
 /// whichever impl happens to be applicable. Calling that method repeatedly on
 /// the returned value should be idempotent.
+</span><span class="attr">#[doc(hidden)]
 </span><span class="kw">pub mod </span>ext {
     <span class="kw">use </span><span class="kw">super</span>::RepInterp;
     <span class="kw">use super</span>::{HasIterator <span class="kw">as </span>HasIter, ThereIsNoIteratorInRepetition <span class="kw">as </span>DoesNotHaveIter};
     <span class="kw">use </span><span class="kw">crate</span>::ToTokens;
-    <span class="kw">use </span>std::collections::btree_set::{<span class="self">self</span>, BTreeSet};
-    <span class="kw">use </span>std::slice;
+    <span class="kw">use </span>alloc::collections::btree_set::{<span class="self">self</span>, BTreeSet};
+    <span class="kw">use </span>core::slice;
 
     <span class="doccomment">/// Extension trait providing the `quote_into_iter` method on iterators.
+    </span><span class="attr">#[doc(hidden)]
     </span><span class="kw">pub trait </span>RepIteratorExt: Iterator + Sized {
         <span class="kw">fn </span>quote_into_iter(<span class="self">self</span>) -&gt; (<span class="self">Self</span>, HasIter) {
             (<span class="self">self</span>, HasIter)
@@ -531,6 +607,7 @@
     <span class="doccomment">/// Extension trait providing the `quote_into_iter` method for
     /// non-iterable types. These types interpolate the same value in each
     /// iteration of the repetition.
+    </span><span class="attr">#[doc(hidden)]
     </span><span class="kw">pub trait </span>RepToTokensExt {
         <span class="doccomment">/// Pretend to be an iterator for the purposes of `quote_into_iter`.
         /// This allows repeated calls to `quote_into_iter` to continue
@@ -548,6 +625,7 @@
 
     <span class="doccomment">/// Extension trait providing the `quote_into_iter` method for types that
     /// can be referenced as an iterator.
+    </span><span class="attr">#[doc(hidden)]
     </span><span class="kw">pub trait </span>RepAsIteratorExt&lt;<span class="lifetime">&#39;q</span>&gt; {
         <span class="kw">type </span>Iter: Iterator;
 
@@ -606,6 +684,7 @@
 <span class="comment">// Helper type used within interpolations to allow for repeated binding names.
 // Implements the relevant traits, and exports a dummy `next()` method.
 </span><span class="attr">#[derive(Copy, Clone)]
+#[doc(hidden)]
 </span><span class="kw">pub struct </span>RepInterp&lt;T&gt;(<span class="kw">pub </span>T);
 
 <span class="kw">impl</span>&lt;T&gt; RepInterp&lt;T&gt; {
@@ -632,11 +711,70 @@
     }
 }
 
-<span class="kw">pub fn </span>push_group(tokens: <span class="kw-2">&amp;mut </span>TokenStream, delimiter: Delimiter, inner: TokenStream) {
+<span class="attr">#[doc(hidden)]
+#[inline]
+</span><span class="kw">pub fn </span>get_span&lt;T&gt;(span: T) -&gt; GetSpan&lt;T&gt; {
+    GetSpan(GetSpanInner(GetSpanBase(span)))
+}
+
+<span class="kw">mod </span>get_span {
+    <span class="kw">use </span>core::ops::Deref;
+    <span class="kw">use </span>proc_macro2::extra::DelimSpan;
+    <span class="kw">use </span>proc_macro2::Span;
+
+    <span class="kw">pub struct </span>GetSpan&lt;T&gt;(<span class="kw">pub</span>(<span class="kw">crate</span>) GetSpanInner&lt;T&gt;);
+
+    <span class="kw">pub struct </span>GetSpanInner&lt;T&gt;(<span class="kw">pub</span>(<span class="kw">crate</span>) GetSpanBase&lt;T&gt;);
+
+    <span class="kw">pub struct </span>GetSpanBase&lt;T&gt;(<span class="kw">pub</span>(<span class="kw">crate</span>) T);
+
+    <span class="kw">impl </span>GetSpan&lt;Span&gt; {
+        <span class="attr">#[inline]
+        </span><span class="kw">pub fn </span>__into_span(<span class="self">self</span>) -&gt; Span {
+            ((<span class="self">self</span>.<span class="number">0</span>).<span class="number">0</span>).<span class="number">0
+        </span>}
+    }
+
+    <span class="kw">impl </span>GetSpanInner&lt;DelimSpan&gt; {
+        <span class="attr">#[inline]
+        </span><span class="kw">pub fn </span>__into_span(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Span {
+            (<span class="self">self</span>.<span class="number">0</span>).<span class="number">0</span>.join()
+        }
+    }
+
+    <span class="kw">impl</span>&lt;T&gt; GetSpanBase&lt;T&gt; {
+        <span class="attr">#[allow(clippy::unused_self)]
+        </span><span class="kw">pub fn </span>__into_span(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; T {
+            <span class="macro">unreachable!</span>()
+        }
+    }
+
+    <span class="kw">impl</span>&lt;T&gt; Deref <span class="kw">for </span>GetSpan&lt;T&gt; {
+        <span class="kw">type </span>Target = GetSpanInner&lt;T&gt;;
+
+        <span class="attr">#[inline]
+        </span><span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
+            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0
+        </span>}
+    }
+
+    <span class="kw">impl</span>&lt;T&gt; Deref <span class="kw">for </span>GetSpanInner&lt;T&gt; {
+        <span class="kw">type </span>Target = GetSpanBase&lt;T&gt;;
+
+        <span class="attr">#[inline]
+        </span><span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
+            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0
+        </span>}
+    }
+}
+
+<span class="attr">#[doc(hidden)]
+</span><span class="kw">pub fn </span>push_group(tokens: <span class="kw-2">&amp;mut </span>TokenStream, delimiter: Delimiter, inner: TokenStream) {
     tokens.append(Group::new(delimiter, inner));
 }
 
-<span class="kw">pub fn </span>push_group_spanned(
+<span class="attr">#[doc(hidden)]
+</span><span class="kw">pub fn </span>push_group_spanned(
     tokens: <span class="kw-2">&amp;mut </span>TokenStream,
     span: Span,
     delimiter: Delimiter,
@@ -647,12 +785,14 @@
     tokens.append(g);
 }
 
-<span class="kw">pub fn </span>parse(tokens: <span class="kw-2">&amp;mut </span>TokenStream, s: <span class="kw-2">&amp;</span>str) {
+<span class="attr">#[doc(hidden)]
+</span><span class="kw">pub fn </span>parse(tokens: <span class="kw-2">&amp;mut </span>TokenStream, s: <span class="kw-2">&amp;</span>str) {
     <span class="kw">let </span>s: TokenStream = s.parse().expect(<span class="string">&quot;invalid token stream&quot;</span>);
     tokens.extend(iter::once(s));
 }
 
-<span class="kw">pub fn </span>parse_spanned(tokens: <span class="kw-2">&amp;mut </span>TokenStream, span: Span, s: <span class="kw-2">&amp;</span>str) {
+<span class="attr">#[doc(hidden)]
+</span><span class="kw">pub fn </span>parse_spanned(tokens: <span class="kw-2">&amp;mut </span>TokenStream, span: Span, s: <span class="kw-2">&amp;</span>str) {
     <span class="kw">let </span>s: TokenStream = s.parse().expect(<span class="string">&quot;invalid token stream&quot;</span>);
     tokens.extend(s.into_iter().map(|t| respan_token_tree(t, span)));
 }
@@ -674,31 +814,19 @@
     token
 }
 
-<span class="kw">pub fn </span>push_ident(tokens: <span class="kw-2">&amp;mut </span>TokenStream, s: <span class="kw-2">&amp;</span>str) {
-    <span class="comment">// Optimization over `mk_ident`, as `s` is guaranteed to be a valid ident.
-    //
-    // FIXME: When `Ident::new_raw` becomes stable, this method should be
-    // updated to call it when available.
-    </span><span class="kw">if </span>s.starts_with(<span class="string">&quot;r#&quot;</span>) {
-        parse(tokens, s);
-    } <span class="kw">else </span>{
-        tokens.append(Ident::new(s, Span::call_site()));
-    }
+<span class="attr">#[doc(hidden)]
+</span><span class="kw">pub fn </span>push_ident(tokens: <span class="kw-2">&amp;mut </span>TokenStream, s: <span class="kw-2">&amp;</span>str) {
+    <span class="kw">let </span>span = Span::call_site();
+    push_ident_spanned(tokens, span, s);
 }
 
-<span class="kw">pub fn </span>push_ident_spanned(tokens: <span class="kw-2">&amp;mut </span>TokenStream, span: Span, s: <span class="kw-2">&amp;</span>str) {
-    <span class="comment">// Optimization over `mk_ident`, as `s` is guaranteed to be a valid ident.
-    //
-    // FIXME: When `Ident::new_raw` becomes stable, this method should be
-    // updated to call it when available.
-    </span><span class="kw">if </span>s.starts_with(<span class="string">&quot;r#&quot;</span>) {
-        parse_spanned(tokens, span, s);
-    } <span class="kw">else </span>{
-        tokens.append(Ident::new(s, span));
-    }
+<span class="attr">#[doc(hidden)]
+</span><span class="kw">pub fn </span>push_ident_spanned(tokens: <span class="kw-2">&amp;mut </span>TokenStream, span: Span, s: <span class="kw-2">&amp;</span>str) {
+    tokens.append(ident_maybe_raw(s, span));
 }
 
-<span class="kw">pub fn </span>push_lifetime(tokens: <span class="kw-2">&amp;mut </span>TokenStream, lifetime: <span class="kw-2">&amp;</span>str) {
+<span class="attr">#[doc(hidden)]
+</span><span class="kw">pub fn </span>push_lifetime(tokens: <span class="kw-2">&amp;mut </span>TokenStream, lifetime: <span class="kw-2">&amp;</span>str) {
     <span class="kw">struct </span>Lifetime&lt;<span class="lifetime">&#39;a</span>&gt; {
         name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
         state: u8,
@@ -728,7 +856,8 @@
     });
 }
 
-<span class="kw">pub fn </span>push_lifetime_spanned(tokens: <span class="kw-2">&amp;mut </span>TokenStream, span: Span, lifetime: <span class="kw-2">&amp;</span>str) {
+<span class="attr">#[doc(hidden)]
+</span><span class="kw">pub fn </span>push_lifetime_spanned(tokens: <span class="kw-2">&amp;mut </span>TokenStream, span: Span, lifetime: <span class="kw-2">&amp;</span>str) {
     <span class="kw">struct </span>Lifetime&lt;<span class="lifetime">&#39;a</span>&gt; {
         name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
         span: Span,
@@ -764,21 +893,25 @@
 
 <span class="macro">macro_rules! </span>push_punct {
     (<span class="macro-nonterminal">$name</span>:ident <span class="macro-nonterminal">$spanned</span>:ident <span class="macro-nonterminal">$char1</span>:tt) =&gt; {
-        <span class="kw">pub fn </span><span class="macro-nonterminal">$name</span>(tokens: <span class="kw-2">&amp;mut </span>TokenStream) {
+        <span class="attr">#[doc(hidden)]
+        </span><span class="kw">pub fn </span><span class="macro-nonterminal">$name</span>(tokens: <span class="kw-2">&amp;mut </span>TokenStream) {
             tokens.append(Punct::new(<span class="macro-nonterminal">$char1</span>, Spacing::Alone));
         }
-        <span class="kw">pub fn </span><span class="macro-nonterminal">$spanned</span>(tokens: <span class="kw-2">&amp;mut </span>TokenStream, span: Span) {
+        <span class="attr">#[doc(hidden)]
+        </span><span class="kw">pub fn </span><span class="macro-nonterminal">$spanned</span>(tokens: <span class="kw-2">&amp;mut </span>TokenStream, span: Span) {
             <span class="kw">let </span><span class="kw-2">mut </span>punct = Punct::new(<span class="macro-nonterminal">$char1</span>, Spacing::Alone);
             punct.set_span(span);
             tokens.append(punct);
         }
     };
     (<span class="macro-nonterminal">$name</span>:ident <span class="macro-nonterminal">$spanned</span>:ident <span class="macro-nonterminal">$char1</span>:tt <span class="macro-nonterminal">$char2</span>:tt) =&gt; {
-        <span class="kw">pub fn </span><span class="macro-nonterminal">$name</span>(tokens: <span class="kw-2">&amp;mut </span>TokenStream) {
+        <span class="attr">#[doc(hidden)]
+        </span><span class="kw">pub fn </span><span class="macro-nonterminal">$name</span>(tokens: <span class="kw-2">&amp;mut </span>TokenStream) {
             tokens.append(Punct::new(<span class="macro-nonterminal">$char1</span>, Spacing::Joint));
             tokens.append(Punct::new(<span class="macro-nonterminal">$char2</span>, Spacing::Alone));
         }
-        <span class="kw">pub fn </span><span class="macro-nonterminal">$spanned</span>(tokens: <span class="kw-2">&amp;mut </span>TokenStream, span: Span) {
+        <span class="attr">#[doc(hidden)]
+        </span><span class="kw">pub fn </span><span class="macro-nonterminal">$spanned</span>(tokens: <span class="kw-2">&amp;mut </span>TokenStream, span: Span) {
             <span class="kw">let </span><span class="kw-2">mut </span>punct = Punct::new(<span class="macro-nonterminal">$char1</span>, Spacing::Joint);
             punct.set_span(span);
             tokens.append(punct);
@@ -788,12 +921,14 @@
         }
     };
     (<span class="macro-nonterminal">$name</span>:ident <span class="macro-nonterminal">$spanned</span>:ident <span class="macro-nonterminal">$char1</span>:tt <span class="macro-nonterminal">$char2</span>:tt <span class="macro-nonterminal">$char3</span>:tt) =&gt; {
-        <span class="kw">pub fn </span><span class="macro-nonterminal">$name</span>(tokens: <span class="kw-2">&amp;mut </span>TokenStream) {
+        <span class="attr">#[doc(hidden)]
+        </span><span class="kw">pub fn </span><span class="macro-nonterminal">$name</span>(tokens: <span class="kw-2">&amp;mut </span>TokenStream) {
             tokens.append(Punct::new(<span class="macro-nonterminal">$char1</span>, Spacing::Joint));
             tokens.append(Punct::new(<span class="macro-nonterminal">$char2</span>, Spacing::Joint));
             tokens.append(Punct::new(<span class="macro-nonterminal">$char3</span>, Spacing::Alone));
         }
-        <span class="kw">pub fn </span><span class="macro-nonterminal">$spanned</span>(tokens: <span class="kw-2">&amp;mut </span>TokenStream, span: Span) {
+        <span class="attr">#[doc(hidden)]
+        </span><span class="kw">pub fn </span><span class="macro-nonterminal">$spanned</span>(tokens: <span class="kw-2">&amp;mut </span>TokenStream, span: Span) {
             <span class="kw">let </span><span class="kw-2">mut </span>punct = Punct::new(<span class="macro-nonterminal">$char1</span>, Spacing::Joint);
             punct.set_span(span);
             tokens.append(punct);
@@ -852,46 +987,30 @@
 <span class="macro">push_punct!</span>(push_sub push_sub_spanned <span class="string">&#39;-&#39;</span>);
 <span class="macro">push_punct!</span>(push_sub_eq push_sub_eq_spanned <span class="string">&#39;-&#39; &#39;=&#39;</span>);
 
-<span class="kw">pub fn </span>push_underscore(tokens: <span class="kw-2">&amp;mut </span>TokenStream) {
+<span class="attr">#[doc(hidden)]
+</span><span class="kw">pub fn </span>push_underscore(tokens: <span class="kw-2">&amp;mut </span>TokenStream) {
     push_underscore_spanned(tokens, Span::call_site());
 }
 
-<span class="kw">pub fn </span>push_underscore_spanned(tokens: <span class="kw-2">&amp;mut </span>TokenStream, span: Span) {
+<span class="attr">#[doc(hidden)]
+</span><span class="kw">pub fn </span>push_underscore_spanned(tokens: <span class="kw-2">&amp;mut </span>TokenStream, span: Span) {
     tokens.append(Ident::new(<span class="string">&quot;_&quot;</span>, span));
 }
 
 <span class="comment">// Helper method for constructing identifiers from the `format_ident!` macro,
 // handling `r#` prefixes.
-//
-// Directly parsing the input string may produce a valid identifier,
-// although the input string was invalid, due to ignored characters such as
-// whitespace and comments. Instead, we always create a non-raw identifier
-// to validate that the string is OK, and only parse again if needed.
+</span><span class="attr">#[doc(hidden)]
 </span><span class="kw">pub fn </span>mk_ident(id: <span class="kw-2">&amp;</span>str, span: <span class="prelude-ty">Option</span>&lt;Span&gt;) -&gt; Ident {
     <span class="kw">let </span>span = span.unwrap_or_else(Span::call_site);
+    ident_maybe_raw(id, span)
+}
 
-    <span class="kw">let </span>is_raw = id.starts_with(<span class="string">&quot;r#&quot;</span>);
-    <span class="kw">let </span>unraw = Ident::new(<span class="kw">if </span>is_raw { <span class="kw-2">&amp;</span>id[<span class="number">2</span>..] } <span class="kw">else </span>{ id }, span);
-    <span class="kw">if </span>!is_raw {
-        <span class="kw">return </span>unraw;
+<span class="kw">fn </span>ident_maybe_raw(id: <span class="kw-2">&amp;</span>str, span: Span) -&gt; Ident {
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = id.strip_prefix(<span class="string">&quot;r#&quot;</span>) {
+        Ident::new_raw(id, span)
+    } <span class="kw">else </span>{
+        Ident::new(id, span)
     }
-
-    <span class="comment">// At this point, the identifier is raw, and the unraw-ed version of it was
-    // successfully converted into an identifier. Try to produce a valid raw
-    // identifier by running the `TokenStream` parser, and unwrapping the first
-    // token as an `Ident`.
-    //
-    // FIXME: When `Ident::new_raw` becomes stable, this method should be
-    // updated to call it when available.
-    </span><span class="kw">if let </span><span class="prelude-val">Ok</span>(ts) = id.parse::&lt;TokenStream&gt;() {
-        <span class="kw">let </span><span class="kw-2">mut </span>iter = ts.into_iter();
-        <span class="kw">if let </span>(<span class="prelude-val">Some</span>(TokenTree::Ident(<span class="kw-2">mut </span>id)), <span class="prelude-val">None</span>) = (iter.next(), iter.next()) {
-            id.set_span(span);
-            <span class="kw">return </span>id;
-        }
-    }
-
-    <span class="macro">panic!</span>(<span class="string">&quot;not allowed as a raw identifier: `{}`&quot;</span>, id);
 }
 
 <span class="comment">// Adapts from `IdentFragment` to `fmt::Display` for use by the `format_ident!`
@@ -901,6 +1020,7 @@
 // `Octal`, `LowerHex`, `UpperHex`, and `Binary` to allow for their use within
 // `format_ident!`.
 </span><span class="attr">#[derive(Copy, Clone)]
+#[doc(hidden)]
 </span><span class="kw">pub struct </span>IdentFragmentAdapter&lt;T: IdentFragment&gt;(<span class="kw">pub </span>T);
 
 <span class="kw">impl</span>&lt;T: IdentFragment&gt; IdentFragmentAdapter&lt;T&gt; {

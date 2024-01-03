@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/rustix-0.36.9/src/fs/fd.rs`."><title>fd.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rustix" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../rustix/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/rustix-0.38.28/src/fs/fd.rs`."><title>fd.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rustix" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../rustix/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -348,53 +348,56 @@
 <a href="#348" id="348">348</a>
 <a href="#349" id="349">349</a>
 <a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
+<a href="#353" id="353">353</a>
+<a href="#354" id="354">354</a>
+<a href="#355" id="355">355</a>
+<a href="#356" id="356">356</a>
+<a href="#357" id="357">357</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Functions which operate on file descriptors.
 
 </span><span class="attr">#[cfg(not(target_os = <span class="string">&quot;wasi&quot;</span>))]
 </span><span class="kw">use </span><span class="kw">crate</span>::fs::Mode;
-<span class="kw">use </span><span class="kw">crate</span>::io::SeekFrom;
 <span class="attr">#[cfg(not(target_os = <span class="string">&quot;wasi&quot;</span>))]
-</span><span class="kw">use </span><span class="kw">crate</span>::process::{Gid, Uid};
+</span><span class="kw">use </span><span class="kw">crate</span>::fs::{Gid, Uid};
+<span class="kw">use </span><span class="kw">crate</span>::fs::{OFlags, SeekFrom, Timespec};
 <span class="kw">use crate</span>::{backend, io};
 <span class="kw">use </span>backend::fd::{AsFd, BorrowedFd};
-
-<span class="attr">#[cfg(not(any(target_os = <span class="string">&quot;solaris&quot;</span>, target_os = <span class="string">&quot;wasi&quot;</span>)))]
-</span><span class="kw">pub use </span>backend::fs::types::FlockOperation;
-
 <span class="attr">#[cfg(not(any(
+    netbsdlike,
+    solarish,
     target_os = <span class="string">&quot;aix&quot;</span>,
     target_os = <span class="string">&quot;dragonfly&quot;</span>,
-    target_os = <span class="string">&quot;illumos&quot;</span>,
-    target_os = <span class="string">&quot;netbsd&quot;</span>,
-    target_os = <span class="string">&quot;openbsd&quot;</span>,
+    target_os = <span class="string">&quot;espidf&quot;</span>,
+    target_os = <span class="string">&quot;nto&quot;</span>,
     target_os = <span class="string">&quot;redox&quot;</span>,
-    target_os = <span class="string">&quot;solaris&quot;</span>,
+    target_os = <span class="string">&quot;vita&quot;</span>,
 )))]
-</span><span class="kw">pub use </span>backend::fs::types::FallocateFlags;
-
-<span class="kw">pub use </span>backend::fs::types::Stat;
-
+</span><span class="kw">use </span>backend::fs::types::FallocateFlags;
 <span class="attr">#[cfg(not(any(
-    target_os = <span class="string">&quot;haiku&quot;</span>,
-    target_os = <span class="string">&quot;illumos&quot;</span>,
-    target_os = <span class="string">&quot;netbsd&quot;</span>,
-    target_os = <span class="string">&quot;redox&quot;</span>,
+    target_os = <span class="string">&quot;espidf&quot;</span>,
     target_os = <span class="string">&quot;solaris&quot;</span>,
+    target_os = <span class="string">&quot;vita&quot;</span>,
+    target_os = <span class="string">&quot;wasi&quot;
+</span>)))]
+</span><span class="kw">use </span>backend::fs::types::FlockOperation;
+<span class="attr">#[cfg(linux_kernel)]
+</span><span class="kw">use </span>backend::fs::types::FsWord;
+<span class="kw">use </span>backend::fs::types::Stat;
+<span class="attr">#[cfg(not(any(
+    solarish,
+    target_os = <span class="string">&quot;espidf&quot;</span>,
+    target_os = <span class="string">&quot;haiku&quot;</span>,
+    target_os = <span class="string">&quot;netbsd&quot;</span>,
+    target_os = <span class="string">&quot;nto&quot;</span>,
+    target_os = <span class="string">&quot;redox&quot;</span>,
+    target_os = <span class="string">&quot;vita&quot;</span>,
     target_os = <span class="string">&quot;wasi&quot;</span>,
 )))]
-</span><span class="kw">pub use </span>backend::fs::types::StatFs;
-
-<span class="attr">#[cfg(not(any(
-    target_os = <span class="string">&quot;haiku&quot;</span>,
-    target_os = <span class="string">&quot;illumos&quot;</span>,
-    target_os = <span class="string">&quot;redox&quot;</span>,
-    target_os = <span class="string">&quot;solaris&quot;</span>,
-    target_os = <span class="string">&quot;wasi&quot;</span>,
-)))]
-</span><span class="kw">pub use </span>backend::fs::types::{StatVfs, StatVfsMountFlags};
-
-<span class="attr">#[cfg(any(target_os = <span class="string">&quot;android&quot;</span>, target_os = <span class="string">&quot;linux&quot;</span>))]
-</span><span class="kw">pub use </span>backend::fs::types::FsWord;
+</span><span class="kw">use </span>backend::fs::types::StatFs;
+<span class="attr">#[cfg(not(any(target_os = <span class="string">&quot;haiku&quot;</span>, target_os = <span class="string">&quot;redox&quot;</span>, target_os = <span class="string">&quot;wasi&quot;</span>)))]
+</span><span class="kw">use </span>backend::fs::types::StatVfs;
 
 <span class="doccomment">/// Timestamps used by [`utimensat`] and [`futimens`].
 ///
@@ -406,27 +409,27 @@
 #[derive(Clone, Debug)]
 </span><span class="kw">pub struct </span>Timestamps {
     <span class="doccomment">/// The timestamp of the last access to a filesystem object.
-    </span><span class="kw">pub </span>last_access: <span class="kw">crate</span>::fs::Timespec,
+    </span><span class="kw">pub </span>last_access: Timespec,
 
     <span class="doccomment">/// The timestamp of the last modification of a filesystem object.
-    </span><span class="kw">pub </span>last_modification: <span class="kw">crate</span>::fs::Timespec,
+    </span><span class="kw">pub </span>last_modification: Timespec,
 }
 
 <span class="doccomment">/// The filesystem magic number for procfs.
 ///
-/// See [the `fstatfs` man page] for more information.
+/// See [the `fstatfs` manual page] for more information.
 ///
-/// [the `fstatfs` man page]: https://man7.org/linux/man-pages/man2/fstatfs.2.html#DESCRIPTION
-</span><span class="attr">#[cfg(any(target_os = <span class="string">&quot;android&quot;</span>, target_os = <span class="string">&quot;linux&quot;</span>))]
-</span><span class="kw">pub const </span>PROC_SUPER_MAGIC: FsWord = backend::fs::types::PROC_SUPER_MAGIC;
+/// [the `fstatfs` manual page]: https://man7.org/linux/man-pages/man2/fstatfs.2.html#DESCRIPTION
+</span><span class="attr">#[cfg(linux_kernel)]
+</span><span class="kw">pub const </span>PROC_SUPER_MAGIC: FsWord = backend::c::PROC_SUPER_MAGIC <span class="kw">as </span>FsWord;
 
 <span class="doccomment">/// The filesystem magic number for NFS.
 ///
-/// See [the `fstatfs` man page] for more information.
+/// See [the `fstatfs` manual page] for more information.
 ///
-/// [the `fstatfs` man page]: https://man7.org/linux/man-pages/man2/fstatfs.2.html#DESCRIPTION
-</span><span class="attr">#[cfg(any(target_os = <span class="string">&quot;android&quot;</span>, target_os = <span class="string">&quot;linux&quot;</span>))]
-</span><span class="kw">pub const </span>NFS_SUPER_MAGIC: FsWord = backend::fs::types::NFS_SUPER_MAGIC;
+/// [the `fstatfs` manual page]: https://man7.org/linux/man-pages/man2/fstatfs.2.html#DESCRIPTION
+</span><span class="attr">#[cfg(linux_kernel)]
+</span><span class="kw">pub const </span>NFS_SUPER_MAGIC: FsWord = backend::c::NFS_SUPER_MAGIC <span class="kw">as </span>FsWord;
 
 <span class="doccomment">/// `lseek(fd, offset, whence)`—Repositions a file descriptor within a file.
 ///
@@ -460,10 +463,10 @@
     backend::fs::syscalls::tell(fd.as_fd())
 }
 
-<span class="doccomment">/// `fchmod(fd)`—Sets open file or directory permissions.
+<span class="doccomment">/// `fchmod(fd, mode)`—Sets open file or directory permissions.
 ///
-/// This implementation does not support `O_PATH` file descriptors, even on
-/// platforms where the host libc emulates it.
+/// This implementation does not support [`OFlags::PATH`] file descriptors,
+/// even on platforms where the host libc emulates it.
 ///
 /// # References
 ///  - [POSIX]
@@ -477,7 +480,7 @@
     backend::fs::syscalls::fchmod(fd.as_fd(), mode)
 }
 
-<span class="doccomment">/// `fchown(fd)`—Sets open file or directory ownership.
+<span class="doccomment">/// `fchown(fd, owner, group)`—Sets open file or directory ownership.
 ///
 /// # References
 ///  - [POSIX]
@@ -502,7 +505,7 @@
 ///
 /// [POSIX]: https://pubs.opengroup.org/onlinepubs/9699919799/functions/fstat.html
 /// [Linux]: https://man7.org/linux/man-pages/man2/fstat.2.html
-/// [`Mode::from_raw_mode`]: crate::fs::Mode::from_raw_mode
+/// [`Mode::from_raw_mode`]: Mode::from_raw_mode
 /// [`FileType::from_raw_mode`]: crate::fs::FileType::from_raw_mode
 </span><span class="attr">#[inline]
 </span><span class="kw">pub fn </span>fstat&lt;Fd: AsFd&gt;(fd: Fd) -&gt; io::Result&lt;Stat&gt; {
@@ -519,11 +522,13 @@
 ///
 /// [Linux]: https://man7.org/linux/man-pages/man2/fstatfs.2.html
 </span><span class="attr">#[cfg(not(any(
+    solarish,
+    target_os = <span class="string">&quot;espidf&quot;</span>,
     target_os = <span class="string">&quot;haiku&quot;</span>,
-    target_os = <span class="string">&quot;illumos&quot;</span>,
     target_os = <span class="string">&quot;netbsd&quot;</span>,
+    target_os = <span class="string">&quot;nto&quot;</span>,
     target_os = <span class="string">&quot;redox&quot;</span>,
-    target_os = <span class="string">&quot;solaris&quot;</span>,
+    target_os = <span class="string">&quot;vita&quot;</span>,
     target_os = <span class="string">&quot;wasi&quot;</span>,
 )))]
 #[inline]
@@ -545,13 +550,7 @@
 ///
 /// [POSIX]: https://pubs.opengroup.org/onlinepubs/9699919799/functions/fstatvfs.html
 /// [Linux]: https://man7.org/linux/man-pages/man2/fstatvfs.2.html
-</span><span class="attr">#[cfg(not(any(
-    target_os = <span class="string">&quot;haiku&quot;</span>,
-    target_os = <span class="string">&quot;illumos&quot;</span>,
-    target_os = <span class="string">&quot;redox&quot;</span>,
-    target_os = <span class="string">&quot;solaris&quot;</span>,
-    target_os = <span class="string">&quot;wasi&quot;</span>,
-)))]
+</span><span class="attr">#[cfg(not(any(target_os = <span class="string">&quot;haiku&quot;</span>, target_os = <span class="string">&quot;redox&quot;</span>, target_os = <span class="string">&quot;wasi&quot;</span>)))]
 #[inline]
 </span><span class="kw">pub fn </span>fstatvfs&lt;Fd: AsFd&gt;(fd: Fd) -&gt; io::Result&lt;StatVfs&gt; {
     backend::fs::syscalls::fstatvfs(fd.as_fd())
@@ -565,7 +564,8 @@
 ///
 /// [POSIX]: https://pubs.opengroup.org/onlinepubs/9699919799/functions/futimens.html
 /// [Linux]: https://man7.org/linux/man-pages/man2/utimensat.2.html
-</span><span class="attr">#[inline]
+</span><span class="attr">#[cfg(not(any(target_os = <span class="string">&quot;espidf&quot;</span>, target_os = <span class="string">&quot;vita&quot;</span>)))]
+#[inline]
 </span><span class="kw">pub fn </span>futimens&lt;Fd: AsFd&gt;(fd: Fd, times: <span class="kw-2">&amp;</span>Timestamps) -&gt; io::Result&lt;()&gt; {
     backend::fs::syscalls::futimens(fd.as_fd(), times)
 }
@@ -586,13 +586,14 @@
 /// [Linux `fallocate`]: https://man7.org/linux/man-pages/man2/fallocate.2.html
 /// [Linux `posix_fallocate`]: https://man7.org/linux/man-pages/man3/posix_fallocate.3.html
 </span><span class="attr">#[cfg(not(any(
+    netbsdlike,
+    solarish,
     target_os = <span class="string">&quot;aix&quot;</span>,
     target_os = <span class="string">&quot;dragonfly&quot;</span>,
-    target_os = <span class="string">&quot;illumos&quot;</span>,
-    target_os = <span class="string">&quot;netbsd&quot;</span>,
-    target_os = <span class="string">&quot;openbsd&quot;</span>,
+    target_os = <span class="string">&quot;espidf&quot;</span>,
+    target_os = <span class="string">&quot;nto&quot;</span>,
     target_os = <span class="string">&quot;redox&quot;</span>,
-    target_os = <span class="string">&quot;solaris&quot;</span>,
+    target_os = <span class="string">&quot;vita&quot;</span>,
 )))] </span><span class="comment">// not implemented in libc for netbsd yet
 </span><span class="attr">#[inline]
 #[doc(alias = <span class="string">&quot;posix_fallocate&quot;</span>)]
@@ -615,22 +616,17 @@
     <span class="kw">let </span>mode = backend::fs::syscalls::fcntl_getfl(fd)<span class="question-mark">?</span>;
 
     <span class="comment">// Check for `O_PATH`.
-    </span><span class="attr">#[cfg(any(
-        target_os = <span class="string">&quot;android&quot;</span>,
-        target_os = <span class="string">&quot;fuchsia&quot;</span>,
-        target_os = <span class="string">&quot;linux&quot;</span>,
-        target_os = <span class="string">&quot;emscripten&quot;</span>,
-    ))]
-    </span><span class="kw">if </span>mode.contains(<span class="kw">crate</span>::fs::OFlags::PATH) {
+    </span><span class="attr">#[cfg(any(linux_kernel, target_os = <span class="string">&quot;emscripten&quot;</span>, target_os = <span class="string">&quot;fuchsia&quot;</span>))]
+    </span><span class="kw">if </span>mode.contains(OFlags::PATH) {
         <span class="kw">return </span><span class="prelude-val">Ok</span>((<span class="bool-val">false</span>, <span class="bool-val">false</span>));
     }
 
     <span class="comment">// Use `RWMODE` rather than `ACCMODE` as `ACCMODE` may include `O_PATH`.
     // We handled `O_PATH` above.
-    </span><span class="kw">match </span>mode &amp; <span class="kw">crate</span>::fs::OFlags::RWMODE {
-        <span class="kw">crate</span>::fs::OFlags::RDONLY =&gt; <span class="prelude-val">Ok</span>((<span class="bool-val">true</span>, <span class="bool-val">false</span>)),
-        <span class="kw">crate</span>::fs::OFlags::RDWR =&gt; <span class="prelude-val">Ok</span>((<span class="bool-val">true</span>, <span class="bool-val">true</span>)),
-        <span class="kw">crate</span>::fs::OFlags::WRONLY =&gt; <span class="prelude-val">Ok</span>((<span class="bool-val">false</span>, <span class="bool-val">true</span>)),
+    </span><span class="kw">match </span>mode &amp; OFlags::RWMODE {
+        OFlags::RDONLY =&gt; <span class="prelude-val">Ok</span>((<span class="bool-val">true</span>, <span class="bool-val">false</span>)),
+        OFlags::RDWR =&gt; <span class="prelude-val">Ok</span>((<span class="bool-val">true</span>, <span class="bool-val">true</span>)),
+        OFlags::WRONLY =&gt; <span class="prelude-val">Ok</span>((<span class="bool-val">false</span>, <span class="bool-val">true</span>)),
         <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
     }
 }
@@ -663,11 +659,12 @@
 /// [POSIX]: https://pubs.opengroup.org/onlinepubs/9699919799/functions/fdatasync.html
 /// [Linux]: https://man7.org/linux/man-pages/man2/fdatasync.2.html
 </span><span class="attr">#[cfg(not(any(
+    apple,
     target_os = <span class="string">&quot;dragonfly&quot;</span>,
+    target_os = <span class="string">&quot;espidf&quot;</span>,
     target_os = <span class="string">&quot;haiku&quot;</span>,
-    target_os = <span class="string">&quot;ios&quot;</span>,
-    target_os = <span class="string">&quot;macos&quot;</span>,
     target_os = <span class="string">&quot;redox&quot;</span>,
+    target_os = <span class="string">&quot;vita&quot;</span>,
 )))]
 #[inline]
 </span><span class="kw">pub fn </span>fdatasync&lt;Fd: AsFd&gt;(fd: Fd) -&gt; io::Result&lt;()&gt; {
@@ -693,9 +690,26 @@
 ///  - [Linux]
 ///
 /// [Linux]: https://man7.org/linux/man-pages/man2/flock.2.html
-</span><span class="attr">#[cfg(not(any(target_os = <span class="string">&quot;solaris&quot;</span>, target_os = <span class="string">&quot;wasi&quot;</span>)))]
+</span><span class="attr">#[cfg(not(any(
+    target_os = <span class="string">&quot;espidf&quot;</span>,
+    target_os = <span class="string">&quot;solaris&quot;</span>,
+    target_os = <span class="string">&quot;vita&quot;</span>,
+    target_os = <span class="string">&quot;wasi&quot;
+</span>)))]
 #[inline]
 </span><span class="kw">pub fn </span>flock&lt;Fd: AsFd&gt;(fd: Fd, operation: FlockOperation) -&gt; io::Result&lt;()&gt; {
     backend::fs::syscalls::flock(fd.as_fd(), operation)
+}
+
+<span class="doccomment">/// `syncfs(fd)`—Flush cached filesystem data.
+///
+/// # References
+///  - [Linux]
+///
+/// [Linux]: https://man7.org/linux/man-pages/man2/syncfs.2.html
+</span><span class="attr">#[cfg(linux_kernel)]
+#[inline]
+</span><span class="kw">pub fn </span>syncfs&lt;Fd: AsFd&gt;(fd: Fd) -&gt; io::Result&lt;()&gt; {
+    backend::fs::syscalls::syncfs(fd.as_fd())
 }
 </code></pre></div></section></main></body></html>

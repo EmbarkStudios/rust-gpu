@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/regex-syntax-0.6.27/src/hir/visitor.rs`."><title>visitor.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="regex_syntax" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../regex_syntax/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/regex-syntax-0.8.2/src/hir/visitor.rs`."><title>visitor.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="regex_syntax" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../regex_syntax/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -201,7 +201,21 @@
 <a href="#201" id="201">201</a>
 <a href="#202" id="202">202</a>
 <a href="#203" id="203">203</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::hir::{<span class="self">self</span>, Hir, HirKind};
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{vec, vec::Vec};
+
+<span class="kw">use </span><span class="kw">crate</span>::hir::{<span class="self">self</span>, Hir, HirKind};
 
 <span class="doccomment">/// A trait for visiting the high-level IR (HIR) in depth first order.
 ///
@@ -212,7 +226,7 @@
 /// important since the size of an HIR may be proportional to end user input.
 ///
 /// Typical usage of this trait involves providing an implementation and then
-/// running it using the [`visit`](fn.visit.html) function.
+/// running it using the [`visit`] function.
 </span><span class="kw">pub trait </span>Visitor {
     <span class="doccomment">/// The result of visiting an HIR.
     </span><span class="kw">type </span>Output;
@@ -242,13 +256,17 @@
     </span><span class="kw">fn </span>visit_alternation_in(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Err&gt; {
         <span class="prelude-val">Ok</span>(())
     }
+
+    <span class="doccomment">/// This method is called between child nodes of a concatenation.
+    </span><span class="kw">fn </span>visit_concat_in(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Err&gt; {
+        <span class="prelude-val">Ok</span>(())
+    }
 }
 
 <span class="doccomment">/// Executes an implementation of `Visitor` in constant stack space.
 ///
 /// This function will visit every node in the given `Hir` while calling
-/// appropriate methods provided by the
-/// [`Visitor`](trait.Visitor.html) trait.
+/// appropriate methods provided by the [`Visitor`] trait.
 ///
 /// The primary use case for this method is when one wants to perform case
 /// analysis over an `Hir` without using a stack size proportional to the depth
@@ -277,9 +295,9 @@
     <span class="doccomment">/// A stack frame allocated just before descending into a repetition
     /// operator&#39;s child node.
     </span>Repetition(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>hir::Repetition),
-    <span class="doccomment">/// A stack frame allocated just before descending into a group&#39;s child
+    <span class="doccomment">/// A stack frame allocated just before descending into a capture&#39;s child
     /// node.
-    </span>Group(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>hir::Group),
+    </span>Capture(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>hir::Capture),
     <span class="doccomment">/// The stack frame used while visiting every child node of a concatenation
     /// of expressions.
     </span>Concat {
@@ -333,8 +351,14 @@
                 <span class="comment">// If this is a concat/alternate, then we might have additional
                 // inductive steps to process.
                 </span><span class="kw">if let </span><span class="prelude-val">Some</span>(x) = <span class="self">self</span>.pop(frame) {
-                    <span class="kw">if let </span>Frame::Alternation { .. } = x {
-                        visitor.visit_alternation_in()<span class="question-mark">?</span>;
+                    <span class="kw">match </span>x {
+                        Frame::Alternation { .. } =&gt; {
+                            visitor.visit_alternation_in()<span class="question-mark">?</span>;
+                        }
+                        Frame::Concat { .. } =&gt; {
+                            visitor.visit_concat_in()<span class="question-mark">?</span>;
+                        }
+                        <span class="kw">_ </span>=&gt; {}
                     }
                     hir = x.child();
                     <span class="self">self</span>.stack.push((post_hir, x));
@@ -352,7 +376,7 @@
     </span><span class="kw">fn </span>induct(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hir: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Hir) -&gt; <span class="prelude-ty">Option</span>&lt;Frame&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
         <span class="kw">match </span><span class="kw-2">*</span>hir.kind() {
             HirKind::Repetition(<span class="kw-2">ref </span>x) =&gt; <span class="prelude-val">Some</span>(Frame::Repetition(x)),
-            HirKind::Group(<span class="kw-2">ref </span>x) =&gt; <span class="prelude-val">Some</span>(Frame::Group(x)),
+            HirKind::Capture(<span class="kw-2">ref </span>x) =&gt; <span class="prelude-val">Some</span>(Frame::Capture(x)),
             HirKind::Concat(<span class="kw-2">ref </span>x) <span class="kw">if </span>x.is_empty() =&gt; <span class="prelude-val">None</span>,
             HirKind::Concat(<span class="kw-2">ref </span>x) =&gt; {
                 <span class="prelude-val">Some</span>(Frame::Concat { head: <span class="kw-2">&amp;</span>x[<span class="number">0</span>], tail: <span class="kw-2">&amp;</span>x[<span class="number">1</span>..] })
@@ -370,7 +394,7 @@
     </span><span class="kw">fn </span>pop(<span class="kw-2">&amp;</span><span class="self">self</span>, induct: Frame&lt;<span class="lifetime">&#39;a</span>&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;Frame&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
         <span class="kw">match </span>induct {
             Frame::Repetition(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
-            Frame::Group(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
+            Frame::Capture(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
             Frame::Concat { tail, .. } =&gt; {
                 <span class="kw">if </span>tail.is_empty() {
                     <span class="prelude-val">None
@@ -397,8 +421,8 @@
     /// child HIR node to visit.
     </span><span class="kw">fn </span>child(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Hir {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-            Frame::Repetition(rep) =&gt; <span class="kw-2">&amp;</span>rep.hir,
-            Frame::Group(group) =&gt; <span class="kw-2">&amp;</span>group.hir,
+            Frame::Repetition(rep) =&gt; <span class="kw-2">&amp;</span>rep.sub,
+            Frame::Capture(capture) =&gt; <span class="kw-2">&amp;</span>capture.sub,
             Frame::Concat { head, .. } =&gt; head,
             Frame::Alternation { head, .. } =&gt; head,
         }
