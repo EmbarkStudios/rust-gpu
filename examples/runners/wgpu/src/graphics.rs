@@ -2,7 +2,7 @@ use crate::{maybe_watch, CompiledShaderModules, Options};
 
 use shared::ShaderConstants;
 use winit::{
-    event::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent},
+    event::{ElementState, Event, MouseButton, WindowEvent},
     event_loop::{ControlFlow, EventLoop, EventLoopBuilder},
     window::Window,
 };
@@ -27,7 +27,9 @@ fn mouse_button_index(button: MouseButton) -> usize {
         MouseButton::Left => 0,
         MouseButton::Middle => 1,
         MouseButton::Right => 2,
-        MouseButton::Other(i) => 3 + (i as usize),
+        MouseButton::Back => 3,
+        MouseButton::Forward => 4,
+        MouseButton::Other(i) => 5 + (i as usize),
     }
 }
 
@@ -42,6 +44,7 @@ async fn run(
     let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
         backends,
         dx12_shader_compiler: wgpu::util::dx12_shader_compiler_from_env().unwrap_or_default(),
+        ..Default::default()
     });
 
     // HACK(eddyb) marker error type for lazily-created surfaces (e.g. on Android).
@@ -62,7 +65,6 @@ async fn run(
 
     let adapter = wgpu::util::initialize_adapter_from_env_or_default(
         &instance,
-        backends,
         // Request an adapter which can render to our surface
         initial_surface.as_ref().ok(),
     )
@@ -146,18 +148,15 @@ async fn run(
     let mut mouse_button_press_since_last_frame = 0;
     let mut mouse_button_press_time = [f32::NEG_INFINITY; 3];
 
-    event_loop.run(move |event, _, control_flow| {
+    event_loop.run(move |event, event_loop_window_target| {
         // Have the closure take ownership of the resources.
         // `event_loop.run` never returns, therefore we must do this to ensure
         // the resources are properly cleaned up.
         let _ = (&instance, &adapter, &pipeline_layout);
         let render_pipeline = &mut render_pipeline;
 
-        *control_flow = ControlFlow::Wait;
+        event_loop_window_target.set_control_flow(ControlFlow::Wait);
         match event {
-            Event::MainEventsCleared => {
-                window.request_redraw();
-            }
             Event::Resumed => {
                 let new_surface = unsafe { instance.create_surface(&window) }
                     .expect("Failed to create surface from window (after resume)");
@@ -188,7 +187,10 @@ async fn run(
                     }
                 }
             }
-            Event::RedrawRequested(_) => {
+            Event::WindowEvent {
+                event: WindowEvent::RedrawRequested,
+                ..
+            } => {
                 // FIXME(eddyb) only the mouse shader *really* needs this, could
                 // avoid doing wasteful rendering by special-casing each shader?
                 // (with VSync enabled this can't be *too* bad, thankfully)
@@ -206,7 +208,7 @@ async fn run(
                                     surface.configure(&device, surface_config);
                                 }
                                 wgpu::SurfaceError::OutOfMemory => {
-                                    *control_flow = ControlFlow::Exit;
+                                    event_loop_window_target.exit();
                                 }
                                 _ => (),
                             }
@@ -226,10 +228,11 @@ async fn run(
                                 resolve_target: None,
                                 ops: wgpu::Operations {
                                     load: wgpu::LoadOp::Clear(wgpu::Color::GREEN),
-                                    store: true,
+                                    store: wgpu::StoreOp::Store,
                                 },
                             })],
                             depth_stencil_attachment: None,
+                            ..Default::default()
                         });
 
                         let time = start.elapsed().as_secs_f32();
@@ -271,15 +274,17 @@ async fn run(
                 event:
                     WindowEvent::CloseRequested
                     | WindowEvent::KeyboardInput {
-                        input:
-                            KeyboardInput {
-                                virtual_keycode: Some(VirtualKeyCode::Escape),
+                        event:
+                            winit::event::KeyEvent {
+                                logical_key:
+                                    winit::keyboard::Key::Named(winit::keyboard::NamedKey::Escape),
+                                state: winit::event::ElementState::Pressed,
                                 ..
                             },
                         ..
                     },
                 ..
-            } => *control_flow = ControlFlow::Exit,
+            } => event_loop_window_target.exit(),
             Event::WindowEvent {
                 event: WindowEvent::MouseInput { state, button, .. },
                 ..
@@ -323,11 +328,11 @@ async fn run(
                     new_module,
                 );
                 window.request_redraw();
-                *control_flow = ControlFlow::Poll;
+                event_loop_window_target.set_control_flow(ControlFlow::Poll);
             }
             _ => {}
         }
-    });
+    }).unwrap();
 }
 
 fn create_pipeline(
@@ -426,7 +431,7 @@ pub fn start(
             env_logger::init();
         }
     }
-    let event_loop = event_loop_builder.build();
+    let event_loop = event_loop_builder.build().unwrap();
 
     // Build the shader before we pop open a window, since it might take a while.
     let initial_shader = maybe_watch(
