@@ -2,7 +2,10 @@ use crate::{maybe_watch, CompiledShaderModules, Options};
 
 use shared::ShaderConstants;
 use winit::{
-    event::{ElementState, Event, MouseButton, WindowEvent},
+    event::{
+        ElementState, Event, MouseButton, Touch, TouchPhase,
+        WindowEvent,
+    },
     event_loop::{ControlFlow, EventLoop, EventLoopBuilder},
     window::Window,
 };
@@ -306,7 +309,40 @@ async fn run(
                 }
             }
             Event::WindowEvent {
-                event: WindowEvent::CursorMoved { position, .. },
+                event:
+                    WindowEvent::Touch(Touch {
+                        phase: phase @ (TouchPhase::Started | TouchPhase::Ended | TouchPhase::Cancelled),
+                        ..
+                    }),
+                ..
+            } => {
+                // FIXME(eddyb) deduplicate!
+                let button = MouseButton::Left;
+                let mask = 1 << mouse_button_index(button);
+                match phase {
+                    TouchPhase::Started => {
+                        mouse_button_pressed |= mask;
+                        mouse_button_press_since_last_frame |= mask;
+
+                        if button == MouseButton::Left {
+                            drag_start_x = cursor_x;
+                            drag_start_y = cursor_y;
+                            drag_end_x = cursor_x;
+                            drag_end_y = cursor_y;
+                        }
+                    }
+                    TouchPhase::Moved => unreachable!(),
+                    TouchPhase::Ended | TouchPhase::Cancelled => mouse_button_pressed &= !mask,
+                }
+            }
+            Event::WindowEvent {
+                event:
+                    WindowEvent::CursorMoved { position, .. }
+                    | WindowEvent::Touch(Touch {
+                        phase: TouchPhase::Moved,
+                        location: position,
+                        ..
+                    }),
                 ..
             } => {
                 cursor_x = position.x as f32;
