@@ -1,28 +1,23 @@
+use clap::Parser;
 use std::{
     env,
     io::{Error, ErrorKind, Result},
     path::{Path, PathBuf},
 };
-use structopt::StructOpt;
 
-#[derive(StructOpt)]
-#[structopt(
-    name = "cargo compiletest",
-    no_version,
-    // HACK(eddyb) avoid "USAGE:" saying "compiletests".
-    usage = "cargo compiletest [FLAGS] [FILTER]..."
-)]
+#[derive(Parser)]
+#[command(bin_name = "cargo compiletest")]
 struct Opt {
     /// Automatically update stderr/stdout files.
-    #[structopt(long)]
+    #[arg(long)]
     bless: bool,
 
     /// The environment to compile to the SPIR-V tests.
-    #[structopt(long, default_value = "spv1.3")]
+    #[arg(long, default_value = "spv1.3")]
     target_env: String,
 
     /// Only run tests that match these filters.
-    #[structopt(name = "FILTER")]
+    #[arg(name = "FILTER")]
     filters: Vec<String>,
 }
 
@@ -57,7 +52,7 @@ impl DepKind {
 }
 
 fn main() {
-    let opt = Opt::from_args();
+    let opt = Opt::parse();
 
     let tests_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let workspace_root = tests_dir.parent().unwrap();
