@@ -169,7 +169,7 @@ fn link_with_linker_opts(
                     )
                 };
                 let emitter =
-                    rustc_errors::emitter::EmitterWriter::new(Box::new(buf), fallback_bundle)
+                    rustc_errors::emitter::HumanEmitter::new(Box::new(buf), fallback_bundle)
                         .sm(Some(sess.parse_sess.clone_source_map()));
 
                 rustc_errors::DiagCtxt::with_emitter(Box::new(emitter))
