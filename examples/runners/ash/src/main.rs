@@ -93,22 +93,22 @@ use std::{
     thread,
 };
 
-use structopt::StructOpt;
+use clap::Parser;
 
 use spirv_builder::{MetadataPrintout, SpirvBuilder};
 
 use shared::ShaderConstants;
 
-#[derive(Debug, StructOpt)]
-#[structopt()]
+#[derive(Debug, Parser)]
+#[command()]
 pub struct Options {
     /// Use Vulkan debug layer (requires Vulkan SDK installed)
-    #[structopt(short, long)]
+    #[arg(short, long)]
     debug_layer: bool,
 }
 
 pub fn main() {
-    let options = Options::from_args();
+    let options = Options::parse();
     let shaders = compile_shaders();
 
     // runtime setup

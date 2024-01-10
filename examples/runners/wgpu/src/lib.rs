@@ -70,8 +70,8 @@
 // crate-specific exceptions:
 // #![allow()]
 
+use clap::Parser;
 use std::borrow::Cow;
-use structopt::StructOpt;
 use strum::{Display, EnumString};
 
 // NOTE(eddyb) while this could theoretically work on the web, it needs more work.
@@ -211,13 +211,13 @@ fn maybe_watch(
     }
 }
 
-#[derive(StructOpt, Clone)]
-#[structopt(name = "example-runner-wgpu")]
+#[derive(Parser, Clone)]
+#[command()]
 pub struct Options {
-    #[structopt(short, long, default_value = "Sky")]
+    #[arg(short, long, default_value = "Sky")]
     shader: RustGPUShader,
 
-    #[structopt(long)]
+    #[arg(long)]
     force_spirv_passthru: bool,
 }
 
@@ -225,7 +225,7 @@ pub struct Options {
 pub fn main(
     #[cfg(target_os = "android")] android_app: winit::platform::android::activity::AndroidApp,
 ) {
-    let options: Options = Options::from_args();
+    let options = Options::parse();
 
     #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
     if options.shader == RustGPUShader::Compute {
