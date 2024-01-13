@@ -34,6 +34,7 @@ pub struct ImageType {
     sampled: Sampled,
     sampled_type: SampledType,
     components: u32,
+    access_qualifier: AccessQualifier,
 }
 
 impl Parse for ImageType {
@@ -47,6 +48,7 @@ impl Parse for ImageType {
         let mut sampled: Option<Sampled> = None;
         let mut crate_root = None;
         let mut components = None;
+        let mut access_qualifier = None;
 
         let starting_span = input.span();
 
@@ -160,6 +162,22 @@ impl Parse for ImageType {
                                 )),
                         }
                     );
+                } else if ident == "access" {
+                    let value = peek_and_eat_value!(syn::Ident);
+
+                    if value.is_none() {
+                        return Err(syn::Error::new(
+                            ident.span(),
+                            "Expected argument for `access`.",
+                        ));
+                    }
+                    let value = params::access_qualifier_from_str(&value.unwrap().to_string());
+
+                    if let Err(err) = value {
+                        return Err(syn::Error::new(ident.span(), err));
+                    }
+
+                    access_qualifier = value.ok();
                 } else if ident == "__crate_root" {
                     input.parse::<syn::Token![=]>()?;
                     crate_root = Some(input.parse::<syn::Path>()?);
@@ -366,6 +384,7 @@ impl Parse for ImageType {
         let multisampled = multisampled.unwrap_or(Multisampled::False);
         let sampled = sampled.unwrap_or(Sampled::Unknown);
         let components = components.unwrap_or(4);
+        let access_qualifier = access_qualifier.unwrap_or(AccessQualifier::ReadOnly);
 
         Ok(Self {
             arrayed,
@@ -377,6 +396,7 @@ impl Parse for ImageType {
             sampled,
             sampled_type,
             components,
+            access_qualifier,
         })
     }
 }
@@ -400,6 +420,7 @@ impl quote::ToTokens for ImageType {
         let sampled = params::sampled_to_tokens(&self.sampled);
         let sampled_type = &self.sampled_type;
         let components = self.components;
+        let access_qualifier = params::access_qualifier_to_tokens(&self.access_qualifier);
 
         tokens.append_all(quote::quote! {
             #crate_root::image::Image<
@@ -410,6 +431,7 @@ impl quote::ToTokens for ImageType {
                 { #crate_root::image::#multisampled as u32 },
                 { #crate_root::image::#sampled as u32 },
                 { #crate_root::image::#format as u32 },
+                { #crate_root::image::#access_qualifier as u32 },
                 { #components as u32 },
             >
         });
@@ -466,6 +488,19 @@ mod params {
             _ => {
                 return Err(
                     "Unknown specified image format. Use `type=<type>` instead if this is intentional.",
+                );
+            }
+        })
+    }
+
+    pub fn access_qualifier_from_str(s: &str) -> Result<AccessQualifier, &'static str> {
+        Ok(match s {
+            "readonly" => AccessQualifier::ReadOnly,
+            "writeonly" => AccessQualifier::WriteOnly,
+            "readwrite" => AccessQualifier::ReadWrite,
+            _ => {
+                return Err(
+                    "Unknown specified access qualifier. Use `access=<access>` instead if this is intentional.",
                 );
             }
         })
@@ -597,5 +632,13 @@ mod params {
         };
 
         quote!(ImageFormat::#variant)
+    }
+
+    pub fn access_qualifier_to_tokens(access: &AccessQualifier) -> proc_macro2::TokenStream {
+        match access {
+            AccessQualifier::ReadOnly => quote!(AccessQualifier::ReadOnly),
+            AccessQualifier::WriteOnly => quote!(AccessQualifier::WriteOnly),
+            AccessQualifier::ReadWrite => quote!(AccessQualifier::ReadWrite),
+        }
     }
 }

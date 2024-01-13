@@ -327,6 +327,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 multisampled: inst.operands[4].unwrap_literal_int32(),
                 sampled: inst.operands[5].unwrap_literal_int32(),
                 image_format: inst.operands[6].unwrap_image_format(),
+                access_qualifier: inst.operands[7].unwrap_access_qualifier()
             }
             .def(self.span(), self),
             Op::TypeSampledImage => SpirvType::SampledImage {

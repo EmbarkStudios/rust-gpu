@@ -877,6 +877,7 @@ fn trans_intrinsic_type<'tcx>(
             let multisampled = const_int_value(cx, args.const_at(4))?;
             let sampled = const_int_value(cx, args.const_at(5))?;
             let image_format = const_int_value(cx, args.const_at(6))?;
+            let access_qualifier = const_int_value(cx, args.const_at(7))?;
 
             let ty = SpirvType::Image {
                 sampled_type,
@@ -886,6 +887,7 @@ fn trans_intrinsic_type<'tcx>(
                 multisampled,
                 sampled,
                 image_format,
+                access_qualifier,
             };
             Ok(ty.def(span, cx))
         }
