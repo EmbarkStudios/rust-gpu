@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [PR#1100](https://github.com/EmbarkStudios/rust-gpu/pull/1100) updated toolchain to `nightly-2023-09-30`
 - [PR#1091](https://github.com/EmbarkStudios/rust-gpu/pull/1091) updated toolchain to `nightly-2023-08-29`
 - [PR#1085](https://github.com/EmbarkStudios/rust-gpu/pull/1085) updated toolchain to `nightly-2023-07-08`
+- [PR#1115](https://github.com/EmbarkStudios/rust-gpu/pull/1115) relaxed `glam` version requirements (from `>=0.22, <=0.24` to `>=0.22, <=0.25`)
 
 ## [0.9.0]
 
