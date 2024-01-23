@@ -1412,7 +1412,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 Ok(x) => inst.operands.push(dr::Operand::StoreCacheControl(x)),
                 Err(()) => self.err(format!("unknown StoreCacheControl {word}")),
             },
-            (OperandKind::LiteralFloat, Some(word)) => todo!(),
+            (OperandKind::LiteralFloat, Some(_word)) => todo!(),
             (kind, None) => match token {
                 Token::Word(_) => bug!(),
                 Token::String(_) => {
