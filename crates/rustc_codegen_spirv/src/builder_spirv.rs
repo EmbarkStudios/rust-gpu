@@ -583,10 +583,8 @@ impl<'tcx> BuilderSpirv<'tcx> {
         }
         let val = val_with_type.val;
         let id = match val {
-            SpirvConst::U32(v) => builder.constant_bit32(ty, v),
-            SpirvConst::U64(v) => builder.constant_bit64(ty, v),
-            SpirvConst::F32(v) => builder.constant_bit32(ty, v),
-            SpirvConst::F64(v) => builder.constant_bit64(ty, v),
+            SpirvConst::U32(v) | SpirvConst::F32(v) => builder.constant_bit32(ty, v),
+            SpirvConst::U64(v) | SpirvConst::F64(v) => builder.constant_bit64(ty, v),
             SpirvConst::Bool(v) => {
                 if v {
                     builder.constant_true(ty)
