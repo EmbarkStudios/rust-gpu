@@ -5,8 +5,9 @@ use crate::spirv_type::SpirvType;
 use rspirv::dr;
 use rspirv::grammar::{reflect, LogicalOperand, OperandKind, OperandQuantifier};
 use rspirv::spirv::{
-    FPFastMathMode, FragmentShadingRate, FunctionControl, ImageOperands, KernelProfilingInfo,
-    LoopControl, MemoryAccess, MemorySemantics, Op, RayFlags, SelectionControl, StorageClass, Word,
+    CooperativeMatrixOperands, FPFastMathMode, FragmentShadingRate, FunctionControl, ImageOperands,
+    KernelProfilingInfo, LoopControl, MemoryAccess, MemorySemantics, Op, RayFlags,
+    SelectionControl, StorageClass, Word,
 };
 use rustc_ast::ast::{InlineAsmOptions, InlineAsmTemplatePiece};
 use rustc_codegen_ssa::mir::place::PlaceRef;
@@ -1357,6 +1358,61 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                     .push(dr::Operand::RayQueryCandidateIntersectionType(x)),
                 Err(()) => self.err(format!("unknown RayQueryCandidateIntersectionType {word}")),
             },
+            (OperandKind::FPDenormMode, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::FPDenormMode(x)),
+                Err(()) => self.err(format!("unknown FPDenormMode {word}")),
+            },
+            (OperandKind::QuantizationModes, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::QuantizationModes(x)),
+                Err(()) => self.err(format!("unknown QuantizationModes {word}")),
+            },
+            (OperandKind::FPOperationMode, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::FPOperationMode(x)),
+                Err(()) => self.err(format!("unknown FPOperationMode {word}")),
+            },
+            (OperandKind::OverflowModes, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::OverflowModes(x)),
+                Err(()) => self.err(format!("unknown OverflowModes {word}")),
+            },
+            (OperandKind::PackedVectorFormat, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::PackedVectorFormat(x)),
+                Err(()) => self.err(format!("unknown PackedVectorFormat {word}")),
+            },
+            (OperandKind::HostAccessQualifier, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::HostAccessQualifier(x)),
+                Err(()) => self.err(format!("unknown HostAccessQualifier {word}")),
+            },
+            (OperandKind::CooperativeMatrixOperands, Some(word)) => {
+                match parse_bitflags_operand(COOPERATIVE_MATRIX_OPERANDS, word) {
+                    Some(x) => inst
+                        .operands
+                        .push(dr::Operand::CooperativeMatrixOperands(x)),
+                    None => self.err(format!("Unknown CooperativeMatrixOperands {word}")),
+                }
+            }
+            (OperandKind::CooperativeMatrixLayout, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::CooperativeMatrixLayout(x)),
+                Err(()) => self.err(format!("unknown CooperativeMatrixLayout {word}")),
+            },
+            (OperandKind::CooperativeMatrixUse, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::CooperativeMatrixUse(x)),
+                Err(()) => self.err(format!("unknown CooperativeMatrixUse {word}")),
+            },
+            (OperandKind::InitializationModeQualifier, Some(word)) => match word.parse() {
+                Ok(x) => inst
+                    .operands
+                    .push(dr::Operand::InitializationModeQualifier(x)),
+                Err(()) => self.err(format!("unknown InitializationModeQualifier {word}")),
+            },
+            (OperandKind::LoadCacheControl, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::LoadCacheControl(x)),
+                Err(()) => self.err(format!("unknown LoadCacheControl {word}")),
+            },
+            (OperandKind::StoreCacheControl, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::StoreCacheControl(x)),
+                Err(()) => self.err(format!("unknown StoreCacheControl {word}")),
+            },
+            (OperandKind::LiteralFloat, Some(word)) => todo!(),
             (kind, None) => match token {
                 Token::Word(_) => bug!(),
                 Token::String(_) => {
@@ -1526,6 +1582,29 @@ pub const FRAGMENT_SHADING_RATE: &[(&str, FragmentShadingRate)] = &[
     (
         "HORIZONTAL4_PIXELS",
         FragmentShadingRate::HORIZONTAL4_PIXELS,
+    ),
+];
+pub const COOPERATIVE_MATRIX_OPERANDS: &[(&str, CooperativeMatrixOperands)] = &[
+    ("NONE_KHR", CooperativeMatrixOperands::NONE_KHR),
+    (
+        "MATRIX_A_SIGNED_COMPONENTS_KHR",
+        CooperativeMatrixOperands::MATRIX_A_SIGNED_COMPONENTS_KHR,
+    ),
+    (
+        "MATRIX_B_SIGNED_COMPONENTS_KHR",
+        CooperativeMatrixOperands::MATRIX_B_SIGNED_COMPONENTS_KHR,
+    ),
+    (
+        "MATRIX_C_SIGNED_COMPONENTS_KHR",
+        CooperativeMatrixOperands::MATRIX_C_SIGNED_COMPONENTS_KHR,
+    ),
+    (
+        "MATRIX_RESULT_SIGNED_COMPONENTS_KHR",
+        CooperativeMatrixOperands::MATRIX_RESULT_SIGNED_COMPONENTS_KHR,
+    ),
+    (
+        "SATURATING_ACCUMULATION_KHR",
+        CooperativeMatrixOperands::SATURATING_ACCUMULATION_KHR,
     ),
 ];
 
