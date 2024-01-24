@@ -59,7 +59,8 @@ async fn run(
             preferred_format: wgpu::TextureFormat::Rgba8UnormSrgb,
         })
     } else {
-        Ok(unsafe { instance.create_surface(&window) }
+        Ok(instance
+            .create_surface(&window)
             .expect("Failed to create surface from window"))
     };
 
@@ -71,11 +72,11 @@ async fn run(
     .await
     .expect("Failed to find an appropriate adapter");
 
-    let mut features = wgpu::Features::PUSH_CONSTANTS;
+    let mut required_features = wgpu::Features::PUSH_CONSTANTS;
     if options.force_spirv_passthru {
-        features |= wgpu::Features::SPIRV_SHADER_PASSTHROUGH;
+        required_features |= wgpu::Features::SPIRV_SHADER_PASSTHROUGH;
     }
-    let limits = wgpu::Limits {
+    let required_limits = wgpu::Limits {
         max_push_constant_size: 128,
         ..Default::default()
     };
@@ -85,35 +86,39 @@ async fn run(
         .request_device(
             &wgpu::DeviceDescriptor {
                 label: None,
-                features,
-                limits,
+                required_features,
+                required_limits,
             },
             None,
         )
         .await
         .expect("Failed to create device");
 
-    let auto_configure_surface =
-        |adapter: &_, device: &_, surface: wgpu::Surface, size: winit::dpi::PhysicalSize<_>| {
-            let mut surface_config = surface
-                .get_default_config(adapter, size.width, size.height)
-                .unwrap_or_else(|| {
-                    panic!(
-                        "Missing formats/present modes in surface capabilities: {:#?}",
-                        surface.get_capabilities(adapter)
-                    )
-                });
+    fn auto_configure_surface<'a>(
+        adapter: &wgpu::Adapter,
+        device: &wgpu::Device,
+        surface: wgpu::Surface<'a>,
+        size: winit::dpi::PhysicalSize<u32>,
+    ) -> (wgpu::Surface<'a>, wgpu::SurfaceConfiguration) {
+        let mut surface_config = surface
+            .get_default_config(adapter, size.width, size.height)
+            .unwrap_or_else(|| {
+                panic!(
+                    "Missing formats/present modes in surface capabilities: {:#?}",
+                    surface.get_capabilities(adapter)
+                )
+            });
 
-            // FIXME(eddyb) should this be toggled by a CLI arg?
-            // NOTE(eddyb) VSync was disabled in the past, but without VSync,
-            // especially for simpler shaders, you can easily hit thousands
-            // of frames per second, stressing GPUs for no reason.
-            surface_config.present_mode = wgpu::PresentMode::AutoVsync;
+        // FIXME(eddyb) should this be toggled by a CLI arg?
+        // NOTE(eddyb) VSync was disabled in the past, but without VSync,
+        // especially for simpler shaders, you can easily hit thousands
+        // of frames per second, stressing GPUs for no reason.
+        surface_config.present_mode = wgpu::PresentMode::AutoVsync;
 
-            surface.configure(device, &surface_config);
+        surface.configure(device, &surface_config);
 
-            (surface, surface_config)
-        };
+        (surface, surface_config)
+    }
     let mut surface_with_config = initial_surface
         .map(|surface| auto_configure_surface(&adapter, &device, surface, window.inner_size()));
 
@@ -148,7 +153,7 @@ async fn run(
     let mut mouse_button_press_since_last_frame = 0;
     let mut mouse_button_press_time = [f32::NEG_INFINITY; 3];
 
-    event_loop.run(move |event, event_loop_window_target| {
+    event_loop.run(|event, event_loop_window_target| {
         // Have the closure take ownership of the resources.
         // `event_loop.run` never returns, therefore we must do this to ensure
         // the resources are properly cleaned up.
@@ -158,7 +163,7 @@ async fn run(
         event_loop_window_target.set_control_flow(ControlFlow::Wait);
         match event {
             Event::Resumed => {
-                let new_surface = unsafe { instance.create_surface(&window) }
+                let new_surface = instance.create_surface(&window)
                     .expect("Failed to create surface from window (after resume)");
                 surface_with_config = Ok(auto_configure_surface(
                     &adapter,

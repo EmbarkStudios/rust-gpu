@@ -22,18 +22,18 @@ async fn start_internal(options: &Options, compiled_shader_modules: CompiledShad
         .await
         .expect("Failed to find an appropriate adapter");
 
-    let mut features =
+    let mut required_features =
         wgpu::Features::TIMESTAMP_QUERY | wgpu::Features::TIMESTAMP_QUERY_INSIDE_PASSES;
     if options.force_spirv_passthru {
-        features |= wgpu::Features::SPIRV_SHADER_PASSTHROUGH;
+        required_features |= wgpu::Features::SPIRV_SHADER_PASSTHROUGH;
     }
 
     let (device, queue) = adapter
         .request_device(
             &wgpu::DeviceDescriptor {
                 label: None,
-                features,
-                limits: wgpu::Limits::default(),
+                required_features,
+                required_limits: wgpu::Limits::default(),
             },
             None,
         )
