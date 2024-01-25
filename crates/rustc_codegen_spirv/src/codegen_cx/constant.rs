@@ -35,12 +35,12 @@ impl<'tcx> CodegenCx<'tcx> {
         self.def_constant(ty, SpirvConst::U32(val as u32))
     }
 
-    pub fn constant_u32(&self, span: Span, val: u32) -> SpirvValue {
+    pub fn constant_bit32(&self, span: Span, val: u32) -> SpirvValue {
         let ty = SpirvType::Integer(32, false).def(span, self);
         self.def_constant(ty, SpirvConst::U32(val))
     }
 
-    pub fn constant_u64(&self, span: Span, val: u64) -> SpirvValue {
+    pub fn constant_bit64(&self, span: Span, val: u64) -> SpirvValue {
         let ty = SpirvType::Integer(64, false).def(span, self);
         self.def_constant(ty, SpirvConst::U64(val))
     }
@@ -163,10 +163,10 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
         self.constant_i32(DUMMY_SP, i)
     }
     fn const_u32(&self, i: u32) -> Self::Value {
-        self.constant_u32(DUMMY_SP, i)
+        self.constant_bit32(DUMMY_SP, i)
     }
     fn const_u64(&self, i: u64) -> Self::Value {
-        self.constant_u64(DUMMY_SP, i)
+        self.constant_bit64(DUMMY_SP, i)
     }
     fn const_u128(&self, i: u128) -> Self::Value {
         let ty = SpirvType::Integer(128, false).def(DUMMY_SP, self);
@@ -336,7 +336,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                     self.tcx
                         .sess
                         .fatal("Non-zero scalar_to_backend ptr.offset not supported")
-                    // let offset = self.constant_u64(ptr.offset.bytes());
+                    // let offset = self.constant_bit64(ptr.offset.bytes());
                     // self.gep(base_addr, once(offset))
                 };
                 if let Primitive::Pointer(_) = layout.primitive() {
