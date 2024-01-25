@@ -449,11 +449,12 @@ impl<'tcx> CodegenCx<'tcx> {
             ),
             Err(SpecConstant { id, default }) => {
                 let mut emit = self.emit_global();
-                let spec_const_id = emit.spec_constant_u32(value_spirv_type, default.unwrap_or(0));
+                let spec_const_id =
+                    emit.spec_constant_bit32(value_spirv_type, default.unwrap_or(0));
                 emit.decorate(
                     spec_const_id,
                     Decoration::SpecId,
-                    [Operand::LiteralInt32(id)],
+                    [Operand::LiteralBit32(id)],
                 );
                 (
                     Err("`#[spirv(spec_constant)]` is not an entry-point interface variable"),
@@ -669,7 +670,7 @@ impl<'tcx> CodegenCx<'tcx> {
             self.emit_global().decorate(
                 var_id.unwrap(),
                 Decoration::DescriptorSet,
-                std::iter::once(Operand::LiteralInt32(descriptor_set.value)),
+                std::iter::once(Operand::LiteralBit32(descriptor_set.value)),
             );
             decoration_supersedes_location = true;
         }
@@ -683,7 +684,7 @@ impl<'tcx> CodegenCx<'tcx> {
             self.emit_global().decorate(
                 var_id.unwrap(),
                 Decoration::Binding,
-                std::iter::once(Operand::LiteralInt32(binding.value)),
+                std::iter::once(Operand::LiteralBit32(binding.value)),
             );
             decoration_supersedes_location = true;
         }
@@ -728,7 +729,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 self.emit_global().decorate(
                     var_id.unwrap(),
                     Decoration::InputAttachmentIndex,
-                    std::iter::once(Operand::LiteralInt32(attachment_index.value)),
+                    std::iter::once(Operand::LiteralBit32(attachment_index.value)),
                 );
             } else if is_subpass_input {
                 self.tcx
@@ -775,7 +776,7 @@ impl<'tcx> CodegenCx<'tcx> {
             self.emit_global().decorate(
                 var_id.unwrap(),
                 Decoration::Location,
-                std::iter::once(Operand::LiteralInt32(*location)),
+                std::iter::once(Operand::LiteralBit32(*location)),
             );
             *location += 1;
         }
