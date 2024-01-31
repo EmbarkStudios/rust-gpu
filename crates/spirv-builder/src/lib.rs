@@ -255,11 +255,27 @@ pub enum ShaderPanicStrategy {
     UNSOUND_DO_NOT_USE_UndefinedBehaviorViaUnreachable,
 }
 
+/// Cargo features specification for building the shader crate.
+struct ShaderCrateFeatures {
+    default_features: bool,
+    features: Vec<String>,
+}
+
+impl Default for ShaderCrateFeatures {
+    fn default() -> Self {
+        ShaderCrateFeatures {
+            default_features: true,
+            features: vec![],
+        }
+    }
+}
+
 pub struct SpirvBuilder {
     path_to_crate: PathBuf,
     print_metadata: MetadataPrintout,
     release: bool,
     target: String,
+    shader_crate_features: ShaderCrateFeatures,
     deny_warnings: bool,
     multimodule: bool,
     spirv_metadata: SpirvMetadata,
@@ -306,6 +322,7 @@ impl SpirvBuilder {
             skip_block_layout: false,
 
             preserve_bindings: false,
+            shader_crate_features: ShaderCrateFeatures::default(),
         }
     }
 
@@ -429,6 +446,20 @@ impl SpirvBuilder {
     #[must_use]
     pub fn extra_arg(mut self, arg: impl Into<String>) -> Self {
         self.extra_args.push(arg.into());
+        self
+    }
+
+    /// Set --default-features for the target shader crate.
+    #[must_use]
+    pub fn shader_crate_default_features(mut self, default_features: bool) -> Self {
+        self.shader_crate_features.default_features = default_features;
+        self
+    }
+
+    /// Set --features for the target shader crate.
+    #[must_use]
+    pub fn shader_crate_features(mut self, features: impl IntoIterator<Item = String>) -> Self {
+        self.shader_crate_features.features = features.into_iter().collect();
         self
     }
 
@@ -688,6 +719,14 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
         profile,
         "--target",
         &*builder.target,
+        &format!(
+            "--default-features={}",
+            builder.shader_crate_features.default_features
+        ),
+        &format!(
+            "--features={}",
+            builder.shader_crate_features.features.join(",")
+        ),
     ]);
 
     // NOTE(eddyb) see above how this is computed and why it might be missing.
