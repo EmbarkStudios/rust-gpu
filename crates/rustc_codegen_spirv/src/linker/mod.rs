@@ -62,6 +62,7 @@ pub struct Options {
     pub dump_spirt_passes: Option<PathBuf>,
     pub spirt_strip_custom_debuginfo_from_dumps: bool,
     pub spirt_keep_debug_sources_in_dumps: bool,
+    pub spirt_keep_unstructured_cfg_in_dumps: bool,
     pub specializer_debug: bool,
     pub specializer_dump_instances: Option<PathBuf>,
     pub print_all_zombie: bool,
@@ -434,7 +435,11 @@ pub fn link(
                 }
             }
         };
-        after_pass("lower_from_spv", &module);
+        // HACK(eddyb) don't dump the unstructured state if not requested, as
+        // after SPIR-T 0.4.0 it's extremely verbose (due to def-use hermeticity).
+        if opts.spirt_keep_unstructured_cfg_in_dumps || !opts.structurize {
+            after_pass("lower_from_spv", &module);
+        }
 
         // NOTE(eddyb) this *must* run on unstructured CFGs, to do its job.
         {

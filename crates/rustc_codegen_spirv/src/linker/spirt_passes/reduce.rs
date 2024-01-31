@@ -4,16 +4,16 @@ use spirt::func_at::{FuncAt, FuncAtMut};
 use spirt::transform::InnerInPlaceTransform;
 use spirt::visit::InnerVisit;
 use spirt::{
-    spv, Const, ConstCtor, ConstDef, Context, ControlNode, ControlNodeDef, ControlNodeKind,
+    spv, Const, ConstDef, ConstKind, Context, ControlNode, ControlNodeDef, ControlNodeKind,
     ControlNodeOutputDecl, ControlRegion, ControlRegionInputDecl, DataInst, DataInstDef,
     DataInstFormDef, DataInstKind, EntityOrientedDenseMap, FuncDefBody, SelectionKind, Type,
-    TypeCtor, TypeDef, Value,
+    TypeDef, TypeKind, Value,
 };
 use std::collections::hash_map::Entry;
-use std::hash::Hash;
 use std::{iter, slice};
 
-use super::{HashableValue, ReplaceValueWith, VisitAllControlRegionsAndNodes};
+use super::{ReplaceValueWith, VisitAllControlRegionsAndNodes};
+use std::rc::Rc;
 
 /// Apply "reduction rules" to `func_def_body`, replacing (pure) computations
 /// with one of their inputs or a constant (e.g. `x + 0 => x` or `1 + 2 => 3`),
@@ -87,9 +87,7 @@ pub(crate) fn reduce_in_func(cx: &Context, func_def_body: &mut FuncDefBody) {
                             control_node: func_at_control_node.position,
                             output_idx: i,
                         };
-                        if let Entry::Vacant(entry) =
-                            value_replacements.entry(HashableValue(output))
-                        {
+                        if let Entry::Vacant(entry) = value_replacements.entry(output) {
                             let per_case_value = cases.iter().map(|&case| {
                                 func_at_control_node.at(case).def().outputs[i as usize]
                             });
@@ -132,8 +130,10 @@ pub(crate) fn reduce_in_func(cx: &Context, func_def_body: &mut FuncDefBody) {
                                     op: PureOp::IntToBool,
                                     output_type: cx.intern(TypeDef {
                                         attrs: Default::default(),
-                                        ctor: TypeCtor::SpvInst(wk.OpTypeBool.into()),
-                                        ctor_args: iter::empty().collect(),
+                                        kind: TypeKind::SpvInst {
+                                            spv_inst: wk.OpTypeBool.into(),
+                                            type_and_const_inputs: iter::empty().collect(),
+                                        },
                                     }),
                                     input: *scrutinee,
                                 };
@@ -166,11 +166,16 @@ pub(crate) fn reduce_in_func(cx: &Context, func_def_body: &mut FuncDefBody) {
                         };
                         if body_output == body_input {
                             value_replacements
-                                .entry(HashableValue(body_input))
+                                .entry(body_input)
                                 .or_insert(initial_input);
                         }
                     }
                 }
+
+                &ControlNodeDef {
+                    kind: ControlNodeKind::ExitInvocation { .. },
+                    ..
+                } => {}
             };
         func_def_body.inner_visit_with(&mut VisitAllControlRegionsAndNodes {
             state: (),
@@ -197,7 +202,7 @@ pub(crate) fn reduce_in_func(cx: &Context, func_def_body: &mut FuncDefBody) {
                 any_changes = true;
                 match redu_target {
                     ReductionTarget::DataInst(inst) => {
-                        value_replacements.insert(HashableValue(Value::DataInstOutput(inst)), v);
+                        value_replacements.insert(Value::DataInstOutput(inst), v);
 
                         // Replace the reduced `DataInstDef` itself with `OpNop`,
                         // removing the ability to use its "name" as a value.
@@ -243,7 +248,7 @@ pub(crate) fn reduce_in_func(cx: &Context, func_def_body: &mut FuncDefBody) {
             loop {
                 match v {
                     Value::Const(_) => break,
-                    _ => match value_replacements.get(&HashableValue(v)) {
+                    _ => match value_replacements.get(&v) {
                         Some(&new) => v = new,
                         None => break,
                     },
@@ -292,6 +297,7 @@ impl ParentMap {
 
                     ControlNodeKind::Select { cases, .. } => cases,
                     ControlNodeKind::Loop { body, .. } => slice::from_ref(body),
+                    ControlNodeKind::ExitInvocation { .. } => &[][..],
                 };
                 for &child_region in child_regions {
                     this.control_region_parent
@@ -319,8 +325,13 @@ fn try_reduce_select(
     let wk = &super::SpvSpecWithExtras::get().well_known;
 
     let as_spv_const = |v: Value| match v {
-        Value::Const(ct) => match &cx[ct].ctor {
-            ConstCtor::SpvInst(spv_inst) => Some(spv_inst.opcode),
+        Value::Const(ct) => match &cx[ct].kind {
+            ConstKind::SpvInst {
+                spv_inst_and_const_inputs,
+            } => {
+                let (spv_inst, _const_inputs) = &**spv_inst_and_const_inputs;
+                Some(spv_inst.opcode)
+            }
             _ => None,
         },
         _ => None,
@@ -476,20 +487,11 @@ impl TryFrom<PureOp> for spv::Inst {
 }
 
 /// Potentially-reducible application of a `PureOp` (`op`) to `input`.
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, PartialEq, Eq, Hash)]
 struct Reducible<V = Value> {
     op: PureOp,
     output_type: Type,
     input: V,
-}
-
-// HACK(eddyb) this works around the accidental lack of `spirt::Value: Hash`.
-impl Hash for Reducible<Value> {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.op.hash(state);
-        self.output_type.hash(state);
-        HashableValue(self.input).hash(state);
-    }
 }
 
 impl<V> Reducible<V> {
@@ -565,20 +567,27 @@ impl Reducible<Const> {
         let wk = &super::SpvSpecWithExtras::get().well_known;
 
         let ct_def = &cx[self.input];
-        match (self.op, &ct_def.ctor) {
-            (_, ConstCtor::SpvInst(spv_inst)) if spv_inst.opcode == wk.OpUndef => {
-                Some(cx.intern(ConstDef {
-                    attrs: ct_def.attrs,
-                    ty: self.output_type,
-                    ctor: ct_def.ctor.clone(),
-                    ctor_args: iter::empty().collect(),
-                }))
-            }
+        match (self.op, &ct_def.kind) {
+            (
+                _,
+                ConstKind::SpvInst {
+                    spv_inst_and_const_inputs,
+                },
+            ) if spv_inst_and_const_inputs.0.opcode == wk.OpUndef => Some(cx.intern(ConstDef {
+                attrs: ct_def.attrs,
+                ty: self.output_type,
+                kind: ct_def.kind.clone(),
+            })),
 
-            (PureOp::BitCast, ConstCtor::SpvInst(spv_inst)) if spv_inst.opcode == wk.OpConstant => {
+            (
+                PureOp::BitCast,
+                ConstKind::SpvInst {
+                    spv_inst_and_const_inputs,
+                },
+            ) if spv_inst_and_const_inputs.0.opcode == wk.OpConstant => {
                 // `OpTypeInt`/`OpTypeFloat` bit width.
-                let scalar_width = |ty: Type| match &cx[ty].ctor {
-                    TypeCtor::SpvInst(spv_inst)
+                let scalar_width = |ty: Type| match &cx[ty].kind {
+                    TypeKind::SpvInst { spv_inst, .. }
                         if [wk.OpTypeInt, wk.OpTypeFloat].contains(&spv_inst.opcode) =>
                     {
                         Some(spv_inst.imms[0])
@@ -590,8 +599,7 @@ impl Reducible<Const> {
                     (Some(from), Some(to)) if from == to => Some(cx.intern(ConstDef {
                         attrs: ct_def.attrs,
                         ty: self.output_type,
-                        ctor: ct_def.ctor.clone(),
-                        ctor_args: ct_def.ctor_args.clone(),
+                        kind: ct_def.kind.clone(),
                     })),
                     _ => None,
                 }
@@ -601,14 +609,21 @@ impl Reducible<Const> {
                 PureOp::CompositeExtract {
                     elem_idx: spv::Imm::Short(_, elem_idx),
                 },
-                ConstCtor::SpvInst(spv_inst),
-            ) if spv_inst.opcode == wk.OpConstantComposite => {
-                Some(ct_def.ctor_args[elem_idx as usize])
+                ConstKind::SpvInst {
+                    spv_inst_and_const_inputs,
+                },
+            ) if spv_inst_and_const_inputs.0.opcode == wk.OpConstantComposite => {
+                let (_spv_inst, const_inputs) = &**spv_inst_and_const_inputs;
+                Some(const_inputs[elem_idx as usize])
             }
 
-            (PureOp::IntToBool, ConstCtor::SpvInst(spv_inst))
-                if spv_inst.opcode == wk.OpConstant =>
-            {
+            (
+                PureOp::IntToBool,
+                ConstKind::SpvInst {
+                    spv_inst_and_const_inputs,
+                },
+            ) if spv_inst_and_const_inputs.0.opcode == wk.OpConstant => {
+                let (spv_inst, _const_inputs) = &**spv_inst_and_const_inputs;
                 let bool_const_op = match spv_imm_checked_trunc32(&spv_inst.imms[..]) {
                     Some(0) => wk.OpConstantFalse,
                     Some(1) => wk.OpConstantTrue,
@@ -617,8 +632,12 @@ impl Reducible<Const> {
                 Some(cx.intern(ConstDef {
                     attrs: Default::default(),
                     ty: self.output_type,
-                    ctor: ConstCtor::SpvInst(bool_const_op.into()),
-                    ctor_args: iter::empty().collect(),
+                    kind: ConstKind::SpvInst {
+                        spv_inst_and_const_inputs: Rc::new((
+                            bool_const_op.into(),
+                            iter::empty().collect(),
+                        )),
+                    },
                 }))
             }
 
@@ -680,7 +699,7 @@ impl Reducible {
         // FIXME(eddyb) come up with a better convention for this!
         func: FuncAtMut<'_, ()>,
 
-        value_replacements: &FxHashMap<HashableValue, Value>,
+        value_replacements: &FxHashMap<Value, Value>,
 
         parent_map: &ParentMap,
 
@@ -693,7 +712,7 @@ impl Reducible {
         // the first time they're encountered, but also, if this process was more
         // "demand-driven" (recursing into use->def, instead of processing defs),
         // it might not require any of this complication.
-        while let Some(&replacement) = value_replacements.get(&HashableValue(self.input)) {
+        while let Some(&replacement) = value_replacements.get(&self.input) {
             self.input = replacement;
         }
 
@@ -715,7 +734,7 @@ impl Reducible {
         // FIXME(eddyb) come up with a better convention for this!
         mut func: FuncAtMut<'_, ()>,
 
-        value_replacements: &FxHashMap<HashableValue, Value>,
+        value_replacements: &FxHashMap<Value, Value>,
 
         parent_map: &ParentMap,
 

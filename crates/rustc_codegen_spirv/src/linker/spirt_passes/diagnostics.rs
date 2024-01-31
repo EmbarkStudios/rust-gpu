@@ -10,7 +10,7 @@ use smallvec::SmallVec;
 use spirt::func_at::FuncAt;
 use spirt::visit::{InnerVisit, Visitor};
 use spirt::{
-    spv, Attr, AttrSet, AttrSetDef, Const, ConstCtor, Context, ControlNode, ControlNodeKind,
+    spv, Attr, AttrSet, AttrSetDef, Const, ConstKind, Context, ControlNode, ControlNodeKind,
     DataInstDef, DataInstForm, DataInstKind, Diag, DiagLevel, ExportKey, Exportee, Func, FuncDecl,
     GlobalVar, InternedStr, Module, Type, Value,
 };
@@ -275,16 +275,19 @@ impl UseOrigin<'_> {
                             } => (file, line_start, line_end, col_start, col_end),
                             _ => unreachable!(),
                         };
-                    let const_ctor = |v: Value| match v {
-                        Value::Const(ct) => &cx[ct].ctor,
+                    let const_kind = |v: Value| match v {
+                        Value::Const(ct) => &cx[ct].kind,
                         _ => unreachable!(),
                     };
-                    let const_str = |v: Value| match const_ctor(v) {
-                        &ConstCtor::SpvStringLiteralForExtInst(s) => s,
+                    let const_str = |v: Value| match const_kind(v) {
+                        &ConstKind::SpvStringLiteralForExtInst(s) => s,
                         _ => unreachable!(),
                     };
-                    let const_u32 = |v: Value| match const_ctor(v) {
-                        ConstCtor::SpvInst(spv_inst) => {
+                    let const_u32 = |v: Value| match const_kind(v) {
+                        ConstKind::SpvInst {
+                            spv_inst_and_const_inputs,
+                        } => {
+                            let (spv_inst, _const_inputs) = &**spv_inst_and_const_inputs;
                             assert!(spv_inst.opcode == wk.OpConstant);
                             match spv_inst.imms[..] {
                                 [spv::Imm::Short(_, x)] => x,
@@ -505,9 +508,9 @@ impl<'a> Visitor<'a> for DiagnosticReporter<'a> {
     fn visit_const_use(&mut self, ct: Const) {
         if self.seen_consts.insert(ct) {
             let ct_def = &self.cx[ct];
-            match ct_def.ctor {
+            match ct_def.kind {
                 // HACK(eddyb) don't push an `UseOrigin` for `GlobalVar` pointers.
-                ConstCtor::PtrToGlobalVar(_) if ct_def.attrs == AttrSet::default() => {
+                ConstKind::PtrToGlobalVar(_) if ct_def.attrs == AttrSet::default() => {
                     self.visit_const_def(ct_def);
                 }
                 _ => {
@@ -642,12 +645,12 @@ impl<'a> Visitor<'a> for DiagnosticReporter<'a> {
                                     // Treat this like a call, in the caller.
                                     replace_origin(self, IntraFuncUseOrigin::CallCallee);
 
-                                    let const_ctor = |v: Value| match v {
-                                        Value::Const(ct) => &self.cx[ct].ctor,
+                                    let const_kind = |v: Value| match v {
+                                        Value::Const(ct) => &self.cx[ct].kind,
                                         _ => unreachable!(),
                                     };
-                                    let const_str = |v: Value| match const_ctor(v) {
-                                        &ConstCtor::SpvStringLiteralForExtInst(s) => s,
+                                    let const_str = |v: Value| match const_kind(v) {
+                                        &ConstKind::SpvStringLiteralForExtInst(s) => s,
                                         _ => unreachable!(),
                                     };
                                     self.use_stack.push(UseOrigin::IntraFunc {

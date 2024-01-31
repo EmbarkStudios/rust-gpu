@@ -462,6 +462,11 @@ impl CodegenArgs {
             );
             opts.optflag(
                 "",
+                "spirt-keep-unstructured-cfg-in-dumps",
+                "include initial unstructured CFG when dumping SPIR-T",
+            );
+            opts.optflag(
+                "",
                 "specializer-debug",
                 "enable debug logging for the specializer",
             );
@@ -629,6 +634,8 @@ impl CodegenArgs {
                 .opt_present("spirt-strip-custom-debuginfo-from-dumps"),
             spirt_keep_debug_sources_in_dumps: matches
                 .opt_present("spirt-keep-debug-sources-in-dumps"),
+            spirt_keep_unstructured_cfg_in_dumps: matches
+                .opt_present("spirt-keep-unstructured-cfg-in-dumps"),
             specializer_debug: matches.opt_present("specializer-debug"),
             specializer_dump_instances: matches_opt_path("specializer-dump-instances"),
             print_all_zombie: matches.opt_present("print-all-zombie"),
