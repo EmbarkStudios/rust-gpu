@@ -955,7 +955,8 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         }
         // SPV_EXT_mesh_shader
         Op::EmitMeshTasksEXT | Op::SetMeshOutputsEXT => {
-            reserved!(SPV_EXT_mesh_shader)
+            // NOTE(eddyb) we actually use these despite not being in the standard yet.
+            // reserved!(SPV_EXT_mesh_shader)
         }
         // SPV_NV_ray_tracing_motion_blur
         Op::TraceMotionNV | Op::TraceRayMotionNV => reserved!(SPV_NV_ray_tracing_motion_blur),
