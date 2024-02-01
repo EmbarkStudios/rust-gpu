@@ -9,7 +9,7 @@ use spirv_std::spirv;
 pub struct Payload {
     pub first: f32,
     pub second: f32,
-    pub third: f32
+    pub third: f32,
 }
 
 #[spirv(mesh_ext(
@@ -21,7 +21,7 @@ pub struct Payload {
 pub fn main(
     #[spirv(position)] positions: &mut [Vec4; 3],
     #[spirv(primitive_triangle_indices_ext)] indices: &mut [UVec3; 1],
-    #[spirv(task_payload_workgroup_ext)] payload: &Payload
+    #[spirv(task_payload_workgroup_ext)] payload: &Payload,
 ) {
     unsafe {
         set_mesh_outputs_ext(3, 1);
