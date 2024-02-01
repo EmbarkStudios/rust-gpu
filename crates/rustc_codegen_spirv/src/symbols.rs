@@ -122,6 +122,13 @@ const BUILTINS: &[(&str, BuiltIn)] = {
         ("bary_coord_no_persp_nv", BuiltIn::BaryCoordNoPerspNV),
         ("bary_coord", BaryCoordKHR),
         ("bary_coord_no_persp", BaryCoordNoPerspKHR),
+        ("primitive_point_indices_ext", PrimitivePointIndicesEXT),
+        ("primitive_line_indices_ext", PrimitiveLineIndicesEXT),
+        (
+            "primitive_triangle_indices_ext",
+            PrimitiveTriangleIndicesEXT,
+        ),
+        ("cull_primitive_ext", CullPrimitiveEXT),
         ("frag_size_ext", FragSizeEXT),
         ("frag_invocation_count_ext", FragInvocationCountEXT),
         ("launch_id", BuiltIn::LaunchIdKHR),
@@ -171,6 +178,7 @@ const STORAGE_CLASSES: &[(&str, StorageClass)] = {
         ("incoming_ray_payload", StorageClass::IncomingRayPayloadKHR),
         ("shader_record_buffer", StorageClass::ShaderRecordBufferKHR),
         ("physical_storage_buffer", PhysicalStorageBuffer),
+        ("task_payload_workgroup_ext", TaskPayloadWorkgroupEXT),
     ]
 };
 
@@ -185,6 +193,8 @@ const EXECUTION_MODELS: &[(&str, ExecutionModel)] = {
         ("compute", GLCompute),
         ("task_nv", TaskNV),
         ("mesh_nv", MeshNV),
+        ("task_ext", TaskEXT),
+        ("mesh_ext", MeshEXT),
         ("ray_generation", ExecutionModel::RayGenerationKHR),
         ("intersection", ExecutionModel::IntersectionKHR),
         ("any_hit", ExecutionModel::AnyHitKHR),
@@ -265,6 +275,17 @@ const EXECUTION_MODES: &[(&str, ExecutionMode, ExecutionModeExtraDim)] = {
         ("output_primitives_nv", OutputPrimitivesNV, Value),
         ("derivative_group_quads_nv", DerivativeGroupQuadsNV, None),
         ("output_triangles_nv", OutputTrianglesNV, None),
+        ("output_lines_ext", ExecutionMode::OutputLinesEXT, None),
+        (
+            "output_triangles_ext",
+            ExecutionMode::OutputTrianglesEXT,
+            None,
+        ),
+        (
+            "output_primitives_ext",
+            ExecutionMode::OutputPrimitivesEXT,
+            Value,
+        ),
         (
             "pixel_interlock_ordered_ext",
             PixelInterlockOrderedEXT,
@@ -717,7 +738,7 @@ fn parse_entry_attrs(
                 .execution_modes
                 .push((origin_mode, ExecutionModeExtra::new([])));
         }
-        GLCompute | MeshNV | TaskNV => {
+        GLCompute | MeshNV | TaskNV | TaskEXT | MeshEXT => {
             if let Some(local_size) = local_size {
                 entry
                     .execution_modes
@@ -726,7 +747,7 @@ fn parse_entry_attrs(
                 return Err((
                     arg.span(),
                     String::from(
-                        "The `threads` argument must be specified when using `#[spirv(compute)]`, `#[spirv(mesh_nv)]` or `#[spirv(task_nv)]`",
+                        "The `threads` argument must be specified when using `#[spirv(compute)]`, `#[spirv(mesh_nv)]`, `#[spirv(task_nv)]`, `#[spirv(task_ext)]` or `#[spirv(mesh_ext)]`",
                     ),
                 ));
             }
