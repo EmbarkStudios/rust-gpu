@@ -118,6 +118,8 @@ const BUILTINS: &[(&str, BuiltIn)] = {
         ("layer_per_view_nv", LayerPerViewNV),
         ("mesh_view_count_nv", MeshViewCountNV),
         ("mesh_view_indices_nv", MeshViewIndicesNV),
+        ("bary_coord_nv", BuiltIn::BaryCoordNV),
+        ("bary_coord_no_persp_nv", BuiltIn::BaryCoordNoPerspNV),
         ("bary_coord", BaryCoordKHR),
         ("bary_coord_no_persp", BaryCoordNoPerspKHR),
         ("frag_size_ext", FragSizeEXT),
