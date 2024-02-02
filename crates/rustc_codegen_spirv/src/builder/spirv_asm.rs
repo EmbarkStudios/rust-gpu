@@ -1081,6 +1081,12 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 Ok(v) => inst.operands.push(dr::Operand::LiteralBit32(v)),
                 Err(e) => self.err(format!("invalid integer: {e}")),
             },
+            (OperandKind::LiteralFloat, Some(word)) => match word.parse() {
+                Ok(v) => inst
+                    .operands
+                    .push(dr::Operand::LiteralBit32(f32::to_bits(v))),
+                Err(e) => self.err(format!("invalid float: {e}")),
+            },
             (OperandKind::LiteralString, _) => {
                 if let Token::String(value) = token {
                     inst.operands.push(dr::Operand::LiteralString(value));
@@ -1412,7 +1418,6 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 Ok(x) => inst.operands.push(dr::Operand::StoreCacheControl(x)),
                 Err(()) => self.err(format!("unknown StoreCacheControl {word}")),
             },
-            (OperandKind::LiteralFloat, Some(_word)) => todo!(),
             (kind, None) => match token {
                 Token::Word(_) => bug!(),
                 Token::String(_) => {
