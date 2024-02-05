@@ -14,12 +14,16 @@ jobs:
         include:
           - os: ubuntu-20.04-16core
             target: x86_64-unknown-linux-gnu
+            host: x86_64-unknown-linux-gnu
           - os: windows-2022-16core
             target: x86_64-pc-windows-msvc
+            host: x86_64-pc-windows-msvc
           - os: macOS-latest-xl
             target: x86_64-apple-darwin
+            host: x86_64-apple-darwin
           - os: ubuntu-20.04-16core
             target: aarch64-linux-android
+            host: x86_64-unknown-linux-gnu
     runs-on: ${{ matrix.os }}
     env:
       RUSTUP_UNPACK_RAM: "26214400"
@@ -31,7 +35,7 @@ jobs:
       # the binaries to the specified path, and adds them to PATH
       - name: Install spirv-tools binaries
         shell: bash
-        run: cargo run --manifest-path .github/install-tools/Cargo.toml -- ${{matrix.target}} 0.10.0 "${{github.workspace}}/bin"
+        run: cargo run --manifest-path .github/install-tools/Cargo.toml -- ${{matrix.host}} 0.10.0 "${{github.workspace}}/bin"
       - if: ${{ runner.os == 'Linux' }}
         name: Linux - Install native dependencies
         run: sudo apt install libwayland-cursor0 libxkbcommon-dev libwayland-dev
