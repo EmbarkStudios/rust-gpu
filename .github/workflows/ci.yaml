@@ -7,7 +7,7 @@ on:
 name: CI
 
 jobs:
-  check:
+  test:
     name: Test
     strategy:
       matrix:
@@ -126,6 +126,14 @@ jobs:
           echo "::group::Build WGPU example for Android"
           cargo apk build -p example-runner-wgpu --lib --features use-installed-tools --no-default-features
           echo "::endgroup::"
+
+  # This just allows us to branch protect on this one job rather needing to change
+  # it if the test matrix changes
+  test_success:
+    runs-on: ubuntu-22.04
+    needs: test
+    steps:
+    - run: echo "All test jobs passed"
 
   lint:
     name: Lint
