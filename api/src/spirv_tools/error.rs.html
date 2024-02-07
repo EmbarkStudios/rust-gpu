@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spirv-tools-0.9.0/src/error.rs`."><title>error.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="spirv_tools" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../spirv_tools/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spirv-tools-0.10.0/src/error.rs`."><title>error.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="spirv_tools" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../spirv_tools/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -200,6 +200,36 @@
 <a href="#200" id="200">200</a>
 <a href="#201" id="201">201</a>
 <a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
+<a href="#230" id="230">230</a>
+<a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>spirv_tools_sys::{diagnostics, shared};
 
 <span class="kw">pub use </span>diagnostics::MessageLevel;
@@ -216,10 +246,18 @@
 <span class="kw">impl </span>fmt::Display <span class="kw">for </span>Error {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
         <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.diagnostic {
-            <span class="prelude-val">Some</span>(diag) =&gt; f.write_fmt(<span class="macro">format_args!</span>(
-                <span class="string">&quot;error:{}:{} - {}&quot;</span>,
-                diag.line, diag.column, diag.message
-            )),
+            <span class="prelude-val">Some</span>(diag) =&gt; {
+                f.write_fmt(<span class="macro">format_args!</span>(
+                    <span class="string">&quot;error:{}:{} - {}&quot;</span>,
+                    diag.line, diag.column, diag.message
+                ))<span class="question-mark">?</span>;
+
+                <span class="kw">if </span>!diag.notes.is_empty() {
+                    f.write_fmt(<span class="macro">format_args!</span>(<span class="string">&quot;\n{}&quot;</span>, diag.notes))<span class="question-mark">?</span>;
+                }
+
+                <span class="prelude-val">Ok</span>(())
+            }
             <span class="prelude-val">None </span>=&gt; f.write_str(<span class="string">&quot;an unknown error occurred&quot;</span>),
         }
     }
@@ -231,12 +269,13 @@
     }
 }
 
-<span class="attr">#[derive(Debug, PartialEq, Eq)]
+<span class="attr">#[derive(Debug, Clone, PartialEq, Eq)]
 </span><span class="kw">pub struct </span>Diagnostic {
     <span class="kw">pub </span>line: usize,
     <span class="kw">pub </span>column: usize,
     <span class="kw">pub </span>index: usize,
     <span class="kw">pub </span>message: String,
+    <span class="kw">pub </span>notes: String,
     <span class="kw">pub </span>is_text: bool,
 }
 
@@ -249,15 +288,14 @@
             <span class="kw">return </span><span class="prelude-val">Err</span>(shared::SpirvResult::Success);
         }
 
-        <span class="kw">let </span>message = std::ffi::CStr::from_ptr((<span class="kw-2">*</span>diag).error)
-            .to_string_lossy()
-            .to_string();
+        <span class="kw">let </span>(message, notes) = Message::message_and_notes_from_cstr((<span class="kw-2">*</span>diag).error);
 
         <span class="kw">let </span>res = <span class="self">Self </span>{
             line: (<span class="kw-2">*</span>diag).position.line,
             column: (<span class="kw-2">*</span>diag).position.column,
             index: (<span class="kw-2">*</span>diag).position.index,
             message,
+            notes,
             is_text: (<span class="kw-2">*</span>diag).is_text_source,
         };
 
@@ -274,6 +312,7 @@
             index: <span class="number">0</span>,
             is_text: <span class="bool-val">false</span>,
             message,
+            notes: String::new(),
         }
     }
 }
@@ -285,6 +324,7 @@
             column: msg.column,
             index: msg.index,
             message: msg.message,
+            notes: msg.notes,
             is_text: <span class="bool-val">false</span>,
         }
     }
@@ -298,6 +338,8 @@
     <span class="kw">pub </span>column: usize,
     <span class="kw">pub </span>index: usize,
     <span class="kw">pub </span>message: String,
+    <span class="doccomment">/// Some messages can include additional information, typically instructions
+    </span><span class="kw">pub </span>notes: String,
 }
 
 <span class="kw">impl </span>Message {
@@ -310,6 +352,21 @@
             column: <span class="number">0</span>,
             index: <span class="number">0</span>,
             message,
+            notes: String::new(),
+        }
+    }
+
+    <span class="attr">#[cfg(feature = <span class="string">&quot;use-compiled-tools&quot;</span>)]
+    </span><span class="kw">unsafe fn </span>message_and_notes_from_cstr(msg: <span class="kw-2">*const </span>std::os::raw::c_char) -&gt; (String, String) {
+        <span class="kw">let </span>full_message = std::ffi::CStr::from_ptr(msg).to_string_lossy();
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(ind) = full_message.find(<span class="string">&#39;\n&#39;</span>) {
+            (
+                full_message[..ind].to_owned(),
+                full_message[ind + <span class="number">1</span>..].to_owned(),
+            )
+        } <span class="kw">else </span>{
+            (full_message.into_owned(), String::new())
         }
     }
 
@@ -326,7 +383,8 @@
             </span>} <span class="kw">else </span>{
                 <span class="prelude-val">Some</span>(std::ffi::CStr::from_ptr(source).to_string_lossy())
             };
-            <span class="kw">let </span>message = std::ffi::CStr::from_ptr(msg).to_string_lossy();
+
+            <span class="kw">let </span>(message, notes) = <span class="self">Self</span>::message_and_notes_from_cstr(msg);
 
             <span class="kw">let </span>(line, column, index) = <span class="kw">if </span>source_pos.is_null() {
                 (<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>)
@@ -350,7 +408,8 @@
                 line,
                 column,
                 index,
-                message: message.into_owned(),
+                message,
+                notes,
             }
         }
     }
@@ -386,6 +445,7 @@
                 source: <span class="prelude-val">None</span>,
                 line: <span class="number">0</span>,
                 column: <span class="number">0</span>,
+                notes: String::new(),
             })
     }
 }
