@@ -757,12 +757,12 @@ impl SampleImplRewriter {
 }
 
 impl VisitMut for SampleImplRewriter {
-    fn visit_impl_item_method_mut(&mut self, item: &mut syn::ImplItemMethod) {
+    fn visit_impl_item_fn_mut(&mut self, item: &mut syn::ImplItemFn) {
         // rewrite the last parameter of this method to be of type `SampleParams<...>` we generated earlier
         if let Some(syn::FnArg::Typed(p)) = item.sig.inputs.last_mut() {
             *p.ty.as_mut() = self.1.clone();
         }
-        syn::visit_mut::visit_impl_item_method_mut(self, item);
+        syn::visit_mut::visit_impl_item_fn_mut(self, item);
     }
 
     fn visit_macro_mut(&mut self, m: &mut syn::Macro) {
