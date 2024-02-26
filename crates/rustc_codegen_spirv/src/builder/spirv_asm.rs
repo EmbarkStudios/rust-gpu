@@ -5,8 +5,9 @@ use crate::spirv_type::SpirvType;
 use rspirv::dr;
 use rspirv::grammar::{reflect, LogicalOperand, OperandKind, OperandQuantifier};
 use rspirv::spirv::{
-    FPFastMathMode, FragmentShadingRate, FunctionControl, ImageOperands, KernelProfilingInfo,
-    LoopControl, MemoryAccess, MemorySemantics, Op, RayFlags, SelectionControl, StorageClass, Word,
+    CooperativeMatrixOperands, FPFastMathMode, FragmentShadingRate, FunctionControl, ImageOperands,
+    KernelProfilingInfo, LoopControl, MemoryAccess, MemorySemantics, Op, RayFlags,
+    SelectionControl, StorageClass, Word,
 };
 use rustc_ast::ast::{InlineAsmOptions, InlineAsmTemplatePiece};
 use rustc_codegen_ssa::mir::place::PlaceRef;
@@ -273,12 +274,12 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             Op::TypeVoid => SpirvType::Void.def(self.span(), self),
             Op::TypeBool => SpirvType::Bool.def(self.span(), self),
             Op::TypeInt => SpirvType::Integer(
-                inst.operands[0].unwrap_literal_int32(),
-                inst.operands[1].unwrap_literal_int32() != 0,
+                inst.operands[0].unwrap_literal_bit32(),
+                inst.operands[1].unwrap_literal_bit32() != 0,
             )
             .def(self.span(), self),
             Op::TypeFloat => {
-                SpirvType::Float(inst.operands[0].unwrap_literal_int32()).def(self.span(), self)
+                SpirvType::Float(inst.operands[0].unwrap_literal_bit32()).def(self.span(), self)
             }
             Op::TypeStruct => {
                 self.err("OpTypeStruct in asm! is not supported yet");
@@ -286,12 +287,12 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             }
             Op::TypeVector => SpirvType::Vector {
                 element: inst.operands[0].unwrap_id_ref(),
-                count: inst.operands[1].unwrap_literal_int32(),
+                count: inst.operands[1].unwrap_literal_bit32(),
             }
             .def(self.span(), self),
             Op::TypeMatrix => SpirvType::Matrix {
                 element: inst.operands[0].unwrap_id_ref(),
-                count: inst.operands[1].unwrap_literal_int32(),
+                count: inst.operands[1].unwrap_literal_bit32(),
             }
             .def(self.span(), self),
             Op::TypeArray => {
@@ -322,10 +323,10 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             Op::TypeImage => SpirvType::Image {
                 sampled_type: inst.operands[0].unwrap_id_ref(),
                 dim: inst.operands[1].unwrap_dim(),
-                depth: inst.operands[2].unwrap_literal_int32(),
-                arrayed: inst.operands[3].unwrap_literal_int32(),
-                multisampled: inst.operands[4].unwrap_literal_int32(),
-                sampled: inst.operands[5].unwrap_literal_int32(),
+                depth: inst.operands[2].unwrap_literal_bit32(),
+                arrayed: inst.operands[3].unwrap_literal_bit32(),
+                multisampled: inst.operands[4].unwrap_literal_bit32(),
+                sampled: inst.operands[5].unwrap_literal_bit32(),
                 image_format: inst.operands[6].unwrap_image_format(),
             }
             .def(self.span(), self),
@@ -694,7 +695,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                         let index_to_usize = || match *index {
                             // FIXME(eddyb) support more than just literals,
                             // by looking up `IdRef`s as constant integers.
-                            dr::Operand::LiteralInt32(i) => usize::try_from(i).ok(),
+                            dr::Operand::LiteralBit32(i) => usize::try_from(i).ok(),
 
                             _ => None,
                         };
@@ -1077,8 +1078,14 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             }
 
             (OperandKind::LiteralInteger, Some(word)) => match word.parse() {
-                Ok(v) => inst.operands.push(dr::Operand::LiteralInt32(v)),
+                Ok(v) => inst.operands.push(dr::Operand::LiteralBit32(v)),
                 Err(e) => self.err(format!("invalid integer: {e}")),
+            },
+            (OperandKind::LiteralFloat, Some(word)) => match word.parse() {
+                Ok(v) => inst
+                    .operands
+                    .push(dr::Operand::LiteralBit32(f32::to_bits(v))),
+                Err(e) => self.err(format!("invalid float: {e}")),
             },
             (OperandKind::LiteralString, _) => {
                 if let Token::String(value) = token {
@@ -1094,34 +1101,34 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                     }
                     Ok(match ty {
                         SpirvType::Integer(8, false) => {
-                            dr::Operand::LiteralInt32(w.parse::<u8>().map_err(fmt)? as u32)
+                            dr::Operand::LiteralBit32(w.parse::<u8>().map_err(fmt)? as u32)
                         }
                         SpirvType::Integer(16, false) => {
-                            dr::Operand::LiteralInt32(w.parse::<u16>().map_err(fmt)? as u32)
+                            dr::Operand::LiteralBit32(w.parse::<u16>().map_err(fmt)? as u32)
                         }
                         SpirvType::Integer(32, false) => {
-                            dr::Operand::LiteralInt32(w.parse::<u32>().map_err(fmt)?)
+                            dr::Operand::LiteralBit32(w.parse::<u32>().map_err(fmt)?)
                         }
                         SpirvType::Integer(64, false) => {
-                            dr::Operand::LiteralInt64(w.parse::<u64>().map_err(fmt)?)
+                            dr::Operand::LiteralBit64(w.parse::<u64>().map_err(fmt)?)
                         }
                         SpirvType::Integer(8, true) => {
-                            dr::Operand::LiteralInt32(w.parse::<i8>().map_err(fmt)? as i32 as u32)
+                            dr::Operand::LiteralBit32(w.parse::<i8>().map_err(fmt)? as i32 as u32)
                         }
                         SpirvType::Integer(16, true) => {
-                            dr::Operand::LiteralInt32(w.parse::<i16>().map_err(fmt)? as i32 as u32)
+                            dr::Operand::LiteralBit32(w.parse::<i16>().map_err(fmt)? as i32 as u32)
                         }
                         SpirvType::Integer(32, true) => {
-                            dr::Operand::LiteralInt32(w.parse::<i32>().map_err(fmt)? as u32)
+                            dr::Operand::LiteralBit32(w.parse::<i32>().map_err(fmt)? as u32)
                         }
                         SpirvType::Integer(64, true) => {
-                            dr::Operand::LiteralInt64(w.parse::<i64>().map_err(fmt)? as u64)
+                            dr::Operand::LiteralBit64(w.parse::<i64>().map_err(fmt)? as u64)
                         }
                         SpirvType::Float(32) => {
-                            dr::Operand::LiteralFloat32(w.parse::<f32>().map_err(fmt)?)
+                            dr::Operand::LiteralBit32(w.parse::<f32>().map_err(fmt)?.to_bits())
                         }
                         SpirvType::Float(64) => {
-                            dr::Operand::LiteralFloat64(w.parse::<f64>().map_err(fmt)?)
+                            dr::Operand::LiteralBit64(w.parse::<f64>().map_err(fmt)?.to_bits())
                         }
                         _ => return Err("expected number literal in OpConstant".to_string()),
                     })
@@ -1152,7 +1159,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                     inst.operands.push(dr::Operand::IdRef(id));
                     match tokens.next() {
                         Some(Token::Word(word)) => match word.parse() {
-                            Ok(v) => inst.operands.push(dr::Operand::LiteralInt32(v)),
+                            Ok(v) => inst.operands.push(dr::Operand::LiteralBit32(v)),
                             Err(e) => {
                                 self.err(format!("invalid integer: {e}"));
                             }
@@ -1357,6 +1364,60 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                     .push(dr::Operand::RayQueryCandidateIntersectionType(x)),
                 Err(()) => self.err(format!("unknown RayQueryCandidateIntersectionType {word}")),
             },
+            (OperandKind::FPDenormMode, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::FPDenormMode(x)),
+                Err(()) => self.err(format!("unknown FPDenormMode {word}")),
+            },
+            (OperandKind::QuantizationModes, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::QuantizationModes(x)),
+                Err(()) => self.err(format!("unknown QuantizationModes {word}")),
+            },
+            (OperandKind::FPOperationMode, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::FPOperationMode(x)),
+                Err(()) => self.err(format!("unknown FPOperationMode {word}")),
+            },
+            (OperandKind::OverflowModes, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::OverflowModes(x)),
+                Err(()) => self.err(format!("unknown OverflowModes {word}")),
+            },
+            (OperandKind::PackedVectorFormat, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::PackedVectorFormat(x)),
+                Err(()) => self.err(format!("unknown PackedVectorFormat {word}")),
+            },
+            (OperandKind::HostAccessQualifier, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::HostAccessQualifier(x)),
+                Err(()) => self.err(format!("unknown HostAccessQualifier {word}")),
+            },
+            (OperandKind::CooperativeMatrixOperands, Some(word)) => {
+                match parse_bitflags_operand(COOPERATIVE_MATRIX_OPERANDS, word) {
+                    Some(x) => inst
+                        .operands
+                        .push(dr::Operand::CooperativeMatrixOperands(x)),
+                    None => self.err(format!("Unknown CooperativeMatrixOperands {word}")),
+                }
+            }
+            (OperandKind::CooperativeMatrixLayout, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::CooperativeMatrixLayout(x)),
+                Err(()) => self.err(format!("unknown CooperativeMatrixLayout {word}")),
+            },
+            (OperandKind::CooperativeMatrixUse, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::CooperativeMatrixUse(x)),
+                Err(()) => self.err(format!("unknown CooperativeMatrixUse {word}")),
+            },
+            (OperandKind::InitializationModeQualifier, Some(word)) => match word.parse() {
+                Ok(x) => inst
+                    .operands
+                    .push(dr::Operand::InitializationModeQualifier(x)),
+                Err(()) => self.err(format!("unknown InitializationModeQualifier {word}")),
+            },
+            (OperandKind::LoadCacheControl, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::LoadCacheControl(x)),
+                Err(()) => self.err(format!("unknown LoadCacheControl {word}")),
+            },
+            (OperandKind::StoreCacheControl, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::StoreCacheControl(x)),
+                Err(()) => self.err(format!("unknown StoreCacheControl {word}")),
+            },
             (kind, None) => match token {
                 Token::Word(_) => bug!(),
                 Token::String(_) => {
@@ -1526,6 +1587,29 @@ pub const FRAGMENT_SHADING_RATE: &[(&str, FragmentShadingRate)] = &[
     (
         "HORIZONTAL4_PIXELS",
         FragmentShadingRate::HORIZONTAL4_PIXELS,
+    ),
+];
+pub const COOPERATIVE_MATRIX_OPERANDS: &[(&str, CooperativeMatrixOperands)] = &[
+    ("NONE_KHR", CooperativeMatrixOperands::NONE_KHR),
+    (
+        "MATRIX_A_SIGNED_COMPONENTS_KHR",
+        CooperativeMatrixOperands::MATRIX_A_SIGNED_COMPONENTS_KHR,
+    ),
+    (
+        "MATRIX_B_SIGNED_COMPONENTS_KHR",
+        CooperativeMatrixOperands::MATRIX_B_SIGNED_COMPONENTS_KHR,
+    ),
+    (
+        "MATRIX_C_SIGNED_COMPONENTS_KHR",
+        CooperativeMatrixOperands::MATRIX_C_SIGNED_COMPONENTS_KHR,
+    ),
+    (
+        "MATRIX_RESULT_SIGNED_COMPONENTS_KHR",
+        CooperativeMatrixOperands::MATRIX_RESULT_SIGNED_COMPONENTS_KHR,
+    ),
+    (
+        "SATURATING_ACCUMULATION_KHR",
+        CooperativeMatrixOperands::SATURATING_ACCUMULATION_KHR,
     ),
 ];
 

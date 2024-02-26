@@ -1,6 +1,6 @@
 // build-pass
 // only-vulkan1.1
-// compile-flags: -Ctarget-feature=+DeviceGroup,+DrawParameters,+FragmentBarycentricNV,+FragmentDensityEXT,+FragmentFullyCoveredEXT,+Geometry,+GroupNonUniform,+GroupNonUniformBallot,+MeshShadingNV,+MultiView,+MultiViewport,+RayTracingKHR,+SampleRateShading,+ShaderSMBuiltinsNV,+ShaderStereoViewNV,+StencilExportEXT,+Tessellation,+ext:SPV_AMD_shader_explicit_vertex_parameter,+ext:SPV_EXT_fragment_fully_covered,+ext:SPV_EXT_fragment_invocation_density,+ext:SPV_EXT_shader_stencil_export,+ext:SPV_KHR_ray_tracing,+ext:SPV_NV_fragment_shader_barycentric,+ext:SPV_NV_mesh_shader,+ext:SPV_NV_shader_sm_builtins,+ext:SPV_NV_stereo_view_rendering
+// compile-flags: -Ctarget-feature=+DeviceGroup,+DrawParameters,+FragmentBarycentricNV,+FragmentBarycentricKHR,+FragmentDensityEXT,+FragmentFullyCoveredEXT,+Geometry,+GroupNonUniform,+GroupNonUniformBallot,+MeshShadingNV,+MultiView,+MultiViewport,+RayTracingKHR,+SampleRateShading,+ShaderSMBuiltinsNV,+ShaderStereoViewNV,+StencilExportEXT,+Tessellation,+ext:SPV_AMD_shader_explicit_vertex_parameter,+ext:SPV_EXT_fragment_fully_covered,+ext:SPV_EXT_fragment_invocation_density,+ext:SPV_EXT_shader_stencil_export,+ext:SPV_KHR_ray_tracing,+ext:SPV_NV_fragment_shader_barycentric,+ext:SPV_NV_mesh_shader,+ext:SPV_NV_shader_sm_builtins,+ext:SPV_NV_stereo_view_rendering
 
 use spirv_std::glam::*;
 use spirv_std::spirv;
@@ -82,10 +82,12 @@ pub fn vertex(
 
 #[spirv(fragment)]
 pub fn fragment(
+    #[spirv(bary_coord_no_persp)] bary_coord_no_persp: Vec3,
     #[spirv(bary_coord_no_persp_amd)] bary_coord_no_persp_amd: Vec3,
     #[spirv(bary_coord_no_persp_centroid_amd)] bary_coord_no_persp_centroid_amd: Vec3,
     #[spirv(bary_coord_no_persp_nv)] bary_coord_no_persp_nv: Vec3,
     #[spirv(bary_coord_no_persp_sample_amd)] bary_coord_no_persp_sample_amd: Vec3,
+    #[spirv(bary_coord)] bary_coord: Vec3,
     #[spirv(bary_coord_nv)] bary_coord_nv: Vec3,
     #[spirv(bary_coord_pull_model_amd)] bary_coord_pull_model_amd: Vec3,
     #[spirv(bary_coord_smooth_amd)] bary_coord_smooth_amd: Vec3,
