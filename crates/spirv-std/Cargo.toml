@@ -11,8 +11,14 @@ repository.workspace = true
 spirv-std-types.workspace = true
 spirv-std-macros.workspace = true
 bitflags = "1.2.1"
-num-traits = { version = "0.2.15", default-features = false, features = ["libm"] }
-glam = { version = ">=0.22, <=0.24", default-features = false, features = ["libm"] }
+
+[target.'cfg(target_arch = "spirv")'.dependencies]
+num-traits = { workspace = true, features = ["libm"] }
+glam = { workspace = true, features = ["libm"] }
+
+[target.'cfg(not(target_arch = "spirv"))'.dependencies]
+num-traits = { workspace = true, default-features = true }
+glam = { workspace = true, default-features = true }
 
 [features]
 default = []
