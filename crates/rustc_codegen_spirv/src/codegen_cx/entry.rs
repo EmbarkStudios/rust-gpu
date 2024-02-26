@@ -777,7 +777,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 Decoration::Location,
                 std::iter::once(Operand::LiteralInt32(*location)),
             );
-            *location += 1;
+            *location += self.location_count_of_type(value_spirv_type);
         }
 
         match storage_class {
@@ -803,6 +803,41 @@ impl<'tcx> CodegenCx<'tcx> {
             }
             // Emitted earlier.
             Err(SpecConstant { .. }) => {}
+        }
+    }
+
+    fn location_count_of_type(&self, ty: Word) -> u32 {
+        match self.lookup_type(ty) {
+            // Arrays take up multiple locations.
+            SpirvType::Array { count, element } => {
+                self.builder
+                    .lookup_const_u64(count)
+                    .expect("Array type has invalid count value") as u32
+                    * self.location_count_of_type(element)
+            }
+            // Structs take up one location per field.
+            SpirvType::Adt { field_types, .. } => {
+                let mut size = 0;
+
+                for field_type in field_types {
+                    size += self.location_count_of_type(field_type);
+                }
+
+                size
+            }
+            SpirvType::Vector { element, count } => {
+                // 3 or 4 component vectors take up 2 locations if they have a 64-bit scalar type.
+                if count > 2 {
+                    match self.lookup_type(element) {
+                        SpirvType::Float(64) | SpirvType::Integer(64, _) => 2,
+                        _ => 1,
+                    }
+                } else {
+                    1
+                }
+            }
+            SpirvType::Matrix { element, count } => count * self.location_count_of_type(element),
+            _ => 1,
         }
     }
 
