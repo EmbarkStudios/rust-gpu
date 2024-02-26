@@ -208,7 +208,7 @@ version of Rust as <code>rust-gpu</code>. Utimately, the build will fail with a 
 error message when you don't use the exact same version)</li>
 <li>Reference <code>spirv-builder</code> in your Cargo.toml:
 <pre><code class="language-toml">[build-dependencies]
-spirv-builder = &quot;0.9&quot;
+spirv-builder = "0.9"
 </code></pre>
 All dependent crates are published on <a href="https://crates.io">crates.io</a>.</li>
 <li>Create a <code>build.rs</code> in your project root.</li>
@@ -225,14 +225,14 @@ fn main() -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
 }</code></pre></pre>
 <p>Substituting <code>shader_crate</code> with a relative path to your shader crate. The values available for the <code>target</code> parameter are available
 <a href="./platform-support.html">here</a>.  For example, if building for vulkan 1.1, use
-<code>&quot;spirv-unknown-vulkan1.1&quot;</code>.</p>
+<code>"spirv-unknown-vulkan1.1"</code>.</p>
 <p>The <code>SpirvBuilder</code> struct has numerous configuration options available, see
 <a href="https://embarkstudios.github.io/rust-gpu/api/spirv_builder/struct.SpirvBuilder.html">documentation</a>.</p>
 <h4 id="mainrs"><a class="header" href="#mainrs"><code>main.rs</code></a></h4>
 <p>The following will directly include the shader module binary into your application.</p>
 <pre><pre class="playground"><code class="language-rust no_run"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>const SHADER: &amp;[u8] = include_bytes!(env!(&quot;&lt;shader_crate&gt;.spv&quot;));
+</span>const SHADER: &amp;[u8] = include_bytes!(env!("&lt;shader_crate&gt;.spv"));
 <span class="boring">}</span></code></pre></pre>
 <blockquote>
 <p><strong>Note</strong> If your shader name contains hyphens, the name of environment variable will be the name with hyphens changed to underscores.</p>
@@ -275,18 +275,18 @@ compiling for (see <a href="./platform-support.html">platform support</a>) and p
 to your built <code>rustc_codegen_spirv</code> dynamic library. We have to also provide
 some additional options.</p>
 <pre><code class="language-toml">[build]
-target = &quot;spirv-unknown-spv1.3&quot;
+target = "spirv-unknown-spv1.3"
 rustflags = [
-    &quot;-Zcodegen-backend=&lt;path_to_librustc_codegen_spirv&gt;&quot;,
-    &quot;-Zbinary-dep-depinfo&quot;,
-    &quot;-Csymbol-mangling-version=v0&quot;,
-    &quot;-Zcrate-attr=feature(register_tool)&quot;,
-    &quot;-Zcrate-attr=register_tool(rust_gpu)&quot;
+    "-Zcodegen-backend=&lt;path_to_librustc_codegen_spirv&gt;",
+    "-Zbinary-dep-depinfo",
+    "-Csymbol-mangling-version=v0",
+    "-Zcrate-attr=feature(register_tool)",
+    "-Zcrate-attr=register_tool(rust_gpu)"
 ]
 
 [unstable]
-build-std=[&quot;core&quot;]
-build-std-features=[&quot;compiler-builtins-mem&quot;]
+build-std=["core"]
+build-std-features=["compiler-builtins-mem"]
 </code></pre>
 <p>Now we can build our crate with cargo as normal.</p>
 <pre><code class="language-bash">cargo build
@@ -294,12 +294,12 @@ build-std-features=[&quot;compiler-builtins-mem&quot;]
 <p>Now you should have <code>&lt;project_name&gt;.spv</code> SPIR-V file in <code>target/debug</code> that you
 can give to a renderer.</p>
 <h2 id="writing-your-first-shader"><a class="header" href="#writing-your-first-shader">Writing your first shader</a></h2>
-<p>Configure your shader crate as a <code>&quot;dylib&quot;</code> type crate, and add <code>spirv-std</code> to its dependencies:</p>
+<p>Configure your shader crate as a <code>"dylib"</code> type crate, and add <code>spirv-std</code> to its dependencies:</p>
 <pre><code class="language-toml">[lib]
-crate-type = [&quot;dylib&quot;]
+crate-type = ["dylib"]
 
 [dependencies]
-spirv-std = { version = &quot;0.9&quot; }
+spirv-std = { version = "0.9" }
 </code></pre>
 <p>Make sure your shader code uses the <code>no_std</code> attribute and makes the <code>spirv</code> attribute visibile in the global scope. Then, you're ready to write your first shader. Here's a very simple fragment shader called <code>main_fs</code> as an example that outputs the color red:</p>
 <pre><pre class="playground"><code class="language-rust norun">#![no_std]

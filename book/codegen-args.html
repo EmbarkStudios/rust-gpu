@@ -173,40 +173,40 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="codegen-args-flagsoptions-supported-by-the-rust-gpu-codegen-backend"><a class="header" href="#codegen-args-flagsoptions-supported-by-the-rust-gpu-codegen-backend">&quot;Codegen args&quot; (flags/options) supported by the Rust-GPU codegen backend</a></h1>
+                        <h1 id="codegen-args-flagsoptions-supported-by-the-rust-gpu-codegen-backend"><a class="header" href="#codegen-args-flagsoptions-supported-by-the-rust-gpu-codegen-backend">"Codegen args" (flags/options) supported by the Rust-GPU codegen backend</a></h1>
 <p>Please keep in mind that many of these flags/options are for internal development, and may break output
 unexpectedly and generally muck things up. Please only use these if you know what you're doing.</p>
-<p>Help is also appreciated keeping this document up to date, &quot;codegen args&quot; flags/options may be
+<p>Help is also appreciated keeping this document up to date, "codegen args" flags/options may be
 added/removed on an ad-hoc basis without much thought, as they're internal development tools, not a
 public API - this documentation is only here because these flags/options may be helpful diagnosing
 problems for others.</p>
-<p>It's recommended that &quot;codegen args&quot; options that take paths to files or directories are set to full
+<p>It's recommended that "codegen args" options that take paths to files or directories are set to full
 paths, as the working directory of the compiler might be something wonky and unexpected, and it's
 easier to set the full path.</p>
 <hr />
-<h2 id="how-to-set-codegen-args-flagsoptions"><a class="header" href="#how-to-set-codegen-args-flagsoptions">How to set &quot;codegen args&quot; flags/options</a></h2>
+<h2 id="how-to-set-codegen-args-flagsoptions"><a class="header" href="#how-to-set-codegen-args-flagsoptions">How to set "codegen args" flags/options</a></h2>
 <p>The most convenient method is relying on <code>spirv-builder</code> reading the <code>RUSTGPU_CODEGEN_ARGS</code> environment variable, e.g.:</p>
-<pre><code class="language-console">$ RUSTGPU_CODEGEN_ARGS=&quot;--no-spirv-val --dump-post-link=$PWD/postlink&quot; cargo run -p example-runner-wgpu
+<pre><code class="language-console">$ RUSTGPU_CODEGEN_ARGS="--no-spirv-val --dump-post-link=$PWD/postlink" cargo run -p example-runner-wgpu
 ...
     Finished release [optimized] target(s) in 15.15s
 
 $ file postlink/*
 postlink/module: Khronos SPIR-V binary, little-endian, version 0x010300, generator 0x1b0000
 </code></pre>
-<p>Notably, <code>RUSTGPU_CODEGEN_ARGS=&quot;--help&quot;</code> can be used to see a &quot;usage&quot; message (which lists all the flags/options, including ones not listed in this document), via e.g. running a Cargo build that relies on <code>spirv-builder</code>.</p>
-<p>However, it's only a convenient alias for for <code>RUSTGPU_RUSTFLAGS=-Cllvm-args=&quot;...&quot;</code> (without having to expose the fact that LLVM's name is still attached to <code>rustc</code>'s interface for this functionality), and if in direct control of <code>rustc</code>, you can still pass such &quot;codegen args&quot; flags/options wrapped in <code>-C llvm-args=&quot;...&quot;</code>.</p>
+<p>Notably, <code>RUSTGPU_CODEGEN_ARGS="--help"</code> can be used to see a "usage" message (which lists all the flags/options, including ones not listed in this document), via e.g. running a Cargo build that relies on <code>spirv-builder</code>.</p>
+<p>However, it's only a convenient alias for for <code>RUSTGPU_RUSTFLAGS=-Cllvm-args="..."</code> (without having to expose the fact that LLVM's name is still attached to <code>rustc</code>'s interface for this functionality), and if in direct control of <code>rustc</code>, you can still pass such "codegen args" flags/options wrapped in <code>-C llvm-args="..."</code>.</p>
 <hr />
-<h2 id="historical-note-about-past-environment-variables"><a class="header" href="#historical-note-about-past-environment-variables">Historical note about past &quot;environment variables&quot;</a></h2>
+<h2 id="historical-note-about-past-environment-variables"><a class="header" href="#historical-note-about-past-environment-variables">Historical note about past "environment variables"</a></h2>
 <p>Many of these flags/options were at one point, individual environment variable (e.g. the <code>--dump-pre-link</code> option used to be the environment variable <code>DUMP_PRE_LINK</code>).</p>
-<p>However, that approach is prone to various failure modes, because the environment variables would not get registered as a &quot;dependency&quot; (without extra work that never happened), and the idea of &quot;codegen args&quot; fits better with existing practices (e.g. <code>rustc -C llvm-args=&quot;...&quot;</code> for the LLVM codegen backend of <code>rustc</code>).</p>
+<p>However, that approach is prone to various failure modes, because the environment variables would not get registered as a "dependency" (without extra work that never happened), and the idea of "codegen args" fits better with existing practices (e.g. <code>rustc -C llvm-args="..."</code> for the LLVM codegen backend of <code>rustc</code>).</p>
 <p>For more context see also <a href="https://github.com/EmbarkStudios/rust-gpu/pull/959">PR #959</a>, which made the transition to this system.</p>
 <h2 id="where-are-all-the-rest-of-the-flagsoptions-documented"><a class="header" href="#where-are-all-the-rest-of-the-flagsoptions-documented">Where are all the rest of the flags/options documented?</a></h2>
-<p>If you do run a build with <code>RUSTGPU_CODEGEN_ARGS=&quot;--help&quot;</code> (or <code>-C llvm-args=&quot;--help&quot;</code>), you will notice more flags/options than are listed in this documented.</p>
-<p>This is a historical artifact: as mentioned above, these used to be environment variables, and this document only described those, without talking about the older &quot;codegen args&quot; at all.</p>
+<p>If you do run a build with <code>RUSTGPU_CODEGEN_ARGS="--help"</code> (or <code>-C llvm-args="--help"</code>), you will notice more flags/options than are listed in this documented.</p>
+<p>This is a historical artifact: as mentioned above, these used to be environment variables, and this document only described those, without talking about the older "codegen args" at all.</p>
 <p>While most of those flags are usually only exposed through higher-level <code>spirv-builder</code> APIs, it would be nice to have all of them documented in one place (eventually?).</p>
 <hr />
-<h2 id="debugging-codegen-args-flagsoptions"><a class="header" href="#debugging-codegen-args-flagsoptions">Debugging &quot;codegen args&quot; flags/options</a></h2>
-<p>As mentioned above, these form the bulk of &quot;codegen args&quot;, but keep in mind the list is not exhaustive and you will want to cehck the full list with e.g. <code>RUSTGPU_CODEGEN_ARGS=&quot;--help&quot;</code>.</p>
+<h2 id="debugging-codegen-args-flagsoptions"><a class="header" href="#debugging-codegen-args-flagsoptions">Debugging "codegen args" flags/options</a></h2>
+<p>As mentioned above, these form the bulk of "codegen args", but keep in mind the list is not exhaustive and you will want to cehck the full list with e.g. <code>RUSTGPU_CODEGEN_ARGS="--help"</code>.</p>
 <h3 id="--dump-mir-dir"><a class="header" href="#--dump-mir-dir"><code>--dump-mir DIR</code></a></h3>
 <p>Dumps the MIR of every function rust-gpu encounters, to files in <code>DIR</code>. Yes, rustc does have options to do
 this by default, but I always forget the syntax, and plumbing through the option to <code>spirv-builder</code>
@@ -255,14 +255,14 @@ linker, hasn't been tested for a while.</p>
 emitted. Useful if you're println debugging IDs in the linker (although spirv-opt will compact them
 anyway, be careful).</p>
 <h3 id="--no-early-report-zombies"><a class="header" href="#--no-early-report-zombies"><code>--no-early-report-zombies</code></a></h3>
-<p>Delays reporting zombies (aka &quot;deferred errors&quot;) even further, to allow more legalization.
+<p>Delays reporting zombies (aka "deferred errors") even further, to allow more legalization.
 Currently this also replaces the zombie reporting with a SPIR-T-based version
 (which may become the default in the future).</p>
 <h3 id="--no-infer-storage-classes"><a class="header" href="#--no-infer-storage-classes"><code>--no-infer-storage-classes</code></a></h3>
-<p>Disables the old SPIR-V &quot;Storage Class&quot; (i.e. address space) inference pass,
+<p>Disables the old SPIR-V "Storage Class" (i.e. address space) inference pass,
 to allow testing alternatives to it (such as SPIR-T <code>qptr</code> passes).</p>
 <p>Note that this will produce illegal SPIR-V by default, and you need e.g.
-<code>--spirt-passes=qptr</code> in order to regain legal &quot;Storage Class&quot; assignments<br />
+<code>--spirt-passes=qptr</code> in order to regain legal "Storage Class" assignments<br />
 (see <a href="https://github.com/EmbarkStudios/spirt/pull/24">SPIR-T <code>qptr</code> PR</a> for more information on <code>qptr</code> in general)</p>
 <h3 id="--no-structurize"><a class="header" href="#--no-structurize"><code>--no-structurize</code></a></h3>
 <p>Disables CFG structurization. Probably results in invalid modules.</p>
@@ -301,7 +301,7 @@ to the standard SPIR-V debuginfo (which <code>SPIR-🇹</code> understands more 
 if you want to see all instructions exactly as e.g. <code>--spirt-passes</code> see them.</p>
 <h3 id="--spirt-keep-debug-sources-in-dumps"><a class="header" href="#--spirt-keep-debug-sources-in-dumps"><code>--spirt-keep-debug-sources-in-dumps</code></a></h3>
 <p>When dumping (pretty-printed) <code>SPIR-🇹</code> (e.g. with <code>--dump-spirt-passes</code>), preserve
-all the &quot;file contents debuginfo&quot; (i.e. from SPIR-V <code>OpSource</code> instructions),
+all the "file contents debuginfo" (i.e. from SPIR-V <code>OpSource</code> instructions),
 which will end up being included, in full, at the start of the dump.</p>
 <p>The default (of hiding the file contents) is less verbose, but (arguably) lossier.</p>
 
