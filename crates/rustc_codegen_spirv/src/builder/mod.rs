@@ -242,7 +242,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         // So we need to check for zero shift, and don't use the shift result if it is.
         let mask_is_zero = self
             .emit()
-            .i_not_equal(bool, None, mask_shift.def(self), zero.def(self))
+            .i_equal(bool, None, mask_shift.def(self), zero.def(self))
             .unwrap()
             .with_type(bool);
         self.select(mask_is_zero, value, or)

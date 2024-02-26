@@ -10,7 +10,7 @@ It takes care of pulling in the `SPIR-V` backend for Rust, `rustc_codegen_spirv`
 
 ## Example
 
-```rust
+```rust,no_run
 use spirv_builder::{MetadataPrintout, SpirvBuilder};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -23,7 +23,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 This example will build a shader crate called `my_shaders`. You typically insert this code in your crate's `build.rs` that requires the shader binary. The path to the shader module's binary will be set in the `my_shaders.spv` environment variable, which you can include in your project using something along the lines of:
 
-```rust
+```rust,ignore
 const SHADER: &[u8] = include_bytes!(env!("my_shaders.spv"));
 ```
 

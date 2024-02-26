@@ -34,7 +34,7 @@ However, many things aren't implemented yet. That means that while being technic
 
 ![Sky shader](docs/assets/sky.jpg)
 
-```rust
+```rust,no_run
 use glam::{Vec3, Vec4, vec2, vec3};
 
 #[spirv(fragment)]

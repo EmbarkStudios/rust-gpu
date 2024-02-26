@@ -6,8 +6,13 @@ on:
 
 name: CI
 
+# Cancel PR actions on new commits
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
-  check:
+  test:
     name: Test
     strategy:
       matrix:
@@ -20,52 +25,22 @@ jobs:
             target: x86_64-apple-darwin
           - os: ubuntu-20.04-16core
             target: aarch64-linux-android
+            host: x86_64-unknown-linux-gnu
     runs-on: ${{ matrix.os }}
     env:
-      # Get platform-specific download links from https://github.com/KhronosGroup/SPIRV-Tools/blob/master/docs/downloads.md
-      # which will point to the `spirv-tools` Google Cloud Storage Bucket - if
-      # you need to manually look around, you can search for `spirv_tools_version`
-      # (which should be in the `YYYYMMDD` format and appear in paths) in these
-      # listings (NB: they're limited to 1000 results and may need adjustment):
-      # https://storage.googleapis.com/spirv-tools/?list-type=2&start-after=artifacts/prod/graphics_shader_compiler/spirv-tools/linux-clang-release/continuous/1800
-      # https://storage.googleapis.com/spirv-tools/?list-type=2&start-after=artifacts/prod/graphics_shader_compiler/spirv-tools/macos-clang-release/continuous/1800
-      # https://storage.googleapis.com/spirv-tools/?list-type=2&start-after=artifacts/prod/graphics_shader_compiler/spirv-tools/windows-msvc-2017-release/continuous/1800
-      spirv_tools_version: "20221024"
-      # NOTE(eddyb) do not forget to update both the above date and below links!
-      # FIXME(eddyb) automate this somewhat by taking advantage of the bucket APIs,
-      # and look for the first build with the date in `spirv_tools_version`.
-      spirv_tools_linux_url: "https://storage.googleapis.com/spirv-tools/artifacts/prod/graphics_shader_compiler/spirv-tools/linux-clang-release/continuous/1863/20221024-094528/install.tgz"
-      spirv_tools_macos_url: "https://storage.googleapis.com/spirv-tools/artifacts/prod/graphics_shader_compiler/spirv-tools/macos-clang-release/continuous/1875/20221024-094531/install.tgz"
-      spirv_tools_windows_url: "https://storage.googleapis.com/spirv-tools/artifacts/prod/graphics_shader_compiler/spirv-tools/windows-msvc-2017-release/continuous/1851/20221024-094908/install.zip"
       RUSTUP_UNPACK_RAM: "26214400"
       RUSTUP_IO_THREADS: "1"
     steps:
-      - uses: actions/checkout@v2
-      - if: ${{ runner.os == 'Linux' }}
-        name: Linux - Install native dependencies and spirv-tools
-        run: |
-          sudo apt install libwayland-cursor0 libxkbcommon-dev libwayland-dev
-          mkdir "${HOME}/spirv-tools"
-          curl -fL "$spirv_tools_linux_url" | tar -xz -C "${HOME}/spirv-tools"
-          echo "${HOME}/spirv-tools/install/bin" >> $GITHUB_PATH
-      - if: ${{ runner.os == 'macOS' }}
-        name: Mac - Install spirv-tools
-        # FIXME(eddyb) deduplicate with Linux (and maybe even Windows?).
-        run: |
-          mkdir "${HOME}/spirv-tools"
-          curl -fL "$spirv_tools_macos_url" | tar -xz -C "${HOME}/spirv-tools"
-          echo "${HOME}/spirv-tools/install/bin" >> $GITHUB_PATH
-      - if: ${{ runner.os == 'Windows' }}
-        name: Windows - Install spirv-tools
+      - uses: actions/checkout@v4
+      # Install the spirv-tools binaries from tarballs hosted on each release
+      # of spirv-tools. This downloads the tarball, decompresses it, unpacks
+      # the binaries to the specified path, and adds them to PATH
+      - name: Install spirv-tools binaries
         shell: bash
-        run: |
-          tmparch=$(mktemp)
-          mkdir "${HOME}/spirv-tools"
-          curl -fL -o "$tmparch" "$spirv_tools_windows_url"
-          unzip "$tmparch" -d "${HOME}/spirv-tools"
-      - if: ${{ runner.os == 'Windows' }}
-        # Runs separately to add spir-v tools to Powershell's Path.
-        run: echo "$HOME/spirv-tools/install/bin" >> $env:GITHUB_PATH
+        run: cargo run --manifest-path .github/install-spirv-tools/Cargo.toml -- ${{matrix.host || matrix.target}} 0.10.0 "${{github.workspace}}/bin"
+      - if: ${{ runner.os == 'Linux' }}
+        name: Linux - Install native dependencies
+        run: sudo apt install libwayland-cursor0 libxkbcommon-dev libwayland-dev
       # cargo version is a random command that forces the installation of rust-toolchain
       - name: install rust-toolchain
         run: cargo version
@@ -87,6 +62,10 @@ jobs:
       - name: compiletest
         if: ${{ matrix.target != 'aarch64-linux-android' }}
         run: cargo run -p compiletests --release --no-default-features --features "use-installed-tools" -- --target-env vulkan1.1,vulkan1.2,spv1.3
+
+      - name: workspace test
+        if: ${{ matrix.target != 'aarch64-linux-android' }}
+        run: cargo test --release
 
       # Examples
       - name: cargo check examples
@@ -123,6 +102,14 @@ jobs:
           cargo apk build -p example-runner-wgpu --lib --features use-installed-tools --no-default-features
           echo "::endgroup::"
 
+  # This just allows us to branch protect on this one job rather needing to change
+  # it if the test matrix changes
+  test_success:
+    runs-on: ubuntu-22.04
+    needs: test
+    steps:
+    - run: echo "All test jobs passed"
+
   lint:
     name: Lint
     runs-on: ubuntu-20.04-16core
@@ -130,16 +117,13 @@ jobs:
       # Note that we are explicitly NOT checking out submodules, to validate
       # that we haven't accidentally enabled spirv-tools native compilation
       # and regressed CI times
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: "false"
       - name: Install native dependencies
         run: sudo apt install libwayland-cursor0 libxkbcommon-dev libwayland-dev
       - name: Install spirv-tools
-        run: |
-          mkdir "${HOME}/spirv-tools"
-          curl -fL https://storage.googleapis.com/spirv-tools/artifacts/prod/graphics_shader_compiler/spirv-tools/linux-clang-release/continuous/1409/20210313-175801/install.tgz | tar -xz -C "${HOME}/spirv-tools"
-          echo "${HOME}/spirv-tools/install/bin" >> $GITHUB_PATH
+        run: cargo run --manifest-path .github/install-spirv-tools/Cargo.toml -- x86_64-unknown-linux-gnu 0.10.0 "${{github.workspace}}/bin"
       - name: Install rustup components
         run: rustup component add rustfmt clippy
       # cargo version is a random command that forces the installation of rust-toolchain
@@ -161,7 +145,7 @@ jobs:
         run: .github/workflows/lint.sh
 
   cargo-deny:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: EmbarkStudios/cargo-deny-action@v1

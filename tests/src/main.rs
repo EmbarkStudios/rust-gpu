@@ -177,11 +177,6 @@ impl Runner {
 
 /// Runs the processes needed to build `spirv-std` & other deps.
 fn build_deps(deps_target_dir: &Path, codegen_backend_path: &Path, target: &str) -> TestDeps {
-    // HACK(eddyb) this is only needed until we enable `resolver = "2"`, as the
-    // old ("1") resolver has a bug where it picks up extra features based on the
-    // current directory (and so we always set the working dir as a workaround).
-    let old_cargo_resolver_workaround_cwd = deps_target_dir.parent().unwrap();
-
     // Build compiletests-deps-helper
     std::process::Command::new("cargo")
         .args([
@@ -195,7 +190,6 @@ fn build_deps(deps_target_dir: &Path, codegen_backend_path: &Path, target: &str)
         .arg("--target-dir")
         .arg(deps_target_dir)
         .env("RUSTFLAGS", rust_flags(codegen_backend_path))
-        .current_dir(old_cargo_resolver_workaround_cwd)
         .stderr(std::process::Stdio::inherit())
         .stdout(std::process::Stdio::inherit())
         .status()
