@@ -12,7 +12,6 @@ use std::sync::{Arc, Mutex};
 // https://github.com/rust-lang/rust/pull/115393 lands.
 // We need to construct an emitter as yet another workaround,
 // see https://github.com/rust-lang/rust/pull/102992.
-extern crate termcolor;
 use termcolor::{ColorSpec, WriteColor};
 
 // https://github.com/colin-kiegel/rust-pretty-assertions/issues/24
@@ -101,12 +100,12 @@ fn link_with_linker_opts(
             self.0.lock().unwrap().flush()
         }
     }
-    impl WriteColor for BufWriter {
+    impl rustc_errors::WriteColor for BufWriter {
         fn supports_color(&self) -> bool {
             false
         }
 
-        fn set_color(&mut self, _spec: &ColorSpec) -> std::io::Result<()> {
+        fn set_color(&mut self, _spec: &rustc_errors::ColorSpec) -> std::io::Result<()> {
             Ok(())
         }
 
@@ -132,7 +131,11 @@ fn link_with_linker_opts(
         .unwrap();
         let sopts =
             rustc_session::config::build_session_options(&mut early_error_handler, &matches);
+        let sysroot = rustc_session::filesearch::materialize_sysroot(sopts.maybe_sysroot.clone());
 
+        let target_cfg =
+            rustc_session::config::build_target_config(&early_error_handler, &sopts, None, &sysroot);
+    
         rustc_span::create_session_globals_then(sopts.edition, || {
             let mut sess = rustc_session::build_session(
                 early_error_handler,
@@ -151,7 +154,8 @@ fn link_with_linker_opts(
                 Default::default(),
                 Default::default(),
                 Default::default(),
-                Default::default(),
+                target_cfg,
+                sysroot,
                 rustc_interface::util::rustc_version_str().unwrap_or("unknown"),
                 Default::default(),
                 Default::default(),
@@ -160,7 +164,7 @@ fn link_with_linker_opts(
 
             // HACK(eddyb) inject `write_diags` into `sess`, to work around
             // the removals in https://github.com/rust-lang/rust/pull/102992.
-            sess.parse_sess.dcx = {
+            sess.psess.dcx = {
                 let fallback_bundle = {
                     extern crate rustc_error_messages;
                     rustc_error_messages::fallback_fluent_bundle(
@@ -169,10 +173,10 @@ fn link_with_linker_opts(
                     )
                 };
                 let emitter =
-                    rustc_errors::emitter::EmitterWriter::new(Box::new(buf), fallback_bundle)
-                        .sm(Some(sess.parse_sess.clone_source_map()));
+                    rustc_errors::emitter::HumanEmitter::new(Box::new(buf), fallback_bundle)
+                        .sm(Some(sess.psess.clone_source_map()));
 
-                rustc_errors::DiagCtxt::with_emitter(Box::new(emitter))
+                rustc_errors::DiagCtxt::new(Box::new(emitter))
                     .with_flags(sess.opts.unstable_opts.dcx_flags(true))
             };
 
@@ -191,14 +195,14 @@ fn link_with_linker_opts(
                 ),
                 Default::default(),
             );
-            assert_eq!(sess.has_errors(), res.as_ref().err().copied());
+            assert_eq!(sess.psess.dcx.has_errors(), res.as_ref().err().copied());
             res.map(|res| match res {
                 LinkResult::SingleModule(m) => *m,
                 LinkResult::MultipleModules { .. } => unreachable!(),
             })
         })
     })
-    .flatten()
+    .unwrap()
     .map_err(|_e| {
         let mut diags = output.unwrap_to_string();
         if let Some(diags_without_trailing_newlines) = diags.strip_suffix("\n\n") {

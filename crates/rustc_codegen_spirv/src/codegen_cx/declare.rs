@@ -167,7 +167,7 @@ impl<'tcx> CodegenCx<'tcx> {
                         self.libm_intrinsics.borrow_mut().insert(fn_id, intrinsic);
                     }
                     None => {
-                        self.tcx.sess.err(format!(
+                        self.tcx.sess.psess.dcx.err(format!(
                             "missing libm intrinsic {symbol_name}, which is {instance}"
                         ));
                     }
@@ -279,7 +279,7 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
             Linkage::External => Some(LinkageType::Export),
             Linkage::Internal => None,
             other => {
-                self.tcx.sess.err(format!(
+                self.tcx.sess.psess.dcx.err(format!(
                     "TODO: Linkage type {other:?} not supported yet for static var symbol {symbol_name}"
                 ));
                 None
@@ -308,7 +308,7 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
             Linkage::External | Linkage::WeakAny => Some(LinkageType::Export),
             Linkage::Internal => None,
             other => {
-                self.tcx.sess.err(format!(
+                self.tcx.sess.psess.dcx.err(format!(
                     "TODO: Linkage type {other:?} not supported yet for function symbol {symbol_name}"
                 ));
                 None
@@ -330,7 +330,7 @@ impl<'tcx> StaticMethods for CodegenCx<'tcx> {
         )
     }
 
-    fn codegen_static(&self, def_id: DefId, _is_mutable: bool) {
+    fn codegen_static(&self, def_id: DefId,) {
         let g = self.get_static(def_id);
 
         let alloc = match self.tcx.eval_static_initializer(def_id) {
@@ -340,7 +340,7 @@ impl<'tcx> StaticMethods for CodegenCx<'tcx> {
         };
         let value_ty = match self.lookup_type(g.ty) {
             SpirvType::Pointer { pointee } => pointee,
-            other => self.tcx.sess.fatal(format!(
+            other => self.tcx.sess.psess.dcx.fatal(format!(
                 "global had non-pointer type {}",
                 other.debug(g.ty, self)
             )),

@@ -6,7 +6,8 @@ use crate::custom_insts::{self, CustomOp};
 use rspirv::dr::{Instruction, Module, Operand};
 use rspirv::spirv::{Op, Word};
 use rustc_data_structures::fx::{FxHashMap, FxHashSet, FxIndexMap};
-use rustc_errors::{DiagnosticBuilder, ErrorGuaranteed};
+use rustc_errors::ErrorGuaranteed;
+use rustc_errors::{Diag,DiagMessage};
 use rustc_session::Session;
 use rustc_span::{Span, DUMMY_SP};
 use smallvec::SmallVec;
@@ -239,7 +240,7 @@ impl<'a> ZombieReporter<'a> {
 
     fn add_use_note_to_err(
         &mut self,
-        err: &mut DiagnosticBuilder<'a, ErrorGuaranteed>,
+        err: &mut Diag<'a, ErrorGuaranteed>,
         span: Span,
         zombie: Zombie<'_>,
         zombie_use: &ZombieUse<'_>,
@@ -278,7 +279,7 @@ impl<'a> ZombieReporter<'a> {
     fn build_errors_keyed_by_leaf_id(
         &mut self,
         zombie: Zombie<'_>,
-    ) -> FxIndexMap<Word, DiagnosticBuilder<'a, ErrorGuaranteed>> {
+    ) -> FxIndexMap<Word, Diag<'a, ErrorGuaranteed>> {
         // FIXME(eddyb) this is a bit inefficient, compared to some kind of
         // "small map", but this is the error path, and being correct is more
         // important here - in particular, we don't want to ignore *any* leaves.
@@ -294,7 +295,7 @@ impl<'a> ZombieReporter<'a> {
                 let reason = self.span_regen.zombie_for_id(zombie.id).unwrap().reason;
                 errors_keyed_by_leaf_id.insert(
                     zombie.id,
-                    self.sess.struct_span_err(span, reason.to_string()),
+                    self.sess.psess.dcx.struct_span_err(span, reason.to_string()),
                 );
             }
             ZombieKind::Uses(zombie_uses) => {

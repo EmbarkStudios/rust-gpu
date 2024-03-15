@@ -16,7 +16,6 @@
 //! [`spirv-tools`]: https://embarkstudios.github.io/rust-gpu/api/spirv_tools
 //! [`spirv-tools-sys`]: https://embarkstudios.github.io/rust-gpu/api/spirv_tools_sys
 #![feature(rustc_private)]
-#![feature(array_methods)]
 #![feature(assert_matches)]
 #![feature(result_flattening)]
 #![feature(lint_reasons)]
@@ -39,7 +38,6 @@
 compile_error!(
     "Either \"use-compiled-tools\" (enabled by default) or \"use-installed-tools\" may be enabled."
 );
-
 extern crate rustc_apfloat;
 extern crate rustc_arena;
 extern crate rustc_ast;
@@ -237,8 +235,7 @@ impl CodegenBackend for SpirvCodegenBackend {
         Box::new(rustc_codegen_ssa::base::codegen_crate(
             Self,
             tcx,
-            tcx.sess
-                .opts
+            tcx.sess.opts
                 .cg
                 .target_cpu
                 .clone()
@@ -253,15 +250,15 @@ impl CodegenBackend for SpirvCodegenBackend {
         ongoing_codegen: Box<dyn Any>,
         sess: &Session,
         _outputs: &OutputFilenames,
-    ) -> Result<(CodegenResults, FxIndexMap<WorkProductId, WorkProduct>), ErrorGuaranteed> {
+    ) -> (CodegenResults, FxIndexMap<WorkProductId, WorkProduct>) {
         let (codegen_results, work_products) = ongoing_codegen
             .downcast::<OngoingCodegen<Self>>()
             .expect("Expected OngoingCodegen, found Box<Any>")
             .join(sess);
 
-        sess.compile_status()?;
+        // sess.psess.dcx.compile_status().unwrap();
 
-        Ok((codegen_results, work_products))
+        (codegen_results, work_products)
     }
 
     fn link(
@@ -279,7 +276,7 @@ impl CodegenBackend for SpirvCodegenBackend {
         );
         drop(timer);
 
-        sess.compile_status()?;
+        // sess.psess.dcx.compile_status()?;
         Ok(())
     }
 }

@@ -162,11 +162,10 @@ impl SpirvValue {
             }
 
             SpirvValueKind::IllegalTypeUsed(id) => {
-                cx.tcx
-                    .sess
-                    .struct_span_err(span, "Can't use type as a value")
-                    .note(format!("Type: *{}", cx.debug_type(id)))
-                    .emit();
+                cx
+                    .tcx.sess
+                    .psess.dcx.struct_span_err(span, "Can't use type as a value")
+                    .note(format!("Type: *{}", cx.debug_type(id)));
 
                 id
             }
@@ -367,7 +366,7 @@ impl Eq for DebugFileKey {}
 impl Hash for DebugFileKey {
     fn hash<H: Hasher>(&self, state: &mut H) {
         let Self(sf) = self;
-        sf.name_hash.hash(state);
+        sf.name.hash(state);
         sf.src_hash.hash(state);
     }
 }
