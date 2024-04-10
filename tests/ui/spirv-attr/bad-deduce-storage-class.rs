@@ -6,7 +6,6 @@ use spirv_std::{spirv, Image};
 #[spirv(vertex)]
 pub fn main(
     #[spirv(uniform)] error: &Image!(2D, type=f32),
-    #[spirv(uniform_constant)] warning: &Image!(2D, type=f32),
 ) {
 }
 

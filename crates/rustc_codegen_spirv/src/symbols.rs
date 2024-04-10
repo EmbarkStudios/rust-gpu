@@ -146,15 +146,9 @@ const BUILTINS: &[(&str, BuiltIn)] = {
 const STORAGE_CLASSES: &[(&str, StorageClass)] = {
     use StorageClass::*;
     &[
-        ("uniform_constant", UniformConstant),
-        ("input", Input),
         ("uniform", Uniform),
-        ("output", Output),
         ("workgroup", Workgroup),
         ("cross_workgroup", CrossWorkgroup),
-        ("private", Private),
-        ("function", Function),
-        ("generic", Generic),
         ("push_constant", PushConstant),
         ("atomic_counter", AtomicCounter),
         ("image", Image),
