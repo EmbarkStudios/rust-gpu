@@ -190,7 +190,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         match *ty {
             SpirvType::Void => self.fatal("memset invalid on void pattern"),
             SpirvType::Bool => self.fatal("memset invalid on bool pattern"),
-            SpirvType::Integer(width, _signedness) => match width {
+            SpirvType::Integer(width, false) => match width {
                 8 => self.constant_u8(self.span(), fill_byte).def(self),
                 16 => self
                     .constant_u16(self.span(), memset_fill_u16(fill_byte))
@@ -200,6 +200,29 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     .def(self),
                 64 => self
                     .constant_u64(self.span(), memset_fill_u64(fill_byte))
+                    .def(self),
+                _ => self.fatal(format!(
+                    "memset on integer width {width} not implemented yet"
+                )),
+            },
+            SpirvType::Integer(width, true) => match width {
+                8 => self
+                    .constant_i8(self.span(), unsafe { std::mem::transmute(fill_byte) })
+                    .def(self),
+                16 => self
+                    .constant_i16(self.span(), unsafe {
+                        std::mem::transmute(memset_fill_u16(fill_byte))
+                    })
+                    .def(self),
+                32 => self
+                    .constant_i32(self.span(), unsafe {
+                        std::mem::transmute(memset_fill_u32(fill_byte))
+                    })
+                    .def(self),
+                64 => self
+                    .constant_i64(self.span(), unsafe {
+                        std::mem::transmute(memset_fill_u64(fill_byte))
+                    })
                     .def(self),
                 _ => self.fatal(format!(
                     "memset on integer width {width} not implemented yet"
@@ -315,7 +338,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         } else {
             for index in 0..count {
                 let const_index = self.constant_u32(self.span(), index as u32);
-                let gep_ptr = self.gep(pat.ty, ptr, &[const_index]);
+                let gep_ptr = self.inbounds_gep(pat.ty, ptr, &[const_index]);
                 self.store(pat, gep_ptr, Align::from_bytes(0).unwrap());
             }
         }
