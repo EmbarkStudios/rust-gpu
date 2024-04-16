@@ -3,7 +3,10 @@
 Welcome to the Rust-GPU dev guide! This documentation is meant for documenting
 how to use and develop on Rust-GPU.
 
-If you're looking to get started with writing your own shaders in Rust, 
+If you're a developer looking to learn about shaders through rust-gpu, check out [_"What are
+Shaders"_](./shaders-intro.md).
+
+If you're looking to get started with writing your own shaders in Rust,
 check out the [_"Writing Shader Crates"_](./writing-shader-crates.md) section for
 more information on how to get started.
 
