@@ -9,7 +9,7 @@ use core::marker::PhantomData;
 #[spirv(runtime_array)]
 // HACK(eddyb) avoids "transparent newtype of `_anti_zst_padding`" misinterpretation.
 #[repr(C)]
-pub struct RuntimeArray<T> {
+pub struct RuntimeArray<T: ?Sized> {
     // HACK(eddyb) avoids the layout becoming ZST (and being elided in one way
     // or another, before `#[spirv(runtime_array)]` can special-case it).
     _anti_zst_padding: core::mem::MaybeUninit<u32>,
@@ -19,7 +19,7 @@ pub struct RuntimeArray<T> {
 // It would be nice to use the Index/IndexMut traits here, but because we do not have the length of
 // the array, it's impossible to make them be safe operations (indexing out of bounds), and
 // Index/IndexMut are marked as safe functions.
-impl<T> RuntimeArray<T> {
+impl<T: ?Sized> RuntimeArray<T> {
     /// Index the array. Unfortunately, because the length of the runtime array cannot be known,
     /// this function will happily index outside of the bounds of the array, and so is unsafe.
     ///

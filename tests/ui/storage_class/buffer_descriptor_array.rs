@@ -21,12 +21,10 @@ pub struct Nested([u32; 3]);
 pub fn main(
     #[spirv(descriptor_set = 0, binding = 0, storage_buffer)] nested_in: &mut RuntimeArray<Nested>,
     #[spirv(descriptor_set = 1, binding = 0, storage_buffer)] nested_out: &mut Nested,
-    #[spirv(descriptor_set = 0, binding = 0, storage_buffer)] buffers: &mut RuntimeArray<
-        &mut [u32],
-    >,
-    #[spirv(descriptor_set = 1, binding = 0, storage_buffer)] output0: &mut [u32; 4],
-    #[spirv(descriptor_set = 1, binding = 1, storage_buffer)] output1: &mut glam::Vec4,
-    #[spirv(descriptor_set = 1, binding = 2, storage_buffer)] output2: &mut TestStruct,
+    #[spirv(descriptor_set = 2, binding = 0, storage_buffer)] buffers: &mut RuntimeArray<[u32]>,
+    #[spirv(descriptor_set = 3, binding = 0, storage_buffer)] output0: &mut [u32; 4],
+    #[spirv(descriptor_set = 3, binding = 1, storage_buffer)] output1: &mut glam::Vec4,
+    #[spirv(descriptor_set = 3, binding = 2, storage_buffer)] output2: &mut TestStruct,
 ) {
     // *nested_out = unsafe { *nested_in.index(0) };
 

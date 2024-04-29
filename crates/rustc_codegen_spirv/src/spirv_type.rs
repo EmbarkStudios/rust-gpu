@@ -195,17 +195,23 @@ impl SpirvType<'_> {
             Self::RuntimeArray { element } => {
                 let mut emit = cx.emit_global();
                 let result = emit.type_runtime_array_id(id, element);
-                // ArrayStride decoration wants in *bytes*
-                let element_size = cx
-                    .lookup_type(element)
-                    .sizeof(cx)
-                    .expect("Element of sized array must be sized")
-                    .bytes();
-                emit.decorate(
-                    result,
-                    Decoration::ArrayStride,
-                    iter::once(Operand::LiteralInt32(element_size as u32)),
-                );
+
+                // from the SPIR-V spec:
+                // Each array type must have an ArrayStride decoration, unless it is an array that contains a structure
+                // decorated with Block or BufferBlock, in which case it must not have an ArrayStride decoration
+                if !matches!(cx.lookup_type(element), SpirvType::InterfaceBlock { .. }) {
+                    // ArrayStride decoration wants in *bytes*
+                    let element_size = cx
+                        .lookup_type(element)
+                        .sizeof(cx)
+                        .expect("Element of sized array must be sized")
+                        .bytes();
+                    emit.decorate(
+                        result,
+                        Decoration::ArrayStride,
+                        iter::once(Operand::LiteralInt32(element_size as u32)),
+                    );
+                }
                 result
             }
             Self::Pointer { pointee } => {
