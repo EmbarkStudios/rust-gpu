@@ -378,6 +378,16 @@ impl SpirvType<'_> {
         }
     }
 
+    pub fn is_uniform_constant(&self) -> bool {
+        matches!(
+            self,
+            SpirvType::Image { .. }
+                | SpirvType::Sampler
+                | SpirvType::SampledImage { .. }
+                | SpirvType::AccelerationStructureKhr { .. }
+        )
+    }
+
     /// Replace `&[T]` fields with `&'tcx [T]` ones produced by calling
     /// `tcx.arena.dropless.alloc_slice(...)` - this is done late for two reasons:
     /// 1. it avoids allocating in the arena when the cache would be hit anyway,
