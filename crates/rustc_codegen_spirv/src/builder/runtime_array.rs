@@ -91,7 +91,16 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     }
                     PassMode::Pair(_, _) => {
                         // element is a slice
-                        // TODO can other elements also be pairs?
+                        match self.lookup_type(result_type) {
+                            SpirvType::Adt { field_types, .. } if field_types.len() == 2
+								&& matches!(self.lookup_type(field_types[0]), SpirvType::Pointer {..})
+								&& field_types[1] == self.type_isize() => {
+							}
+							_ => self.fatal(format!(
+								"Expected element of RuntimeArray to be a plain slice, like `&RuntimeArray<[u32]>`, but got {:?}!",
+								self.lookup_type(result_type).debug(result_type, self)
+							))
+                        };
                         let len = self
                             .emit()
                             .array_length(self.type_isize(), None, element.def(self), 0)
