@@ -2,6 +2,7 @@ use crate::builder::Builder;
 use crate::builder_spirv::{SpirvValue, SpirvValueExt, SpirvValueKind};
 use crate::spirv_type::SpirvType;
 use rspirv::spirv::Word;
+use rustc_codegen_ssa::traits::{BaseTypeMethods, BuilderMethods};
 use rustc_target::abi::call::PassMode;
 
 impl<'a, 'tcx> Builder<'a, 'tcx> {
@@ -41,36 +42,80 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         let index = args[1];
 
         let runtime_array_type = self.lookup_type(runtime_array.ty);
-        match runtime_array_type {
-            SpirvType::Pointer { pointee } => {
-                match self.lookup_type(pointee) {
+        let element_ty = match runtime_array_type {
+			SpirvType::Pointer { pointee } => {
+				match self.lookup_type(pointee) {
 					SpirvType::RuntimeArray { element } => {
-						let indices = match self.lookup_type(element) {
-							SpirvType::InterfaceBlock { .. } => {
-								vec![index.def(self), self.constant_i32(self.span(), 0).def(self)]
-							}
-							_ => vec![index.def(self)],
-						};
-
-						let mut builder = self.emit();
-						let obj = builder
-							.access_chain(result_type, None, runtime_array.def(self), indices)
-							.unwrap();
-						// FIXME OpAccessChain's result_type is a Pointer<float>
-						// self.fatal(format!("result_type {:?}", self.lookup_type(result_type)));
-						// builder.store(at, obj, None, []).unwrap().with_type(result_type);
-						obj.with_type(result_type)
+						element
 					}
 					_ => self.fatal(format!(
 						"runtime_array_index_intrinsic args[0] is {:?} and not a Pointer to a RuntimeArray!",
 						runtime_array_type
 					)),
 				}
+			}
+			_ => self.fatal(format!(
+				"runtime_array_index_intrinsic args[0] is {:?} and not a Pointer!",
+				runtime_array_type
+			)),
+		};
+
+        let ptr_element = self.type_ptr_to(element_ty);
+        let element = self
+            .emit()
+            .access_chain(
+                ptr_element,
+                None,
+                runtime_array.def(self),
+                [index.def(self)],
+            )
+            .unwrap()
+            .with_type(ptr_element);
+
+        match self.lookup_type(element_ty) {
+            SpirvType::InterfaceBlock { .. } => {
+                // array of buffer descriptors
+                let inner = self.struct_gep(element_ty, element, 0);
+                match pass_mode {
+                    PassMode::Direct(_) => {
+                        // element is sized
+                        if inner.ty == result_type {
+                            inner
+                        } else {
+                            self.fatal(format!(
+								"runtime_array_index_intrinsic expected result_type to equal RuntimeArray's InterfaceBlock's inner_type: {:?} == {:?}",
+								self.lookup_type(result_type).debug(result_type, self),
+								self.lookup_type(inner.ty).debug(inner.ty, self)
+							))
+                        }
+                    }
+                    PassMode::Pair(_, _) => {
+                        // element is a slice
+                        // TODO can other elements also be pairs?
+                        let len = self
+                            .emit()
+                            .array_length(self.type_isize(), None, element.def(self), 0)
+                            .unwrap();
+                        self.emit()
+                            .composite_construct(result_type, None, [inner.def(self), len])
+                            .unwrap()
+                            .with_type(result_type)
+                    }
+                    _ => unreachable!(),
+                }
             }
-            _ => self.fatal(format!(
-                "runtime_array_index_intrinsic args[0] is {:?} and not a Pointer!",
-                runtime_array_type
-            )),
+            _ => {
+                // array of UniformConstant (image, sampler, etc.) descriptors
+                if ptr_element == result_type {
+                    element
+                } else {
+                    self.fatal(format!(
+						"runtime_array_index_intrinsic expected result_type to equal RuntimeArray's element_ty: {:?} == {:?}",
+						self.lookup_type(result_type).debug(result_type, self),
+						self.lookup_type(ptr_element).debug(ptr_element, self)
+					))
+                }
+            }
         }
     }
 }
