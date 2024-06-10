@@ -1,6 +1,7 @@
+use crate::arch::barrier;
 use crate::float::Float;
 use crate::integer::{Integer, SignedInteger, UnsignedInteger};
-use crate::memory::Scope;
+use crate::memory::{Scope, Semantics};
 use crate::scalar::VectorOrScalar;
 #[cfg(target_arch = "spirv")]
 use core::arch::asm;
@@ -49,7 +50,116 @@ pub enum GroupOperation {
 /// function, it was removed from the [`GroupOperation`] enum and instead resides individually.
 pub const GROUP_OPERATION_CLUSTERED_REDUCE: u32 = 3;
 
-// TODO barriers
+/// Only usable if the extension GL_KHR_shader_subgroup_basic is enabled.
+///
+/// The function subgroupBarrier() enforces that all active invocations within a
+/// subgroup must execute this function before any are allowed to continue their
+/// execution, and the results of any memory stores performed using coherent
+/// variables performed prior to the call will be visible to any future
+/// coherent access to the same memory performed by any other shader invocation
+/// within the same subgroup.
+///
+/// Requires Capability `GroupNonUniform`.
+#[spirv_std_macros::gpu_only]
+#[doc(alias = "subgroupBarrier")]
+#[inline]
+pub unsafe fn subgroup_barrier() {
+    unsafe {
+        barrier::control_barrier::<
+            SUBGROUP,
+            SUBGROUP,
+            {
+                Semantics::ACQUIRE_RELEASE.bits()
+                    | Semantics::UNIFORM_MEMORY.bits()
+                    | Semantics::WORKGROUP_MEMORY.bits()
+                    | Semantics::IMAGE_MEMORY.bits()
+            },
+        >();
+    }
+}
+
+/// Only usable if the extension GL_KHR_shader_subgroup_basic is enabled.
+///
+/// The function subgroupMemoryBarrier() enforces the ordering of all memory
+/// transactions issued within a single shader invocation, as viewed by other
+/// invocations in the same subgroup.
+///
+/// Requires Capability `GroupNonUniform`.
+#[spirv_std_macros::gpu_only]
+#[doc(alias = "subgroupMemoryBarrier")]
+#[inline]
+pub unsafe fn subgroup_memory_barrier() {
+    unsafe {
+        barrier::memory_barrier::<
+            SUBGROUP,
+            {
+                Semantics::ACQUIRE_RELEASE.bits()
+                    | Semantics::UNIFORM_MEMORY.bits()
+                    | Semantics::WORKGROUP_MEMORY.bits()
+                    | Semantics::IMAGE_MEMORY.bits()
+            },
+        >();
+    }
+}
+
+/// Only usable if the extension GL_KHR_shader_subgroup_basic is enabled.
+///
+/// The function subgroupMemoryBarrierBuffer() enforces the ordering of all
+/// memory transactions to buffer variables issued within a single shader
+/// invocation, as viewed by other invocations in the same subgroup.
+///
+/// Requires Capability `GroupNonUniform`.
+#[spirv_std_macros::gpu_only]
+#[doc(alias = "subgroupMemoryBarrierBuffer")]
+#[inline]
+pub unsafe fn subgroup_memory_barrier_buffer() {
+    unsafe {
+        barrier::memory_barrier::<
+            SUBGROUP,
+            { Semantics::ACQUIRE_RELEASE.bits() | Semantics::UNIFORM_MEMORY.bits() },
+        >();
+    }
+}
+
+/// Only usable if the extension GL_KHR_shader_subgroup_basic is enabled.
+///
+/// The function subgroupMemoryBarrierShared() enforces the ordering of all
+/// memory transactions to shared variables issued within a single shader
+/// invocation, as viewed by other invocations in the same subgroup.
+///
+/// Only available in compute shaders.
+///
+/// Requires Capability `GroupNonUniform`.
+#[spirv_std_macros::gpu_only]
+#[doc(alias = "subgroupMemoryBarrierShared")]
+#[inline]
+pub unsafe fn subgroup_memory_barrier_shared() {
+    unsafe {
+        barrier::memory_barrier::<
+            SUBGROUP,
+            { Semantics::ACQUIRE_RELEASE.bits() | Semantics::WORKGROUP_MEMORY.bits() },
+        >();
+    }
+}
+
+/// Only usable if the extension GL_KHR_shader_subgroup_basic is enabled.
+///
+/// The function subgroupMemoryBarrierImage() enforces the ordering of all
+/// memory transactions to images issued within a single shader invocation, as
+/// viewed by other invocations in the same subgroup.
+///
+/// Requires Capability `GroupNonUniform`.
+#[spirv_std_macros::gpu_only]
+#[doc(alias = "subgroupMemoryBarrierImage")]
+#[inline]
+pub unsafe fn subgroup_memory_barrier_image() {
+    unsafe {
+        barrier::memory_barrier::<
+            SUBGROUP,
+            { Semantics::ACQUIRE_RELEASE.bits() | Semantics::IMAGE_MEMORY.bits() },
+        >();
+    }
+}
 
 /// Result is true only in the active invocation with the lowest id in the group, otherwise result is false.
 ///
