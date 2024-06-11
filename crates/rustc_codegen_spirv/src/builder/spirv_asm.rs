@@ -2,11 +2,13 @@ use super::Builder;
 use crate::builder_spirv::{BuilderCursor, SpirvValue};
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
+use num_traits::FromPrimitive;
 use rspirv::dr;
 use rspirv::grammar::{reflect, LogicalOperand, OperandKind, OperandQuantifier};
 use rspirv::spirv::{
-    FPFastMathMode, FragmentShadingRate, FunctionControl, ImageOperands, KernelProfilingInfo,
-    LoopControl, MemoryAccess, MemorySemantics, Op, RayFlags, SelectionControl, StorageClass, Word,
+    FPFastMathMode, FragmentShadingRate, FunctionControl, GroupOperation, ImageOperands,
+    KernelProfilingInfo, LoopControl, MemoryAccess, MemorySemantics, Op, RayFlags,
+    SelectionControl, StorageClass, Word,
 };
 use rustc_ast::ast::{InlineAsmOptions, InlineAsmTemplatePiece};
 use rustc_codegen_ssa::mir::place::PlaceRef;
@@ -1329,10 +1331,15 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 Ok(x) => inst.operands.push(dr::Operand::Scope(x)),
                 Err(()) => self.err(format!("unknown Scope {word}")),
             },
-            (OperandKind::GroupOperation, Some(word)) => match word.parse() {
-                Ok(x) => inst.operands.push(dr::Operand::GroupOperation(x)),
-                Err(()) => self.err(format!("unknown GroupOperation {word}")),
-            },
+            (OperandKind::GroupOperation, Some(word)) => {
+                match word.parse::<u32>().ok().and_then(GroupOperation::from_u32) {
+                    Some(id) => inst.operands.push(dr::Operand::GroupOperation(id)),
+                    None => match word.parse() {
+                        Ok(x) => inst.operands.push(dr::Operand::GroupOperation(x)),
+                        Err(()) => self.err(format!("unknown GroupOperation {word}")),
+                    },
+                }
+            }
             (OperandKind::KernelEnqueueFlags, Some(word)) => match word.parse() {
                 Ok(x) => inst.operands.push(dr::Operand::KernelEnqueueFlags(x)),
                 Err(()) => self.err(format!("unknown KernelEnqueueFlags {word}")),
