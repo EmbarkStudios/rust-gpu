@@ -2,11 +2,19 @@
 
 use core::mem;
 
+/// Loads an arbitrary type from the buffer. `byte_index` must be a multiple of 4, otherwise,
+/// it will get silently rounded down to the nearest multiple of 4. Bounds checking is not
+/// performed.
+///
+/// # Safety
+/// This function allows writing a type to an untyped buffer, then reading a different type
+/// from the same buffer, allowing all sorts of safety guarantees to be bypassed (effectively a
+/// transmute). Additionally, bounds checking is not performed.
 #[spirv(buffer_load_intrinsic)]
 // HACK(eddyb) try to prevent MIR inlining from breaking our intrinsics.
 #[inline(never)]
 #[spirv_std_macros::gpu_only]
-unsafe fn buffer_load_intrinsic<T>(
+pub unsafe fn buffer_load_intrinsic<T>(
     buffer: &[u32],
     // FIXME(eddyb) should be `usize`.
     offset: u32,
@@ -22,11 +30,19 @@ unsafe fn buffer_load_intrinsic<T>(
         .read()
 }
 
+/// Stores an arbitrary type int the buffer. `byte_index` must be a multiple of 4, otherwise,
+/// it will get silently rounded down to the nearest multiple of 4. Bounds checking is not
+/// performed.
+///
+/// # Safety
+/// This function allows writing a type to an untyped buffer, then reading a different type
+/// from the same buffer, allowing all sorts of safety guarantees to be bypassed (effectively a
+/// transmute). Additionally, bounds checking is not performed.
 #[spirv(buffer_store_intrinsic)]
 // HACK(eddyb) try to prevent MIR inlining from breaking our intrinsics.
 #[inline(never)]
 #[spirv_std_macros::gpu_only]
-unsafe fn buffer_store_intrinsic<T>(
+pub unsafe fn buffer_store_intrinsic<T>(
     buffer: &mut [u32],
     // FIXME(eddyb) should be `usize`.
     offset: u32,
