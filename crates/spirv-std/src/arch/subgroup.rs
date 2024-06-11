@@ -8,9 +8,10 @@ use core::arch::asm;
 
 const SUBGROUP: u32 = Scope::Subgroup as u32;
 
-/// GroupMask is a [`glam::UVec4`] representing a bitmask of all invocations within a subgroup.
+/// SubgroupMask is a [`glam::UVec4`] representing a bitmask of all invocations within a subgroup.
 /// Mostly used in group ballot operations.
-pub type SubgroupMask = glam::UVec4;
+#[derive(Copy, Clone, Default, Eq, PartialEq)]
+pub struct SubgroupMask(pub glam::UVec4);
 
 /// Defines the class of group operation.
 #[non_exhaustive]
@@ -24,7 +25,6 @@ pub enum GroupOperation {
     /// A binary operation with an identity I and n (where n is the size of the workgroup)
     /// elements[a0, a1, … an-1] resulting in [I, a0, (a0 op a1), … (a0 op a1 op … op an-2)].
     ExclusiveScan = 2,
-
     // /// See [`GROUP_OPERATION_CLUSTERED_REDUCE`]
     // ClusteredReduce = 3,
     /// Reserved.
