@@ -27,13 +27,16 @@ pub enum GroupOperation {
     // /// See [`GROUP_OPERATION_CLUSTERED_REDUCE`]
     // ClusteredReduce = 3,
     /// Reserved.
-    #[cfg(target_feature = "GroupNonUniformPartitionedNV")]
+    ///
+    /// Requires Capability `GroupNonUniformPartitionedNV`.
     PartitionedReduceNV = 6,
     /// Reserved.
-    #[cfg(target_feature = "GroupNonUniformPartitionedNV")]
+    ///
+    /// Requires Capability `GroupNonUniformPartitionedNV`.
     PartitionedInclusiveScanNV = 7,
     /// Reserved.
-    #[cfg(target_feature = "GroupNonUniformPartitionedNV")]
+    ///
+    /// Requires Capability `GroupNonUniformPartitionedNV`.
     PartitionedExclusiveScanNV = 8,
 }
 
@@ -53,7 +56,8 @@ pub const GROUP_OPERATION_CLUSTERED_REDUCE: u32 = 3;
 /// Result Type must be a Boolean type.
 ///
 /// Execution is a Scope that identifies the group of invocations affected by this command. It must be Subgroup.
-#[cfg(target_feature = "GroupNonUniform")]
+///
+/// Requires Capability `GroupNonUniform`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformElect")]
 #[inline]
@@ -82,7 +86,8 @@ pub unsafe fn subgroup_non_uniform_elect() -> bool {
 /// Execution is a Scope that identifies the group of invocations affected by this command. It must be Subgroup.
 ///
 /// Predicate must be a Boolean type.
-#[cfg(target_feature = "GroupNonUniformVote")]
+///
+/// Requires Capability `GroupNonUniformVote`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformAll")]
 #[inline]
@@ -113,7 +118,8 @@ pub unsafe fn subgroup_non_uniform_all(predicate: bool) -> bool {
 /// Execution is a Scope that identifies the group of invocations affected by this command. It must be Subgroup.
 ///
 /// Predicate must be a Boolean type.
-#[cfg(target_feature = "GroupNonUniformVote")]
+///
+/// Requires Capability `GroupNonUniformVote`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformAny")]
 #[inline]
@@ -144,7 +150,8 @@ pub unsafe fn subgroup_non_uniform_any(predicate: bool) -> bool {
 /// Execution is a Scope that identifies the group of invocations affected by this command. It must be Subgroup.
 ///
 /// Value must be a scalar or vector of floating-point type, integer type, or Boolean type. The compare operation is based on this type, and if it is a floating-point type, an ordered-and-equal compare is used.
-#[cfg(target_feature = "GroupNonUniformVote")]
+///
+/// Requires Capability `GroupNonUniformVote`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformAllEqual")]
 #[inline]
@@ -181,7 +188,8 @@ pub unsafe fn subgroup_non_uniform_all_equal<T: VectorOrScalar>(value: T) -> boo
 /// Before version 1.5, Id must come from a constant instruction. Starting with version 1.5, this restriction is lifted. However, behavior is undefined when Id is not dynamically uniform.
 ///
 /// The resulting value is undefined if Id is an inactive invocation, or is greater than or equal to the size of the group.
-#[cfg(target_feature = "GroupNonUniformBallot")]
+///
+/// Requires Capability `GroupNonUniformBallot`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformBroadcast")]
 #[inline]
@@ -213,7 +221,8 @@ pub unsafe fn subgroup_non_uniform_broadcast<T: VectorOrScalar>(value: T, id: u3
 /// Execution is a Scope that identifies the group of invocations affected by this command. It must be Subgroup.
 ///
 /// The type of Value must be the same as Result Type.
-#[cfg(target_feature = "GroupNonUniformBallot")]
+///
+/// Requires Capability `GroupNonUniformBallot`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformBroadcastFirst")]
 #[inline]
@@ -245,7 +254,8 @@ pub unsafe fn subgroup_non_uniform_broadcast_first<T: VectorOrScalar>(value: T) 
 /// Execution is a Scope that identifies the group of invocations affected by this command.
 ///
 /// Predicate must be a Boolean type.
-#[cfg(target_feature = "GroupNonUniformBallot")]
+///
+/// Requires Capability `GroupNonUniformBallot`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformBallot")]
 #[inline]
@@ -280,7 +290,8 @@ pub unsafe fn subgroup_non_uniform_ballot(predicate: bool) -> SubgroupMask {
 /// Behavior is undefined unless Value is the same for all invocations that execute the same dynamic instance of this instruction.
 ///
 /// Value is a set of bitfields where the first invocation is represented in the lowest bit of the first vector component and the last (up to the size of the group) is the higher bit number of the last bitmask needed to represent all bits of the group invocations.
-#[cfg(target_feature = "GroupNonUniformBallot")]
+///
+/// Requires Capability `GroupNonUniformBallot`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformInverseBallot")]
 #[inline]
@@ -317,7 +328,8 @@ pub unsafe fn subgroup_non_uniform_inverse_ballot(subgroup_mask: SubgroupMask) -
 /// Index must be a scalar of integer type, whose Signedness operand is 0.
 ///
 /// The resulting value is undefined if Index is greater than or equal to the size of the group.
-#[cfg(target_feature = "GroupNonUniformBallot")]
+///
+/// Requires Capability `GroupNonUniformBallot`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformBallotBitExtract")]
 #[inline]
@@ -357,7 +369,8 @@ pub unsafe fn subgroup_non_uniform_ballot_bit_extract(
 /// Value must be a vector of four components of integer type scalar, whose Width operand is 32 and whose Signedness operand is 0.
 ///
 /// Value is a set of bitfields where the first invocation is represented in the lowest bit of the first vector component and the last (up to the size of the group) is the higher bit number of the last bitmask needed to represent all bits of the group invocations.
-#[cfg(target_feature = "GroupNonUniformBallot")]
+///
+/// Requires Capability `GroupNonUniformBallot`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformBallotBitCount")]
 #[inline]
@@ -393,7 +406,8 @@ pub unsafe fn subgroup_non_uniform_ballot_bit_count<const GROUP_OP: u32>(
 /// Value must be a vector of four components of integer type scalar, whose Width operand is 32 and whose Signedness operand is 0.
 ///
 /// Value is a set of bitfields where the first invocation is represented in the lowest bit of the first vector component and the last (up to the size of the group) is the higher bit number of the last bitmask needed to represent all bits of the group invocations.
-#[cfg(target_feature = "GroupNonUniformBallot")]
+///
+/// Requires Capability `GroupNonUniformBallot`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformBallotFindLSB")]
 #[inline]
@@ -425,7 +439,8 @@ pub unsafe fn subgroup_non_uniform_ballot_find_lsb(subgroup_mask: SubgroupMask) 
 /// Value must be a vector of four components of integer type scalar, whose Width operand is 32 and whose Signedness operand is 0.
 ///
 /// Value is a set of bitfields where the first invocation is represented in the lowest bit of the first vector component and the last (up to the size of the group) is the higher bit number of the last bitmask needed to represent all bits of the group invocations.
-#[cfg(target_feature = "GroupNonUniformBallot")]
+///
+/// Requires Capability `GroupNonUniformBallot`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformBallotFindMSB")]
 #[inline]
@@ -459,7 +474,8 @@ pub unsafe fn subgroup_non_uniform_ballot_find_msb(subgroup_mask: SubgroupMask) 
 /// Id must be a scalar of integer type, whose Signedness operand is 0.
 ///
 /// The resulting value is undefined if Id is an inactive invocation, or is greater than or equal to the size of the group.
-#[cfg(target_feature = "GroupNonUniformShuffle")]
+///
+/// Requires Capability `GroupNonUniformShuffle`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformShuffle")]
 #[inline]
@@ -495,7 +511,8 @@ pub unsafe fn subgroup_non_uniform_shuffle<T: VectorOrScalar>(value: T, id: u32)
 /// Mask must be a scalar of integer type, whose Signedness operand is 0.
 ///
 /// The resulting value is undefined if current invocation’s id within the group xor’ed with Mask is an inactive invocation, or is greater than or equal to the size of the group.
-#[cfg(target_feature = "GroupNonUniformShuffle")]
+///
+/// Requires Capability `GroupNonUniformShuffle`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformShuffleXor")]
 #[inline]
@@ -531,7 +548,8 @@ pub unsafe fn subgroup_non_uniform_shuffle_xor<T: VectorOrScalar>(value: T, mask
 /// Delta must be a scalar of integer type, whose Signedness operand is 0.
 ///
 /// Delta is treated as unsigned and the resulting value is undefined if Delta is greater than the current invocation’s id within the group or if the selected lane is inactive.
-#[cfg(target_feature = "GroupNonUniformShuffleRelative")]
+///
+/// Requires Capability `GroupNonUniformShuffleRelative`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformShuffleUp")]
 #[inline]
@@ -567,7 +585,8 @@ pub unsafe fn subgroup_non_uniform_shuffle_up<T: VectorOrScalar>(value: T, delta
 /// Delta must be a scalar of integer type, whose Signedness operand is 0.
 ///
 /// Delta is treated as unsigned and the resulting value is undefined if Delta is greater than or equal to the size of the group, or if the current invocation’s id within the group + Delta is either an inactive invocation or greater than or equal to the size of the group.
-#[cfg(target_feature = "GroupNonUniformShuffleRelative")]
+///
+/// Requires Capability `GroupNonUniformShuffleRelative`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformShuffleDown")]
 #[inline]
@@ -601,7 +620,8 @@ pub unsafe fn subgroup_non_uniform_shuffle_down<T: VectorOrScalar>(value: T, del
 /// The identity I for Operation is 0.
 ///
 /// The type of Value must be the same as Result Type.
-#[cfg(target_feature = "GroupNonUniformArithmetic")]
+///
+/// Requires Capability `GroupNonUniformArithmetic`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformIAdd")]
 #[inline]
@@ -642,10 +662,8 @@ pub unsafe fn subgroup_non_uniform_i_add<
 /// The type of Value must be the same as Result Type.
 ///
 /// ClusterSize is the size of cluster to use. ClusterSize must be a scalar of integer type, whose Signedness operand is 0. ClusterSize must come from a constant instruction. Behavior is undefined unless ClusterSize is at least 1 and a power of 2. If ClusterSize is greater than the size of the group, executing this instruction results in undefined behavior.
-#[cfg(all(
-    target_feature = "GroupNonUniformArithmetic",
-    target_feature = "GroupNonUniformClustered",
-))]
+///
+/// Requires Capability `GroupNonUniformArithmetic` and `GroupNonUniformClustered`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformIAdd")]
 #[inline]
@@ -686,7 +704,8 @@ pub unsafe fn subgroup_non_uniform_i_add_clustered<
 /// The identity I for Operation is 0.
 ///
 /// The type of Value must be the same as Result Type. The method used to perform the group operation on the contributed Value(s) from active invocations is implementation defined.
-#[cfg(target_feature = "GroupNonUniformArithmetic")]
+///
+/// Requires Capability `GroupNonUniformArithmetic`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformFAdd")]
 #[inline]
@@ -727,10 +746,8 @@ pub unsafe fn subgroup_non_uniform_f_add<
 /// The type of Value must be the same as Result Type. The method used to perform the group operation on the contributed Value(s) from active invocations is implementation defined.
 ///
 /// ClusterSize is the size of cluster to use. ClusterSize must be a scalar of integer type, whose Signedness operand is 0. ClusterSize must come from a constant instruction. Behavior is undefined unless ClusterSize is at least 1 and a power of 2. If ClusterSize is greater than the size of the group, executing this instruction results in undefined behavior.
-#[cfg(all(
-    target_feature = "GroupNonUniformArithmetic",
-    target_feature = "GroupNonUniformClustered",
-))]
+///
+/// Requires Capability `GroupNonUniformArithmetic` and `GroupNonUniformClustered`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformFAdd")]
 #[inline]
@@ -771,7 +788,8 @@ pub unsafe fn subgroup_non_uniform_f_add_clustered<
 /// The identity I for Operation is 1.
 ///
 /// The type of Value must be the same as Result Type.
-#[cfg(target_feature = "GroupNonUniformArithmetic")]
+///
+/// Requires Capability `GroupNonUniformArithmetic`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformIMul")]
 #[inline]
@@ -812,10 +830,8 @@ pub unsafe fn subgroup_non_uniform_i_mul<
 /// The type of Value must be the same as Result Type.
 ///
 /// ClusterSize is the size of cluster to use. ClusterSize must be a scalar of integer type, whose Signedness operand is 0. ClusterSize must come from a constant instruction. Behavior is undefined unless ClusterSize is at least 1 and a power of 2. If ClusterSize is greater than the size of the group, executing this instruction results in undefined behavior.
-#[cfg(all(
-    target_feature = "GroupNonUniformArithmetic",
-    target_feature = "GroupNonUniformClustered",
-))]
+///
+/// Requires Capability `GroupNonUniformArithmetic` and `GroupNonUniformClustered`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformIMul")]
 #[inline]
@@ -856,7 +872,8 @@ pub unsafe fn subgroup_non_uniform_i_mul_clustered<
 /// The identity I for Operation is 1.
 ///
 /// The type of Value must be the same as Result Type. The method used to perform the group operation on the contributed Value(s) from active invocations is implementation defined.
-#[cfg(target_feature = "GroupNonUniformArithmetic")]
+///
+/// Requires Capability `GroupNonUniformArithmetic`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformFMul")]
 #[inline]
@@ -897,10 +914,8 @@ pub unsafe fn subgroup_non_uniform_f_mul<
 /// The type of Value must be the same as Result Type. The method used to perform the group operation on the contributed Value(s) from active invocations is implementation defined.
 ///
 /// ClusterSize is the size of cluster to use. ClusterSize must be a scalar of integer type, whose Signedness operand is 0. ClusterSize must come from a constant instruction. Behavior is undefined unless ClusterSize is at least 1 and a power of 2. If ClusterSize is greater than the size of the group, executing this instruction results in undefined behavior.
-#[cfg(all(
-    target_feature = "GroupNonUniformArithmetic",
-    target_feature = "GroupNonUniformClustered",
-))]
+///
+/// Requires Capability `GroupNonUniformArithmetic` and `GroupNonUniformClustered`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformFMul")]
 #[inline]
@@ -941,7 +956,8 @@ pub unsafe fn subgroup_non_uniform_f_mul_clustered<
 /// The identity I for Operation is INT_MAX.
 ///
 /// The type of Value must be the same as Result Type.
-#[cfg(target_feature = "GroupNonUniformArithmetic")]
+///
+/// Requires Capability `GroupNonUniformArithmetic`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformSMin")]
 #[inline]
@@ -982,10 +998,8 @@ pub unsafe fn subgroup_non_uniform_s_min<
 /// The type of Value must be the same as Result Type.
 ///
 /// ClusterSize is the size of cluster to use. ClusterSize must be a scalar of integer type, whose Signedness operand is 0. ClusterSize must come from a constant instruction. Behavior is undefined unless ClusterSize is at least 1 and a power of 2. If ClusterSize is greater than the size of the group, executing this instruction results in undefined behavior.
-#[cfg(all(
-    target_feature = "GroupNonUniformArithmetic",
-    target_feature = "GroupNonUniformClustered",
-))]
+///
+/// Requires Capability `GroupNonUniformArithmetic` and `GroupNonUniformClustered`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformSMin")]
 #[inline]
@@ -1026,7 +1040,8 @@ pub unsafe fn subgroup_non_uniform_s_min_clustered<
 /// The identity I for Operation is UINT_MAX.
 ///
 /// The type of Value must be the same as Result Type.
-#[cfg(target_feature = "GroupNonUniformArithmetic")]
+///
+/// Requires Capability `GroupNonUniformArithmetic`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformUMin")]
 #[inline]
@@ -1067,10 +1082,8 @@ pub unsafe fn subgroup_non_uniform_u_min<
 /// The type of Value must be the same as Result Type.
 ///
 /// ClusterSize is the size of cluster to use. ClusterSize must be a scalar of integer type, whose Signedness operand is 0. ClusterSize must come from a constant instruction. Behavior is undefined unless ClusterSize is at least 1 and a power of 2. If ClusterSize is greater than the size of the group, executing this instruction results in undefined behavior.
-#[cfg(all(
-    target_feature = "GroupNonUniformArithmetic",
-    target_feature = "GroupNonUniformClustered",
-))]
+///
+/// Requires Capability `GroupNonUniformArithmetic` and `GroupNonUniformClustered`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformUMin")]
 #[inline]
@@ -1111,7 +1124,8 @@ pub unsafe fn subgroup_non_uniform_u_min_clustered<
 /// The identity I for Operation is +INF.
 ///
 /// The type of Value must be the same as Result Type. The method used to perform the group operation on the contributed Value(s) from active invocations is implementation defined. From the set of Value(s) provided by active invocations within a subgroup, if for any two Values one of them is a NaN, the other is chosen. If all Value(s) that are used by the current invocation are NaN, then the result is an undefined value.
-#[cfg(target_feature = "GroupNonUniformArithmetic")]
+///
+/// Requires Capability `GroupNonUniformArithmetic`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformFMin")]
 #[inline]
@@ -1152,10 +1166,8 @@ pub unsafe fn subgroup_non_uniform_f_min<
 /// The type of Value must be the same as Result Type. The method used to perform the group operation on the contributed Value(s) from active invocations is implementation defined. From the set of Value(s) provided by active invocations within a subgroup, if for any two Values one of them is a NaN, the other is chosen. If all Value(s) that are used by the current invocation are NaN, then the result is an undefined value.
 ///
 /// ClusterSize is the size of cluster to use. ClusterSize must be a scalar of integer type, whose Signedness operand is 0. ClusterSize must come from a constant instruction. Behavior is undefined unless ClusterSize is at least 1 and a power of 2. If ClusterSize is greater than the size of the group, executing this instruction results in undefined behavior.
-#[cfg(all(
-    target_feature = "GroupNonUniformArithmetic",
-    target_feature = "GroupNonUniformClustered",
-))]
+///
+/// Requires Capability `GroupNonUniformArithmetic` and `GroupNonUniformClustered`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformFMin")]
 #[inline]
@@ -1196,7 +1208,8 @@ pub unsafe fn subgroup_non_uniform_f_min_clustered<
 /// The identity I for Operation is INT_MIN.
 ///
 /// The type of Value must be the same as Result Type.
-#[cfg(target_feature = "GroupNonUniformArithmetic")]
+///
+/// Requires Capability `GroupNonUniformArithmetic`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformSMax")]
 #[inline]
@@ -1237,10 +1250,8 @@ pub unsafe fn subgroup_non_uniform_s_max<
 /// The type of Value must be the same as Result Type.
 ///
 /// ClusterSize is the size of cluster to use. ClusterSize must be a scalar of integer type, whose Signedness operand is 0. ClusterSize must come from a constant instruction. Behavior is undefined unless ClusterSize is at least 1 and a power of 2. If ClusterSize is greater than the size of the group, executing this instruction results in undefined behavior.
-#[cfg(all(
-    target_feature = "GroupNonUniformArithmetic",
-    target_feature = "GroupNonUniformClustered",
-))]
+///
+/// Requires Capability `GroupNonUniformArithmetic` and `GroupNonUniformClustered`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformSMax")]
 #[inline]
@@ -1281,7 +1292,8 @@ pub unsafe fn subgroup_non_uniform_s_max_clustered<
 /// The identity I for Operation is 0.
 ///
 /// The type of Value must be the same as Result Type.
-#[cfg(target_feature = "GroupNonUniformArithmetic")]
+///
+/// Requires Capability `GroupNonUniformArithmetic`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformUMax")]
 #[inline]
@@ -1322,10 +1334,8 @@ pub unsafe fn subgroup_non_uniform_u_max<
 /// The type of Value must be the same as Result Type.
 ///
 /// ClusterSize is the size of cluster to use. ClusterSize must be a scalar of integer type, whose Signedness operand is 0. ClusterSize must come from a constant instruction. Behavior is undefined unless ClusterSize is at least 1 and a power of 2. If ClusterSize is greater than the size of the group, executing this instruction results in undefined behavior.
-#[cfg(all(
-    target_feature = "GroupNonUniformArithmetic",
-    target_feature = "GroupNonUniformClustered",
-))]
+///
+/// Requires Capability `GroupNonUniformArithmetic` and `GroupNonUniformClustered`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformUMax")]
 #[inline]
@@ -1366,7 +1376,8 @@ pub unsafe fn subgroup_non_uniform_u_max_clustered<
 /// The identity I for Operation is -INF.
 ///
 /// The type of Value must be the same as Result Type. The method used to perform the group operation on the contributed Value(s) from active invocations is implementation defined. From the set of Value(s) provided by active invocations within a subgroup, if for any two Values one of them is a NaN, the other is chosen. If all Value(s) that are used by the current invocation are NaN, then the result is an undefined value.
-#[cfg(target_feature = "GroupNonUniformArithmetic")]
+///
+/// Requires Capability `GroupNonUniformArithmetic`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformFMax")]
 #[inline]
@@ -1405,10 +1416,8 @@ pub unsafe fn subgroup_non_uniform_f_max<
 /// The identity I for Operation is -INF.
 ///
 /// The type of Value must be the same as Result Type. The method used to perform the group operation on the contributed Value(s) from active invocations is implementation defined. From the set of Value(s) provided by active invocations within a subgroup, if for any two Values one of them is a NaN, the other is chosen. If all Value(s) that are used by the current invocation are NaN, then the result is an undefined value.
-#[cfg(all(
-    target_feature = "GroupNonUniformArithmetic",
-    target_feature = "GroupNonUniformClustered",
-))]
+///
+/// Requires Capability `GroupNonUniformArithmetic` and `GroupNonUniformClustered`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformFMax")]
 #[inline]
@@ -1449,7 +1458,8 @@ pub unsafe fn subgroup_non_uniform_f_max_clustered<
 /// The identity I for Operation is ~0.
 ///
 /// The type of Value must be the same as Result Type.
-#[cfg(target_feature = "GroupNonUniformArithmetic")]
+///
+/// Requires Capability `GroupNonUniformArithmetic`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformBitwiseAnd")]
 #[inline]
@@ -1490,10 +1500,8 @@ pub unsafe fn subgroup_non_uniform_bitwise_and<
 /// The type of Value must be the same as Result Type.
 ///
 /// ClusterSize is the size of cluster to use. ClusterSize must be a scalar of integer type, whose Signedness operand is 0. ClusterSize must come from a constant instruction. Behavior is undefined unless ClusterSize is at least 1 and a power of 2. If ClusterSize is greater than the size of the group, executing this instruction results in undefined behavior.
-#[cfg(all(
-    target_feature = "GroupNonUniformArithmetic",
-    target_feature = "GroupNonUniformClustered",
-))]
+///
+/// Requires Capability `GroupNonUniformArithmetic` and `GroupNonUniformClustered`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformBitwiseAnd")]
 #[inline]
@@ -1534,7 +1542,8 @@ pub unsafe fn subgroup_non_uniform_bitwise_and_clustered<
 /// The identity I for Operation is 0.
 ///
 /// The type of Value must be the same as Result Type.
-#[cfg(target_feature = "GroupNonUniformArithmetic")]
+///
+/// Requires Capability `GroupNonUniformArithmetic`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformBitwiseOr")]
 #[inline]
@@ -1575,10 +1584,8 @@ pub unsafe fn subgroup_non_uniform_bitwise_or<
 /// The type of Value must be the same as Result Type.
 ///
 /// ClusterSize is the size of cluster to use. ClusterSize must be a scalar of integer type, whose Signedness operand is 0. ClusterSize must come from a constant instruction. Behavior is undefined unless ClusterSize is at least 1 and a power of 2. If ClusterSize is greater than the size of the group, executing this instruction results in undefined behavior.
-#[cfg(all(
-    target_feature = "GroupNonUniformArithmetic",
-    target_feature = "GroupNonUniformClustered",
-))]
+///
+/// Requires Capability `GroupNonUniformArithmetic` and `GroupNonUniformClustered`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformBitwiseOr")]
 #[inline]
@@ -1619,7 +1626,8 @@ pub unsafe fn subgroup_non_uniform_bitwise_or_clustered<
 /// The identity I for Operation is 0.
 ///
 /// The type of Value must be the same as Result Type.
-#[cfg(target_feature = "GroupNonUniformArithmetic")]
+///
+/// Requires Capability `GroupNonUniformArithmetic`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformBitwiseXor")]
 #[inline]
@@ -1660,10 +1668,8 @@ pub unsafe fn subgroup_non_uniform_bitwise_xor<
 /// The type of Value must be the same as Result Type.
 ///
 /// ClusterSize is the size of cluster to use. ClusterSize must be a scalar of integer type, whose Signedness operand is 0. ClusterSize must come from a constant instruction. Behavior is undefined unless ClusterSize is at least 1 and a power of 2. If ClusterSize is greater than the size of the group, executing this instruction results in undefined behavior.
-#[cfg(all(
-    target_feature = "GroupNonUniformArithmetic",
-    target_feature = "GroupNonUniformClustered",
-))]
+///
+/// Requires Capability `GroupNonUniformArithmetic` and `GroupNonUniformClustered`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformBitwiseXor")]
 #[inline]
@@ -1704,7 +1710,8 @@ pub unsafe fn subgroup_non_uniform_bitwise_xor_clustered<
 /// The identity I for Operation is ~0.
 ///
 /// The type of Value must be the same as Result Type.
-#[cfg(target_feature = "GroupNonUniformArithmetic")]
+///
+/// Requires Capability `GroupNonUniformArithmetic`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformLogicalAnd")]
 #[inline]
@@ -1745,10 +1752,8 @@ pub unsafe fn subgroup_non_uniform_logical_and<
 /// The type of Value must be the same as Result Type.
 ///
 /// ClusterSize is the size of cluster to use. ClusterSize must be a scalar of integer type, whose Signedness operand is 0. ClusterSize must come from a constant instruction. Behavior is undefined unless ClusterSize is at least 1 and a power of 2. If ClusterSize is greater than the size of the group, executing this instruction results in undefined behavior.
-#[cfg(all(
-    target_feature = "GroupNonUniformArithmetic",
-    target_feature = "GroupNonUniformClustered",
-))]
+///
+/// Requires Capability `GroupNonUniformArithmetic` and `GroupNonUniformClustered`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformLogicalAnd")]
 #[inline]
@@ -1789,7 +1794,8 @@ pub unsafe fn subgroup_non_uniform_logical_and_clustered<
 /// The identity I for Operation is 0.
 ///
 /// The type of Value must be the same as Result Type.
-#[cfg(target_feature = "GroupNonUniformArithmetic")]
+///
+/// Requires Capability `GroupNonUniformArithmetic`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformLogicalOr")]
 #[inline]
@@ -1830,10 +1836,8 @@ pub unsafe fn subgroup_non_uniform_logical_or<
 /// The type of Value must be the same as Result Type.
 ///
 /// ClusterSize is the size of cluster to use. ClusterSize must be a scalar of integer type, whose Signedness operand is 0. ClusterSize must come from a constant instruction. Behavior is undefined unless ClusterSize is at least 1 and a power of 2. If ClusterSize is greater than the size of the group, executing this instruction results in undefined behavior.
-#[cfg(all(
-    target_feature = "GroupNonUniformArithmetic",
-    target_feature = "GroupNonUniformClustered",
-))]
+///
+/// Requires Capability `GroupNonUniformArithmetic` and `GroupNonUniformClustered`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformLogicalOr")]
 #[inline]
@@ -1874,7 +1878,8 @@ pub unsafe fn subgroup_non_uniform_logical_or_clustered<
 /// The identity I for Operation is 0.
 ///
 /// The type of Value must be the same as Result Type.
-#[cfg(target_feature = "GroupNonUniformArithmetic")]
+///
+/// Requires Capability `GroupNonUniformArithmetic`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformLogicalXor")]
 #[inline]
@@ -1915,10 +1920,8 @@ pub unsafe fn subgroup_non_uniform_logical_xor<
 /// The type of Value must be the same as Result Type.
 ///
 /// ClusterSize is the size of cluster to use. ClusterSize must be a scalar of integer type, whose Signedness operand is 0. ClusterSize must come from a constant instruction. Behavior is undefined unless ClusterSize is at least 1 and a power of 2. If ClusterSize is greater than the size of the group, executing this instruction results in undefined behavior.
-#[cfg(all(
-    target_feature = "GroupNonUniformArithmetic",
-    target_feature = "GroupNonUniformClustered",
-))]
+///
+/// Requires Capability `GroupNonUniformArithmetic` and `GroupNonUniformClustered`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformLogicalXor")]
 #[inline]
@@ -1963,7 +1966,8 @@ pub unsafe fn subgroup_non_uniform_logical_xor_clustered<
 /// Before version 1.5, Index must come from a constant instruction. Starting with version 1.5, Index must be dynamically uniform.
 ///
 /// If the value of Index is greater than or equal to 4, or refers to an inactive invocation, the resulting value is undefined.
-#[cfg(target_feature = "GroupNonUniformQuad")]
+///
+/// Requires Capability `GroupNonUniformQuad`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformQuadBroadcast")]
 #[inline]
@@ -1995,7 +1999,8 @@ pub unsafe fn subgroup_non_uniform_quad_broadcast<T: VectorOrScalar>(value: T, i
 /// Direction must come from a constant instruction.
 ///
 /// The value returned in Result is the value provided to Value by another invocation in the same quad scope instance. The invocation providing this value is determined according to Direction.
-#[cfg(target_feature = "GroupNonUniformQuad")]
+///
+/// Requires Capability `GroupNonUniformQuad`.
 pub enum QuadDirection {
     /// A Direction of 0 indicates a horizontal swap;
     /// - Invocations with quad indices of 0 and 1 swap values
@@ -2040,7 +2045,8 @@ pub enum QuadDirection {
 /// Direction must be one of the above values.
 ///
 /// If an active invocation reads Value from an inactive invocation, the resulting value is undefined.
-#[cfg(target_feature = "GroupNonUniformQuad")]
+///
+/// Requires Capability `GroupNonUniformQuad`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpGroupNonUniformQuadSwap")]
 #[inline]
