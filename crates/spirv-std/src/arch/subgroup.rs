@@ -1,14 +1,17 @@
+#[cfg(target_arch = "spirv")]
 use crate::arch::barrier;
 use crate::float::Float;
 use crate::integer::{Integer, SignedInteger, UnsignedInteger};
+#[cfg(target_arch = "spirv")]
 use crate::memory::{Scope, Semantics};
 use crate::scalar::VectorOrScalar;
 #[cfg(target_arch = "spirv")]
 use core::arch::asm;
 
+#[cfg(target_arch = "spirv")]
 const SUBGROUP: u32 = Scope::Subgroup as u32;
 
-/// SubgroupMask is a [`glam::UVec4`] representing a bitmask of all invocations within a subgroup.
+/// `SubgroupMask` is a [`glam::UVec4`] representing a bitmask of all invocations within a subgroup.
 /// Mostly used in group ballot operations.
 #[derive(Copy, Clone, Default, Eq, PartialEq)]
 pub struct SubgroupMask(pub glam::UVec4);
