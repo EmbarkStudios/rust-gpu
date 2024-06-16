@@ -357,6 +357,7 @@ impl Symbols {
             ("block", SpirvAttribute::Block),
             ("flat", SpirvAttribute::Flat),
             ("invariant", SpirvAttribute::Invariant),
+            ("per_primitive_ext", SpirvAttribute::PerPrimitiveExt),
             (
                 "sampled_image",
                 SpirvAttribute::IntrinsicType(IntrinsicType::SampledImage),

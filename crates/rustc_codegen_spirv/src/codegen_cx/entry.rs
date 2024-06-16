@@ -708,6 +708,27 @@ impl<'tcx> CodegenCx<'tcx> {
             self.emit_global()
                 .decorate(var_id.unwrap(), Decoration::Invariant, std::iter::empty());
         }
+        if let Some(per_primitive_ext) = attrs.per_primitive_ext {
+            if storage_class != Ok(StorageClass::Output) {
+                self.tcx.sess.span_fatal(
+                    per_primitive_ext.span,
+                    "`#[spirv(per_primitive_ext)]` is only valid on Output variables",
+                );
+            }
+            if !(execution_model == ExecutionModel::MeshEXT
+                || execution_model == ExecutionModel::MeshNV)
+            {
+                self.tcx.sess.span_fatal(
+                    per_primitive_ext.span,
+                    "`#[spirv(per_primitive_ext)]` is only valid in mesh shaders",
+                );
+            }
+            self.emit_global().decorate(
+                var_id.unwrap(),
+                Decoration::PerPrimitiveEXT,
+                std::iter::empty(),
+            );
+        }
 
         let is_subpass_input = match self.lookup_type(value_spirv_type) {
             SpirvType::Image {
