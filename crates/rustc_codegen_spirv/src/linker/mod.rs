@@ -442,6 +442,9 @@ pub fn link(
         }
 
         // NOTE(eddyb) this *must* run on unstructured CFGs, to do its job.
+        // FIXME(eddyb) no longer relying on structurization, try porting this
+        // to replace custom aborts in `Block`s and inject `ExitInvocation`s
+        // after them (truncating the `Block` and/or parent region if necessary).
         {
             let _timer = sess.timer("spirt_passes::controlflow::convert_custom_aborts_to_unstructured_returns_in_entry_points");
             spirt_passes::controlflow::convert_custom_aborts_to_unstructured_returns_in_entry_points(opts, &mut module);

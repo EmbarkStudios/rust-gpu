@@ -11,6 +11,10 @@ use std::fmt::Write as _;
 
 /// Replace our custom extended instruction `Abort`s with standard `OpReturn`s,
 /// but only in entry-points (and only before CFG structurization).
+//
+// FIXME(eddyb) no longer relying on structurization, try porting this
+// to replace custom aborts in `Block`s and inject `ExitInvocation`s
+// after them (truncating the `Block` and/or parent region if necessary).
 pub fn convert_custom_aborts_to_unstructured_returns_in_entry_points(
     linker_options: &crate::linker::Options,
     module: &mut Module,
@@ -252,7 +256,9 @@ pub fn convert_custom_aborts_to_unstructured_returns_in_entry_points(
             )) = custom_terminator_inst
             {
                 let abort_inst = func_at_abort_inst.position;
-                terminator.kind = cfg::ControlInstKind::Return;
+                terminator.kind = cfg::ControlInstKind::ExitInvocation(
+                    cfg::ExitInvocationKind::SpvInst(wk.OpReturn.into()),
+                );
 
                 match abort_strategy {
                     Some(Strategy::Unreachable) => {
