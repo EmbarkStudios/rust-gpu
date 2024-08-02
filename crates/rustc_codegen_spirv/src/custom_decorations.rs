@@ -158,7 +158,10 @@ impl<'a> CustomDecoration<'a> for SrcLocDecoration<'a> {
     }
     fn decode(s: &'a str) -> Self {
         #[derive(Copy, Clone, Debug)]
-        struct InvalidSrcLoc<'a>(&'a str);
+        struct InvalidSrcLoc<'a>(
+            // HACK(eddyb) only exists for `fmt::Debug` in case of error.
+            #[allow(dead_code)] &'a str,
+        );
         let err = InvalidSrcLoc(s);
 
         let (s, col_end) = s.rsplit_once(':').ok_or(err).unwrap();

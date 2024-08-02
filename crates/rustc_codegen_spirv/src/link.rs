@@ -350,7 +350,7 @@ fn do_spirv_opt(
                 // <https://github.com/rust-lang/rust/commit/2cd14bc9394ca6675e08d02c02c5f9abfa813616>
                 Level::Error | Level::Fatal | Level::InternalError => DiagnosticBuilder::<()>::new(
                     sess.dcx(),
-                    rustc_errors::Level::Error { lint: false },
+                    rustc_errors::Level::Error,
                     msg.message,
                 ),
                 Level::Warning => sess.dcx().struct_warn(msg.message),

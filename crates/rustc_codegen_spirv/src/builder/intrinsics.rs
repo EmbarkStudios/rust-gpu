@@ -105,7 +105,10 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                 let ptr = args[0].immediate();
                 let layout = self.layout_of(fn_args.type_at(0));
                 let load = self.volatile_load(layout.spirv_type(self.span(), self), ptr);
-                self.to_immediate(load, layout)
+                if !result.layout.is_zst() {
+                    self.store(load, result.llval, result.align);
+                }
+                return;
             }
 
             sym::prefetch_read_data

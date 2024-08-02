@@ -14,7 +14,7 @@ use crate::builder_spirv::{BuilderCursor, SpirvValue, SpirvValueExt};
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
 use rspirv::spirv::{self, Word};
-use rustc_codegen_ssa::mir::operand::OperandValue;
+use rustc_codegen_ssa::mir::operand::{OperandRef, OperandValue};
 use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{
     AbiBuilderMethods, ArgAbiMethods, BackendTypes, BuilderMethods, CoverageInfoBuilderMethods,
@@ -301,7 +301,7 @@ impl<'a, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'tcx> {
         match arg_abi.mode {
             PassMode::Ignore => {}
             PassMode::Direct(_) => {
-                OperandValue::Immediate(next(self, idx)).store(self, dst);
+                self.store_arg(arg_abi, next(self, idx), dst);
             }
             PassMode::Pair(..) => {
                 OperandValue::Pair(next(self, idx), next(self, idx)).store(self, dst);
@@ -323,7 +323,9 @@ impl<'a, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'tcx> {
         match arg_abi.mode {
             PassMode::Ignore => {}
             PassMode::Direct(_) | PassMode::Pair(..) => {
-                OperandValue::Immediate(val).store(self, dst);
+                OperandRef::from_immediate_or_packed_pair(self, val, arg_abi.layout)
+                    .val
+                    .store(self, dst);
             }
             PassMode::Cast { .. } | PassMode::Indirect { .. } => span_bug!(
                 self.span(),

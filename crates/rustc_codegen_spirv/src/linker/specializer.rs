@@ -234,7 +234,10 @@ enum CopyOperand {
 }
 
 #[derive(Debug)]
-struct NotSupportedAsCopyOperand(Operand);
+struct NotSupportedAsCopyOperand(
+    // HACK(eddyb) only exists for `fmt::Debug` in case of error.
+    #[allow(dead_code)] Operand,
+);
 
 impl TryFrom<&Operand> for CopyOperand {
     type Error = NotSupportedAsCopyOperand;
