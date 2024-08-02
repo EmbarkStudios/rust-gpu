@@ -565,6 +565,11 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
         // HACK(eddyb) we need this for `core::fmt::rt::Argument::new_*` calls
         // to *never* be inlined, so we can pattern-match the calls themselves.
         "-Zinline-mir=off".to_string(),
+        // HACK(eddyb) similar to turning MIR inlining off, we also can't allow
+        // optimizations that drastically impact (the quality of) codegen, and
+        // GVN currently can lead to the memcpy-out-of-const-alloc-global-var
+        // pattern, even for `ScalarPair` (e.g. `return None::<u32>;`).
+        "-Zmir-enable-passes=-GVN".to_string(),
     ];
 
     // Wrapper for `env::var` that appropriately informs Cargo of the dependency.
