@@ -2310,10 +2310,9 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             )
             .unwrap()
             .with_type(access_ty);
-        let result = self.bitcast(result, ty);
 
-        let val = self.extract_value(result, 0);
-        let success = self.extract_value(result, 1);
+        let val = self.bitcast(result, ty);
+        let success = self.icmp(IntPredicate::IntEQ, val, cmp);
 
         (val, success)
     }
