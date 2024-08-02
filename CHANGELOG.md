@@ -30,13 +30,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed 🛠
+- [PR#1115](https://github.com/EmbarkStudios/rust-gpu/pull/1115) relaxed `glam` version requirements (from `>=0.22, <=0.24` to `>=0.22, <=0.25`)
 - [PR#1127](https://github.com/EmbarkStudios/rust-gpu/pull/1127) updated `spirv-tools` to `0.10.0`, which follows `vulkan-sdk-1.3.275`
 - [PR#1101](https://github.com/EmbarkStudios/rust-gpu/pull/1101) added `ignore` and `no_run` to documentation to make `cargo test` pass
 - [PR#1112](https://github.com/EmbarkStudios/rust-gpu/pull/1112) updated wgpu and winit in example runners
 - [PR#1100](https://github.com/EmbarkStudios/rust-gpu/pull/1100) updated toolchain to `nightly-2023-09-30`
 - [PR#1091](https://github.com/EmbarkStudios/rust-gpu/pull/1091) updated toolchain to `nightly-2023-08-29`
 - [PR#1085](https://github.com/EmbarkStudios/rust-gpu/pull/1085) updated toolchain to `nightly-2023-07-08`
-- [PR#1115](https://github.com/EmbarkStudios/rust-gpu/pull/1115) relaxed `glam` version requirements (from `>=0.22, <=0.24` to `>=0.22, <=0.25`)
 
 ### Fixed 🩹
 - [PR#1129](https://github.com/EmbarkStudios/rust-gpu/pull/1129) fixed [#1062](https://github.com/EmbarkStudios/rust-gpu/issues/1062) by not flipping the comparison of the rotate amount with zero
