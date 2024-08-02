@@ -13,7 +13,7 @@ use crate::abi::ConvSpirvType;
 use crate::builder_spirv::{BuilderCursor, SpirvValue, SpirvValueExt};
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
-use rspirv::spirv::{self, Word};
+use rspirv::spirv::Word;
 use rustc_codegen_ssa::mir::operand::{OperandRef, OperandValue};
 use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{
@@ -102,115 +102,6 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
     // HACK(eddyb) like the `CodegenCx` method but with `self.span()` awareness.
     pub fn type_ptr_to(&self, ty: Word) -> Word {
         SpirvType::Pointer { pointee: ty }.def(self.span(), self)
-    }
-
-    // Given an ID, check if it's defined by an OpAccessChain, and if it is, return its ptr/indices
-    fn find_access_chain(&self, id: spirv::Word) -> Option<(spirv::Word, Vec<spirv::Word>)> {
-        let emit = self.emit();
-        let module = emit.module_ref();
-        let func = &module.functions[emit.selected_function().unwrap()];
-        let ptr_def_inst = func.all_inst_iter().find(|inst| inst.result_id == Some(id));
-        if let Some(ptr_def_inst) = ptr_def_inst {
-            if ptr_def_inst.class.opcode == spirv::Op::AccessChain
-                || ptr_def_inst.class.opcode == spirv::Op::InBoundsAccessChain
-            {
-                let ptr = ptr_def_inst.operands[0].unwrap_id_ref();
-                let indices = ptr_def_inst.operands[1..]
-                    .iter()
-                    .map(|op| op.unwrap_id_ref())
-                    .collect::<Vec<spirv::Word>>();
-                return Some((ptr, indices));
-            }
-        }
-        None
-    }
-
-    pub fn gep_help(
-        &mut self,
-        ty: Word,
-        ptr: SpirvValue,
-        indices: &[SpirvValue],
-        is_inbounds: bool,
-    ) -> SpirvValue {
-        // HACK(eddyb) temporary workaround for untyped pointers upstream.
-        // FIXME(eddyb) replace with untyped memory SPIR-V + `qptr` or similar.
-        let ptr = self.pointercast(ptr, self.type_ptr_to(ty));
-
-        // The first index is an offset to the pointer, the rest are actual members.
-        // https://llvm.org/docs/GetElementPtr.html
-        // "An OpAccessChain instruction is the equivalent of an LLVM getelementptr instruction where the first index element is zero."
-        // https://github.com/gpuweb/gpuweb/issues/33
-        let mut result_indices = Vec::with_capacity(indices.len() - 1);
-        let mut result_pointee_type = ty;
-        for index in indices.iter().cloned().skip(1) {
-            result_indices.push(index.def(self));
-            result_pointee_type = match self.lookup_type(result_pointee_type) {
-                SpirvType::Array { element, .. } | SpirvType::RuntimeArray { element } => element,
-                _ => self.fatal(format!(
-                    "GEP not implemented for type {}",
-                    self.debug_type(result_pointee_type)
-                )),
-            };
-        }
-        let result_type = self.type_ptr_to(result_pointee_type);
-
-        let ptr_id = ptr.def(self);
-        if let Some((original_ptr, mut original_indices)) = self.find_access_chain(ptr_id) {
-            // Transform the following:
-            // OpAccessChain original_ptr [a, b, c]
-            // OpPtrAccessChain ptr base [d, e, f]
-            // into
-            // OpAccessChain original_ptr [a, b, c + base, d, e, f]
-            // to remove the need for OpPtrAccessChain
-            let last = original_indices.last_mut().unwrap();
-            *last = self
-                .add(last.with_type(indices[0].ty), indices[0])
-                .def(self);
-            original_indices.append(&mut result_indices);
-            let zero = self.constant_int(indices[0].ty, 0);
-            self.emit_access_chain(
-                result_type,
-                original_ptr,
-                zero,
-                original_indices,
-                is_inbounds,
-            )
-        } else {
-            self.emit_access_chain(result_type, ptr_id, indices[0], result_indices, is_inbounds)
-        }
-    }
-
-    fn emit_access_chain(
-        &self,
-        result_type: spirv::Word,
-        pointer: spirv::Word,
-        base: SpirvValue,
-        indices: Vec<spirv::Word>,
-        is_inbounds: bool,
-    ) -> SpirvValue {
-        let mut emit = self.emit();
-        if self.builder.lookup_const_u64(base) == Some(0) {
-            if is_inbounds {
-                emit.in_bounds_access_chain(result_type, None, pointer, indices)
-            } else {
-                emit.access_chain(result_type, None, pointer, indices)
-            }
-            .unwrap()
-            .with_type(result_type)
-        } else {
-            let result = if is_inbounds {
-                emit.in_bounds_ptr_access_chain(result_type, None, pointer, base.def(self), indices)
-            } else {
-                emit.ptr_access_chain(result_type, None, pointer, base.def(self), indices)
-            }
-            .unwrap()
-            .with_type(result_type);
-            self.zombie(
-                result.def(self),
-                "cannot offset a pointer to an arbitrary element",
-            );
-            result
-        }
     }
 
     // TODO: Definitely add tests to make sure this impl is right.
