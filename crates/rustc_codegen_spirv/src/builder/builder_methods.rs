@@ -431,7 +431,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 .map(|idx| self.constant_u32(self.span(), idx).def(self))
                 .collect::<Vec<_>>();
             self.emit()
-                .access_chain(leaf_ptr_ty, None, ptr.def(self), indices)
+                .in_bounds_access_chain(leaf_ptr_ty, None, ptr.def(self), indices)
                 .unwrap()
                 .with_type(leaf_ptr_ty)
         };
@@ -1417,7 +1417,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 .collect::<Vec<_>>();
             return self
                 .emit()
-                .access_chain(result_type, None, original_ptr, indices)
+                .in_bounds_access_chain(result_type, None, original_ptr, indices)
                 .unwrap()
                 .with_type(result_type);
         }
@@ -1435,7 +1435,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         }
         let index_const = self.constant_u32(self.span(), idx as u32).def(self);
         self.emit()
-            .access_chain(
+            .in_bounds_access_chain(
                 result_type,
                 None,
                 ptr.def(self),
@@ -1744,7 +1744,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 .map(|idx| self.constant_u32(self.span(), idx).def(self))
                 .collect::<Vec<_>>();
             self.emit()
-                .access_chain(dest_ty, None, ptr.def(self), indices)
+                .in_bounds_access_chain(dest_ty, None, ptr.def(self), indices)
                 .unwrap()
                 .with_type(dest_ty)
         } else {
@@ -2683,7 +2683,6 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 enum Inst<'tcx, ID> {
                     Bitcast(ID, ID),
                     CompositeExtract(ID, ID, u32),
-                    AccessChain(ID, ID, SpirvConst<'tcx, 'tcx>),
                     InBoundsAccessChain(ID, ID, SpirvConst<'tcx, 'tcx>),
                     Store(ID, ID),
                     Load(ID, ID),
@@ -2721,9 +2720,6 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                         Some(
                             match (inst.class.opcode, inst.result_id, &id_operands[..]) {
                                 (Op::Bitcast, Some(r), &[x]) => Inst::Bitcast(r, x),
-                                (Op::AccessChain, Some(r), &[p, i]) => {
-                                    Inst::AccessChain(r, p, self.builder.lookup_const_by_id(i)?)
-                                }
                                 (Op::InBoundsAccessChain, Some(r), &[p, i]) => {
                                     Inst::InBoundsAccessChain(
                                         r,
@@ -2887,9 +2883,9 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                                     array_base_ptr,
                                     SpirvConst::U32(array_idx),
                                 ),
-                                Inst::AccessChain(a_ptr, a_base_ptr, SpirvConst::U32(0)),
+                                Inst::InBoundsAccessChain(a_ptr, a_base_ptr, SpirvConst::U32(0)),
                                 Inst::Store(a_st_dst, a_st_val),
-                                Inst::AccessChain(b_ptr, b_base_ptr, SpirvConst::U32(1)),
+                                Inst::InBoundsAccessChain(b_ptr, b_base_ptr, SpirvConst::U32(1)),
                                 Inst::Store(b_st_dst, b_st_val),
                             ] if array_base_ptr == rt_args_array_ptr_id
                                 && array_idx as usize == rt_arg_idx
