@@ -545,7 +545,7 @@ fn parse_attr_int_value(arg: &NestedMetaItem) -> Result<u32, ParseAttrError> {
         Some(&MetaItemLit {
             kind: LitKind::Int(x, LitIntType::Unsuffixed),
             ..
-        }) if x <= u32::MAX as u128 => Ok(x as u32),
+        }) if x <= u32::MAX as u128 => Ok(x.get() as u32),
         _ => Err((arg.span, "attribute value must be integer".to_string())),
     }
 }
@@ -563,7 +563,7 @@ fn parse_local_size_attr(arg: &NestedMetaItem) -> Result<[u32; 3], ParseAttrErro
                     NestedMetaItem::Lit(MetaItemLit {
                         kind: LitKind::Int(x, LitIntType::Unsuffixed),
                         ..
-                    }) if *x <= u32::MAX as u128 => local_size[idx] = *x as u32,
+                    }) if *x <= u32::MAX as u128 => local_size[idx] = x.get() as u32,
                     _ => return Err((lit.span(), "must be a u32 literal".to_string())),
                 }
             }

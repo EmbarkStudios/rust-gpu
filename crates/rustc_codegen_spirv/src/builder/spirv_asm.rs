@@ -306,10 +306,10 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 let storage_class = inst.operands[0].unwrap_storage_class();
                 if storage_class != StorageClass::Generic {
                     self.struct_err("TypePointer in asm! requires `Generic` storage class")
-                        .note(format!(
+                        .with_note(format!(
                             "`{storage_class:?}` storage class was specified"
                         ))
-                        .help(format!(
+                        .with_help(format!(
                             "the storage class will be inferred automatically (e.g. to `{storage_class:?}`)"
                         ))
                         .emit();
@@ -362,7 +362,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                     self.struct_err(format!(
                         "using `Op{op:?}` to return from within `asm!` is disallowed"
                     ))
-                    .note(
+                    .with_note(
                         "resuming execution, without falling through the end \
                         of the `asm!` block, is always undefined behavior",
                     )

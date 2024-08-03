@@ -386,7 +386,7 @@ impl CheckSpirvAttrVisitor<'_> {
                                 span,
                                 format!("only one {category} attribute is allowed on a {target}"),
                             )
-                            .span_note(prev_span, format!("previous {category} attribute"))
+                            .with_span_note(prev_span, format!("previous {category} attribute"))
                             .emit();
                     }
                 },

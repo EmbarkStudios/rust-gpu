@@ -484,7 +484,7 @@ fn add_upstream_native_libraries(
 // (see `compiler/rustc_codegen_ssa/src/back/link.rs`)
 fn relevant_lib(sess: &Session, lib: &NativeLib) -> bool {
     match lib.cfg {
-        Some(ref cfg) => rustc_attr::cfg_matches(cfg, &sess.parse_sess, CRATE_NODE_ID, None),
+        Some(ref cfg) => rustc_attr::cfg_matches(cfg, sess, CRATE_NODE_ID, None),
         None => true,
     }
 }

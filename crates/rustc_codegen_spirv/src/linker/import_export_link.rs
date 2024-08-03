@@ -188,11 +188,11 @@ fn check_tys_equal(
         Err(sess
             .dcx()
             .struct_err(format!("Types mismatch for {name:?}"))
-            .note(format!(
+            .with_note(format!(
                 "import type: {}",
                 format_ty_(&ty_defs, import_type)
             ))
-            .note(format!(
+            .with_note(format!(
                 "export type: {}",
                 format_ty_(&ty_defs, export_type)
             ))

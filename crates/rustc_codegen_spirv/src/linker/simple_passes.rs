@@ -250,7 +250,7 @@ pub fn check_fragment_insts(sess: &Session, module: &Module) -> Result<()> {
                             "{} cannot be used outside a fragment shader",
                             inst.class.opname
                         ))
-                        .note(note)
+                        .with_note(note)
                         .emit(),
                 );
             }

@@ -428,8 +428,8 @@ pub fn link(
                     return Err(sess
                         .dcx()
                         .struct_err(format!("{e}"))
-                        .note("while lowering SPIR-V module to SPIR-T (spirt::spv::lower)")
-                        .note(format!("input SPIR-V module {was_saved_msg}"))
+                        .with_note("while lowering SPIR-V module to SPIR-T (spirt::spv::lower)")
+                        .with_note(format!("input SPIR-V module {was_saved_msg}"))
                         .emit());
                 }
             }
@@ -543,7 +543,7 @@ pub fn link(
             if opts.dump_spirt_passes.is_none() {
                 note.help("re-run with `RUSTGPU_CODEGEN_ARGS=\"--dump-spirt-passes=$PWD\"` for more details");
             }
-            note.note("pretty-printed SPIR-T is preferred when reporting Rust-GPU issues")
+            note.with_note("pretty-printed SPIR-T is preferred when reporting Rust-GPU issues")
                 .emit();
         }
 

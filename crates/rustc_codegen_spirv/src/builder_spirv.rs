@@ -165,7 +165,7 @@ impl SpirvValue {
                 cx.tcx
                     .dcx()
                     .struct_span_err(span, "Can't use type as a value")
-                    .note(format!("Type: *{}", cx.debug_type(id)))
+                    .with_note(format!("Type: *{}", cx.debug_type(id)))
                     .emit();
 
                 id

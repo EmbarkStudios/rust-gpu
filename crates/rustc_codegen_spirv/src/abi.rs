@@ -975,7 +975,7 @@ fn trans_intrinsic_type<'tcx>(
                         .tcx
                         .dcx()
                         .struct_span_err(span, "#[spirv(matrix)] type fields must all be vectors")
-                        .note(format!("field type is {}", ty.debug(elem_type, cx)))
+                        .with_note(format!("field type is {}", ty.debug(elem_type, cx)))
                         .emit());
                 }
             }

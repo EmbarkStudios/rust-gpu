@@ -229,7 +229,7 @@ impl<'a> ZombieReporter<'a> {
         // list out all the leaves, but that shouldn't be a huge issue.
         for root_id in super::dce::collect_roots(self.module) {
             if let Some(zombie) = self.zombies.get_zombie_by_id(root_id) {
-                for (_, mut err) in self.build_errors_keyed_by_leaf_id(zombie) {
+                for (_, err) in self.build_errors_keyed_by_leaf_id(zombie) {
                     result = Err(err.emit());
                 }
             }

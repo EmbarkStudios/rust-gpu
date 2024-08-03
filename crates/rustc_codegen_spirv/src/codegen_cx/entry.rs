@@ -311,20 +311,17 @@ impl<'tcx> CodegenCx<'tcx> {
                     self.tcx
                         .dcx()
                         .struct_span_err(hir_param.span, "storage class mismatch")
-                        .span_label(
+                        .with_span_label(
                             storage_class_attr.span,
                             format!("`{storage_class:?}` specified in attribute"),
                         )
-                        .span_label(
+                        .with_span_label(
                             hir_param.ty_span,
                             format!("`{deduced:?}` deduced from type"),
                         )
-                        .span_help(
-                            storage_class_attr.span,
-                            format!(
-                                "remove storage class attribute to use `{deduced:?}` as storage class"
-                            ),
-                        )
+                        .with_help(format!(
+                            "remove storage class attribute to use `{deduced:?}` as storage class"
+                        ))
                         .emit();
                 }
                 None => (),
