@@ -167,10 +167,10 @@ pub enum MetadataPrintout {
 pub enum SpirvMetadata {
     /// Strip all names and other debug information from SPIR-V output.
     None,
-    /// Only include OpNames for public interface variables (uniforms and the like), to allow
+    /// Only include `OpName`s for public interface variables (uniforms and the like), to allow
     /// shader reflection.
     NameVariables,
-    /// Include all OpNames for everything, and OpLines. Significantly increases binary size.
+    /// Include all `OpName`s for everything, and `OpLine`s. Significantly increases binary size.
     Full,
 }
 
@@ -233,7 +233,7 @@ pub enum ShaderPanicStrategy {
         print_inputs: bool,
 
         /// Whether to also print a "backtrace" (i.e. the chain of function calls
-        /// that led to the `panic!).
+        /// that led to the `panic!`).
         ///
         /// As there is no way to dynamically compute this information, the string
         /// containing the full backtrace of each `panic!` is statically generated,

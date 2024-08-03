@@ -9,7 +9,7 @@ use rustc_codegen_ssa::back::lto::{LtoModuleCodegen, SerializedModule, ThinModul
 use rustc_codegen_ssa::back::write::CodegenContext;
 use rustc_codegen_ssa::{CodegenResults, NativeLib};
 use rustc_data_structures::fx::FxHashSet;
-use rustc_errors::{DiagnosticBuilder, FatalError};
+use rustc_errors::{Diag, FatalError};
 use rustc_metadata::fs::METADATA_FILENAME;
 use rustc_middle::bug;
 use rustc_middle::dep_graph::WorkProduct;
@@ -348,11 +348,9 @@ fn do_spirv_opt(
             let mut err = match msg.level {
                 // We have to manually construct this after `forget_guarantee` was removed in
                 // <https://github.com/rust-lang/rust/commit/2cd14bc9394ca6675e08d02c02c5f9abfa813616>
-                Level::Error | Level::Fatal | Level::InternalError => DiagnosticBuilder::<()>::new(
-                    sess.dcx(),
-                    rustc_errors::Level::Error,
-                    msg.message,
-                ),
+                Level::Error | Level::Fatal | Level::InternalError => {
+                    Diag::<()>::new(sess.dcx(), rustc_errors::Level::Error, msg.message)
+                }
                 Level::Warning => sess.dcx().struct_warn(msg.message),
                 Level::Info | Level::Debug => sess.dcx().struct_note(msg.message),
             };

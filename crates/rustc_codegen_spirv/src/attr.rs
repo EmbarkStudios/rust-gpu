@@ -317,7 +317,7 @@ impl CheckSpirvAttrVisitor<'_> {
                 | SpirvAttribute::InputAttachmentIndex(_)
                 | SpirvAttribute::SpecConstant(_) => match target {
                     Target::Param => {
-                        let parent_hir_id = self.tcx.hir().parent_id(hir_id);
+                        let parent_hir_id = self.tcx.parent_hir_id(hir_id);
                         let parent_is_entry_point =
                             parse_attrs(self.tcx.hir().attrs(parent_hir_id))
                                 .filter_map(|r| r.ok())

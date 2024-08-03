@@ -58,7 +58,6 @@ use rustc_data_structures::captures::Captures;
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use smallvec::SmallVec;
 use std::collections::{BTreeMap, VecDeque};
-use std::convert::{TryFrom, TryInto};
 use std::ops::{Range, RangeTo};
 use std::{fmt, io, iter, mem, slice};
 
@@ -378,6 +377,8 @@ enum InstructionLocation {
 }
 
 trait OperandIndexGetSet<I> {
+    // FIXME(eddyb) how come this isn't used? (is iteration preferred?)
+    #[allow(dead_code)]
     fn index_get(&self, index: I) -> Operand;
     fn index_set(&mut self, index: I, operand: Operand);
 }

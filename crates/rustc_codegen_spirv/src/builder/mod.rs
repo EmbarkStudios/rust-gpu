@@ -20,7 +20,7 @@ use rustc_codegen_ssa::traits::{
     AbiBuilderMethods, ArgAbiMethods, BackendTypes, BuilderMethods, CoverageInfoBuilderMethods,
     DebugInfoBuilderMethods, HasCodegen, StaticBuilderMethods, TypeMembershipMethods,
 };
-use rustc_errors::{DiagnosticBuilder, DiagnosticMessage};
+use rustc_errors::{Diag, DiagnosticMessage};
 use rustc_middle::mir::Coverage;
 use rustc_middle::span_bug;
 use rustc_middle::ty::layout::{
@@ -69,7 +69,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
     }
 
     #[track_caller]
-    pub fn struct_err(&self, msg: impl Into<DiagnosticMessage>) -> DiagnosticBuilder<'_> {
+    pub fn struct_err(&self, msg: impl Into<DiagnosticMessage>) -> Diag<'_> {
         if let Some(current_span) = self.current_span {
             self.tcx.dcx().struct_span_err(current_span, msg)
         } else {

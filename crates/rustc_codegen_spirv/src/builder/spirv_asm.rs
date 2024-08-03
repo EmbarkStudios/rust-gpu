@@ -15,7 +15,6 @@ use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use rustc_middle::{bug, ty::Instance};
 use rustc_span::{Span, DUMMY_SP};
 use rustc_target::asm::{InlineAsmRegClass, InlineAsmRegOrRegClass, SpirVInlineAsmRegClass};
-use std::convert::TryFrom;
 
 pub struct InstructionTable {
     table: FxHashMap<&'static str, &'static rspirv::grammar::Instruction<'static>>,

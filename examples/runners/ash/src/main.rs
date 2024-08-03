@@ -85,10 +85,8 @@ use winit::{
 use std::{
     borrow::Cow,
     collections::HashMap,
-    default::Default,
     ffi::{CStr, CString},
     fs::File,
-    ops::Drop,
     sync::mpsc::{sync_channel, TryRecvError, TrySendError},
     thread,
 };

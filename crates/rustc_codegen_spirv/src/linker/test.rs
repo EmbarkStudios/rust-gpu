@@ -172,7 +172,7 @@ fn link_with_linker_opts(
                     rustc_errors::emitter::HumanEmitter::new(Box::new(buf), fallback_bundle)
                         .sm(Some(sess.parse_sess.clone_source_map()));
 
-                rustc_errors::DiagCtxt::with_emitter(Box::new(emitter))
+                rustc_errors::DiagCtxt::new(Box::new(emitter))
                     .with_flags(sess.opts.unstable_opts.dcx_flags(true))
             };
 
@@ -196,10 +196,12 @@ fn link_with_linker_opts(
                 LinkResult::SingleModule(m) => *m,
                 LinkResult::MultipleModules { .. } => unreachable!(),
             })
+            .map_err(|_guar| ())
         })
     })
+    .map_err(|_fatal| ())
     .flatten()
-    .map_err(|_e| {
+    .map_err(|()| {
         let mut diags = output.unwrap_to_string();
         if let Some(diags_without_trailing_newlines) = diags.strip_suffix("\n\n") {
             diags.truncate(diags_without_trailing_newlines.len());

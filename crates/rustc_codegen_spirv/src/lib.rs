@@ -252,15 +252,11 @@ impl CodegenBackend for SpirvCodegenBackend {
         ongoing_codegen: Box<dyn Any>,
         sess: &Session,
         _outputs: &OutputFilenames,
-    ) -> Result<(CodegenResults, FxIndexMap<WorkProductId, WorkProduct>), ErrorGuaranteed> {
-        let (codegen_results, work_products) = ongoing_codegen
+    ) -> (CodegenResults, FxIndexMap<WorkProductId, WorkProduct>) {
+        ongoing_codegen
             .downcast::<OngoingCodegen<Self>>()
             .expect("Expected OngoingCodegen, found Box<Any>")
-            .join(sess);
-
-        sess.compile_status()?;
-
-        Ok((codegen_results, work_products))
+            .join(sess)
     }
 
     fn link(
@@ -278,8 +274,7 @@ impl CodegenBackend for SpirvCodegenBackend {
         );
         drop(timer);
 
-        sess.compile_status()?;
-        Ok(())
+        sess.dcx().has_errors().map_or(Ok(()), Err)
     }
 }
 

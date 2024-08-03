@@ -37,7 +37,7 @@ pub enum SpirvValueKind {
 
     /// This can only happen in one specific case - which is as a result of
     /// `codegen_buffer_store_intrinsic`, that function is supposed to return
-    /// OpTypeVoid, however because it gets inline by the compiler it can't.
+    /// `OpTypeVoid`, however because it gets inline by the compiler it can't.
     /// Instead we return this, and trigger an error if we ever end up using the
     /// result of this function call (which we can't).
     IllegalTypeUsed(Word),

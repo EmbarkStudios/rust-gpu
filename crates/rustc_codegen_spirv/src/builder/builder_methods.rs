@@ -28,7 +28,6 @@ use rustc_target::abi::{Abi, Align, Scalar, Size, WrappingRange};
 use smallvec::SmallVec;
 use std::borrow::Cow;
 use std::cell::Cell;
-use std::convert::TryInto;
 use std::iter::{self, empty};
 use std::ops::RangeInclusive;
 
@@ -1193,11 +1192,14 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             int(a, b) => a.wrapping_add(b)
         }
     }
+    // FIXME(eddyb) try to annotate the SPIR-V for `fast` and `algebraic`.
     simple_op! {fadd, f_add}
     simple_op! {fadd_fast, f_add} // fast=normal
+    simple_op! {fadd_algebraic, f_add} // algebraic=normal
     simple_op! {sub, i_sub}
     simple_op! {fsub, f_sub}
     simple_op! {fsub_fast, f_sub} // fast=normal
+    simple_op! {fsub_algebraic, f_sub} // algebraic=normal
     simple_op! {
         mul, i_mul,
         // HACK(eddyb) `rustc_codegen_ssa` relies on `Builder` methods doing
@@ -1208,6 +1210,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
     simple_op! {fmul, f_mul}
     simple_op! {fmul_fast, f_mul} // fast=normal
+    simple_op! {fmul_algebraic, f_mul} // algebraic=normal
     simple_op! {udiv, u_div}
     // Note: exactudiv is UB when there's a remainder, so it's valid to implement as a normal div.
     // TODO: Can we take advantage of the UB and emit something else?
@@ -1217,10 +1220,12 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     simple_op! {exactsdiv, s_div}
     simple_op! {fdiv, f_div}
     simple_op! {fdiv_fast, f_div} // fast=normal
+    simple_op! {fdiv_algebraic, f_div} // algebraic=normal
     simple_op! {urem, u_mod}
     simple_op! {srem, s_rem}
     simple_op! {frem, f_rem}
     simple_op! {frem_fast, f_rem} // fast=normal
+    simple_op! {frem_algebraic, f_rem} // algebraic=normal
     simple_op_unchecked_type! {shl, shift_left_logical}
     simple_op_unchecked_type! {lshr, shift_right_logical}
     simple_op_unchecked_type! {ashr, shift_right_arithmetic}

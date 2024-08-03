@@ -3,7 +3,7 @@ use crate::custom_decorations::{
 };
 use crate::custom_insts::{self, CustomInst, CustomOp};
 use rustc_data_structures::fx::FxIndexSet;
-use rustc_errors::{DiagnosticBuilder, EmissionGuarantee};
+use rustc_errors::EmissionGuarantee;
 use rustc_session::Session;
 use rustc_span::{Span, DUMMY_SP};
 use smallvec::SmallVec;
@@ -310,7 +310,7 @@ impl UseOrigin<'_> {
         &self,
         cx: &Context,
         span_regen: &mut SpanRegenerator<'_>,
-        err: &mut DiagnosticBuilder<'_, G>,
+        err: &mut rustc_errors::Diag<'_, G>,
     ) {
         let wk = &super::SpvSpecWithExtras::get().well_known;
 

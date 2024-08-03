@@ -15,7 +15,6 @@ use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use rustc_errors::ErrorGuaranteed;
 use rustc_session::Session;
 use smallvec::SmallVec;
-use std::convert::TryInto;
 use std::mem::{self, take};
 
 type FunctionMap = FxHashMap<Word, Function>;

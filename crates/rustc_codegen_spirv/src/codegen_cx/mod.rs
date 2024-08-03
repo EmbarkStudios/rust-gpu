@@ -70,9 +70,9 @@ pub struct CodegenCx<'tcx> {
     /// "specifier" as a `char` (' ' for `Display`, `x` for `LowerHex`, etc.)
     pub fmt_rt_arg_new_fn_ids_to_ty_and_spec: RefCell<FxHashMap<Word, (Ty<'tcx>, char)>>,
 
-    /// Intrinsic for loading a <T> from a &[u32]. The PassMode is the mode of the <T>.
+    /// Intrinsic for loading a `<T>` from a `&[u32]`. The `PassMode` is the mode of the `<T>`.
     pub buffer_load_intrinsic_fn_id: RefCell<FxHashMap<Word, &'tcx PassMode>>,
-    /// Intrinsic for storing a <T> into a &[u32]. The PassMode is the mode of the <T>.
+    /// Intrinsic for storing a `<T>` into a `&[u32]`. The `PassMode` is the mode of the `<T>`.
     pub buffer_store_intrinsic_fn_id: RefCell<FxHashMap<Word, &'tcx PassMode>>,
 
     /// Some runtimes (e.g. intel-compute-runtime) disallow atomics on i8 and i16, even though it's allowed by the spec.
