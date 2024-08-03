@@ -752,7 +752,7 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
     cargo.arg("--target").arg(
         Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("target-specs")
-            .join(&format!("{}.json", builder.target)),
+            .join(format!("{}.json", builder.target)),
     );
 
     // NOTE(eddyb) see above how this is computed and why it might be missing.

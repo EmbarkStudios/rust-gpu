@@ -148,6 +148,10 @@ fn link_with_linker_opts(
                 Default::default(),
                 Default::default(),
                 Default::default(),
+                "spirv-unknown-spv1.0"
+                    .parse::<crate::target::SpirvTarget>()
+                    .unwrap()
+                    .rustc_target(),
                 Default::default(),
                 rustc_interface::util::rustc_version_str().unwrap_or("unknown"),
                 Default::default(),

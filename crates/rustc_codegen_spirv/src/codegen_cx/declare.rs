@@ -330,7 +330,7 @@ impl<'tcx> StaticMethods for CodegenCx<'tcx> {
         )
     }
 
-    fn codegen_static(&self, def_id: DefId, _is_mutable: bool) {
+    fn codegen_static(&self, def_id: DefId) {
         let g = self.get_static(def_id);
 
         let alloc = match self.tcx.eval_static_initializer(def_id) {

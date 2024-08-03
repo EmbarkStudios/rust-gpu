@@ -455,7 +455,7 @@ impl<'tcx> Visitor<'tcx> for CheckSpirvAttrVisitor<'tcx> {
 
     fn visit_stmt(&mut self, stmt: &'tcx hir::Stmt<'tcx>) {
         // When checking statements ignore expressions, they will be checked later.
-        if let hir::StmtKind::Local(l) = stmt.kind {
+        if let hir::StmtKind::Let(l) = stmt.kind {
             self.check_spirv_attributes(l.hir_id, Target::Statement);
         }
         intravisit::walk_stmt(self, stmt);
