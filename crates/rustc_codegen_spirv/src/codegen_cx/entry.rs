@@ -505,11 +505,18 @@ impl<'tcx> CodegenCx<'tcx> {
                 .def(hir_param.span, self);
                 var_ptr_spirv_type = self.type_ptr_to(var_spirv_type);
 
-                let value_ptr = bx.struct_gep(
-                    var_spirv_type,
-                    var_id.unwrap().with_type(var_ptr_spirv_type),
-                    0,
-                );
+                let zero_u32 = self.constant_u32(hir_param.span, 0).def_cx(self);
+                let value_ptr_spirv_type = self.type_ptr_to(value_spirv_type);
+                let value_ptr = bx
+                    .emit()
+                    .in_bounds_access_chain(
+                        value_ptr_spirv_type,
+                        None,
+                        var_id.unwrap(),
+                        [zero_u32].iter().cloned(),
+                    )
+                    .unwrap()
+                    .with_type(value_ptr_spirv_type);
 
                 let value_len = if is_unsized_with_len {
                     match self.lookup_type(value_spirv_type) {

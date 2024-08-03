@@ -97,6 +97,7 @@ impl SpirvTarget {
     pub fn rustc_target(&self) -> Target {
         Target {
             llvm_target: self.to_string().into(),
+            description: None,
             pointer_width: 32,
             data_layout: "e-m:e-p:32:32:32-i64:64-n8:16:32:64".into(),
             arch: ARCH.into(),

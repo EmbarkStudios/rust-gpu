@@ -132,12 +132,17 @@ impl SpirvType<'_> {
             Self::Float(width) => {
                 let result = cx.emit_global().type_float_id(id, width);
                 match width {
+                    16 if !cx.builder.has_capability(Capability::Float16) => cx.zombie_with_span(
+                        result,
+                        def_span,
+                        "`f16` without `OpCapability Float16`",
+                    ),
                     64 if !cx.builder.has_capability(Capability::Float64) => cx.zombie_with_span(
                         result,
                         def_span,
                         "`f64` without `OpCapability Float64`",
                     ),
-                    32 | 64 => (),
+                    16 | 32 | 64 => (),
                     other => cx.zombie_with_span(
                         result,
                         def_span,

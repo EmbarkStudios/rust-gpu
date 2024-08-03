@@ -647,6 +647,9 @@ pub fn link(
                         entry.insert((entry_name, module));
                         break;
                     }
+                    // FIXME(eddyb) false positive: `file_stem` was moved out of,
+                    // so assigning it is necessary, but clippy doesn't know that.
+                    #[allow(clippy::assigning_clones)]
                     Entry::Occupied(entry) => {
                         // FIXME(eddyb) there's no way to access the owned key
                         // passed to `BTreeMap::entry` from `OccupiedEntry`.

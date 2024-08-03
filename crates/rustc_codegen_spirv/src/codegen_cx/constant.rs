@@ -265,6 +265,10 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                             other.debug(ty, self)
                         )),
                     },
+                    Primitive::F16 => self
+                        .tcx
+                        .dcx()
+                        .fatal("scalar_to_backend Primitive::F16 not supported"),
                     Primitive::F32 => {
                         let res = self.constant_f32(DUMMY_SP, f32::from_bits(data as u32));
                         assert_eq!(res.ty, ty);
@@ -275,6 +279,10 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                         assert_eq!(res.ty, ty);
                         res
                     }
+                    Primitive::F128 => self
+                        .tcx
+                        .dcx()
+                        .fatal("scalar_to_backend Primitive::F128 not supported"),
                     Primitive::Pointer(_) => {
                         if data == 0 {
                             self.constant_null(ty)

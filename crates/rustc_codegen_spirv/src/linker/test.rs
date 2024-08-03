@@ -122,20 +122,17 @@ fn link_with_linker_opts(
     // is really a silent unwinding device, that should be treated the same as
     // `Err(ErrorGuaranteed)` returns from `link`).
     rustc_driver::catch_fatal_errors(|| {
-        let mut early_error_handler =
+        let mut early_dcx =
             rustc_session::EarlyDiagCtxt::new(rustc_session::config::ErrorOutputType::default());
-        early_error_handler.initialize_checked_jobserver();
-        let matches = rustc_driver::handle_options(
-            &early_error_handler,
-            &["".to_string(), "x.rs".to_string()],
-        )
-        .unwrap();
-        let sopts =
-            rustc_session::config::build_session_options(&mut early_error_handler, &matches);
+        early_dcx.initialize_checked_jobserver();
+        let matches =
+            rustc_driver::handle_options(&early_dcx, &["".to_string(), "x.rs".to_string()])
+                .unwrap();
+        let sopts = rustc_session::config::build_session_options(&mut early_dcx, &matches);
 
         rustc_span::create_session_globals_then(sopts.edition, || {
             let mut sess = rustc_session::build_session(
-                early_error_handler,
+                early_dcx,
                 sopts,
                 CompilerIO {
                     input: Input::Str {
@@ -160,7 +157,7 @@ fn link_with_linker_opts(
 
             // HACK(eddyb) inject `write_diags` into `sess`, to work around
             // the removals in https://github.com/rust-lang/rust/pull/102992.
-            sess.parse_sess.dcx = {
+            sess.psess.dcx = {
                 let fallback_bundle = {
                     extern crate rustc_error_messages;
                     rustc_error_messages::fallback_fluent_bundle(
@@ -170,7 +167,7 @@ fn link_with_linker_opts(
                 };
                 let emitter =
                     rustc_errors::emitter::HumanEmitter::new(Box::new(buf), fallback_bundle)
-                        .sm(Some(sess.parse_sess.clone_source_map()));
+                        .sm(Some(sess.psess.clone_source_map()));
 
                 rustc_errors::DiagCtxt::new(Box::new(emitter))
                     .with_flags(sess.opts.unstable_opts.dcx_flags(true))

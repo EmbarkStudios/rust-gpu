@@ -1465,9 +1465,12 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 .size(self)
                 .align_to(b.primitive().align(self).abi);
 
-            let pair_ty = place.layout.spirv_type(self.span(), self);
             let mut load = |i, scalar: Scalar, align| {
-                let llptr = self.struct_gep(pair_ty, place.llval, i as u64);
+                let llptr = if i == 0 {
+                    place.llval
+                } else {
+                    self.inbounds_ptradd(place.llval, self.const_usize(b_offset.bytes()))
+                };
                 let load = self.load(
                     self.scalar_pair_element_backend_type(place.layout, i, false),
                     llptr,
@@ -1579,79 +1582,6 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         indices: &[Self::Value],
     ) -> Self::Value {
         self.maybe_inbounds_gep(ty, ptr, indices, true)
-    }
-
-    fn struct_gep(&mut self, ty: Self::Type, ptr: Self::Value, idx: u64) -> Self::Value {
-        let (offset, result_pointee_type) = match self.lookup_type(ty) {
-            SpirvType::Adt {
-                field_offsets,
-                field_types,
-                ..
-            } => (field_offsets[idx as usize], field_types[idx as usize]),
-            SpirvType::Array { element, .. }
-            | SpirvType::RuntimeArray { element, .. }
-            | SpirvType::Vector { element, .. }
-            | SpirvType::Matrix { element, .. } => (
-                self.lookup_type(element).sizeof(self).unwrap() * idx,
-                element,
-            ),
-            SpirvType::InterfaceBlock { inner_type } => {
-                assert_eq!(idx, 0);
-                (Size::ZERO, inner_type)
-            }
-            other => self.fatal(format!(
-                "struct_gep not on struct, array, or vector type: {other:?}, index {idx}"
-            )),
-        };
-        let result_pointee_size = self.lookup_type(result_pointee_type).sizeof(self);
-        let result_type = self.type_ptr_to(result_pointee_type);
-
-        // Special-case field accesses through a `pointercast`, to accesss the
-        // right field in the original type, for the `Logical` addressing model.
-        let ptr = ptr.strip_ptrcasts();
-        let original_pointee_ty = match self.lookup_type(ptr.ty) {
-            SpirvType::Pointer { pointee } => pointee,
-            other => self.fatal(format!("struct_gep called on non-pointer type: {other:?}")),
-        };
-        if let Some((indices, _)) = self.recover_access_chain_from_offset(
-            original_pointee_ty,
-            offset,
-            result_pointee_size..=result_pointee_size,
-            Some(result_pointee_type),
-        ) {
-            let original_ptr = ptr.def(self);
-            let indices = indices
-                .into_iter()
-                .map(|idx| self.constant_u32(self.span(), idx).def(self))
-                .collect::<Vec<_>>();
-            return self
-                .emit()
-                .in_bounds_access_chain(result_type, None, original_ptr, indices)
-                .unwrap()
-                .with_type(result_type);
-        }
-
-        // FIXME(eddyb) can we even get to this point, with valid SPIR-V?
-
-        // HACK(eddyb) temporary workaround for untyped pointers upstream.
-        // FIXME(eddyb) replace with untyped memory SPIR-V + `qptr` or similar.
-        let ptr = self.pointercast(ptr, self.type_ptr_to(ty));
-
-        // Important! LLVM, and therefore intel-compute-runtime, require the `getelementptr` instruction (and therefore
-        // OpAccessChain) on structs to be a constant i32. Not i64! i32.
-        if idx > u32::MAX as u64 {
-            self.fatal("struct_gep bigger than u32::MAX");
-        }
-        let index_const = self.constant_u32(self.span(), idx as u32).def(self);
-        self.emit()
-            .in_bounds_access_chain(
-                result_type,
-                None,
-                ptr.def(self),
-                [index_const].iter().cloned(),
-            )
-            .unwrap()
-            .with_type(result_type)
     }
 
     // intcast has the logic for dealing with bools, so use that

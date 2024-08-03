@@ -20,7 +20,7 @@ use rustc_codegen_ssa::traits::{
     AbiBuilderMethods, ArgAbiMethods, BackendTypes, BuilderMethods, CoverageInfoBuilderMethods,
     DebugInfoBuilderMethods, HasCodegen, StaticBuilderMethods, TypeMembershipMethods,
 };
-use rustc_errors::{Diag, DiagnosticMessage};
+use rustc_errors::{Diag, DiagMessage};
 use rustc_middle::mir::Coverage;
 use rustc_middle::span_bug;
 use rustc_middle::ty::layout::{
@@ -69,7 +69,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
     }
 
     #[track_caller]
-    pub fn struct_err(&self, msg: impl Into<DiagnosticMessage>) -> Diag<'_> {
+    pub fn struct_err(&self, msg: impl Into<DiagMessage>) -> Diag<'_> {
         if let Some(current_span) = self.current_span {
             self.tcx.dcx().struct_span_err(current_span, msg)
         } else {
@@ -78,7 +78,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
     }
 
     #[track_caller]
-    pub fn err(&self, msg: impl Into<DiagnosticMessage>) {
+    pub fn err(&self, msg: impl Into<DiagMessage>) {
         if let Some(current_span) = self.current_span {
             self.tcx.dcx().span_err(current_span, msg);
         } else {
@@ -87,7 +87,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
     }
 
     #[track_caller]
-    pub fn fatal(&self, msg: impl Into<DiagnosticMessage>) -> ! {
+    pub fn fatal(&self, msg: impl Into<DiagMessage>) -> ! {
         if let Some(current_span) = self.current_span {
             self.tcx.dcx().span_fatal(current_span, msg)
         } else {

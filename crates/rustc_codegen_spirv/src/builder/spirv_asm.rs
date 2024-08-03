@@ -58,7 +58,8 @@ impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
         options: InlineAsmOptions,
         _line_spans: &[Span],
         _instance: Instance<'_>,
-        _dest_catch_funclet: Option<(Self::BasicBlock, Self::BasicBlock, Option<&Self::Funclet>)>,
+        _dest: Option<Self::BasicBlock>,
+        _catch_funclet: Option<(Self::BasicBlock, Option<&Self::Funclet>)>,
     ) {
         const SUPPORTED_OPTIONS: InlineAsmOptions = InlineAsmOptions::NORETURN;
         let unsupported_options = options & !SUPPORTED_OPTIONS;
@@ -889,6 +890,12 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                         .span_err(span, "cannot write to static variable asm argument");
                     None
                 }
+                InlineAsmOperandRef::Label { label: _ } => {
+                    self.tcx
+                        .dcx()
+                        .span_err(span, "cannot write to label asm argument");
+                    None
+                }
             },
         }
     }
@@ -988,6 +995,12 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                     );
                     None
                 }
+                InlineAsmOperandRef::Label { label: _ } => {
+                    self.tcx
+                        .dcx()
+                        .span_err(span, "cannot take the type of a label asm argument");
+                    None
+                }
             },
             Token::Placeholder(hole, span) => match hole {
                 InlineAsmOperandRef::In { reg, value } => {
@@ -1030,6 +1043,12 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                     self.tcx
                         .dcx()
                         .span_err(span, "static variable asm argument not supported yet");
+                    None
+                }
+                InlineAsmOperandRef::Label { label: _ } => {
+                    self.tcx
+                        .dcx()
+                        .span_err(span, "label asm argument not supported yet");
                     None
                 }
             },

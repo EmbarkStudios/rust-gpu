@@ -505,8 +505,10 @@ fn trans_scalar<'tcx>(
         Primitive::Int(width, signedness) => {
             SpirvType::Integer(width.size().bits() as u32, signedness).def(span, cx)
         }
+        Primitive::F16 => SpirvType::Float(16).def(span, cx),
         Primitive::F32 => SpirvType::Float(32).def(span, cx),
         Primitive::F64 => SpirvType::Float(64).def(span, cx),
+        Primitive::F128 => SpirvType::Float(128).def(span, cx),
         Primitive::Pointer(_) => {
             let pointee_ty = dig_scalar_pointee(cx, ty, offset);
             // Pointers can be recursive. So, record what we're currently translating, and if we're already translating

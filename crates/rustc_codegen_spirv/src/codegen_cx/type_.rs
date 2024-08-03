@@ -12,7 +12,7 @@ use rustc_middle::{bug, span_bug};
 use rustc_span::source_map::Spanned;
 use rustc_span::{Span, DUMMY_SP};
 use rustc_target::abi::call::{CastTarget, FnAbi, Reg};
-use rustc_target::abi::{Abi, AddressSpace, FieldsShape};
+use rustc_target::abi::{Abi, AddressSpace};
 
 impl<'tcx> LayoutOfHelpers<'tcx> for CodegenCx<'tcx> {
     type LayoutOfResult = TyAndLayout<'tcx>;
@@ -107,23 +107,6 @@ impl<'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'tcx> {
         }
     }
 
-    fn backend_field_index(&self, layout: TyAndLayout<'tcx>, index: usize) -> u64 {
-        match layout.abi {
-            Abi::Scalar(_) | Abi::ScalarPair(..) => {
-                bug!("backend_field_index({:?}): not applicable", layout);
-            }
-            _ => {}
-        }
-        match layout.fields {
-            FieldsShape::Primitive | FieldsShape::Union(_) => {
-                bug!("backend_field_index({:?}): not applicable", layout)
-            }
-            FieldsShape::Array { .. } => index as u64,
-            // note: codegen_llvm implements this as 1+index*2 due to padding fields
-            FieldsShape::Arbitrary { .. } => layout.fields.memory_index(index) as u64,
-        }
-    }
-
     fn scalar_pair_element_backend_type(
         &self,
         layout: TyAndLayout<'tcx>,
@@ -165,11 +148,17 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
         SpirvType::Integer(ptr_size, false).def(DUMMY_SP, self)
     }
 
+    fn type_f16(&self) -> Self::Type {
+        SpirvType::Float(16).def(DUMMY_SP, self)
+    }
     fn type_f32(&self) -> Self::Type {
         SpirvType::Float(32).def(DUMMY_SP, self)
     }
     fn type_f64(&self) -> Self::Type {
         SpirvType::Float(64).def(DUMMY_SP, self)
+    }
+    fn type_f128(&self) -> Self::Type {
+        SpirvType::Float(128).def(DUMMY_SP, self)
     }
 
     fn type_array(&self, ty: Self::Type, len: u64) -> Self::Type {
@@ -209,6 +198,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
                 16 => TypeKind::Half,
                 32 => TypeKind::Float,
                 64 => TypeKind::Double,
+                128 => TypeKind::FP128,
                 other => self
                     .tcx
                     .dcx()
