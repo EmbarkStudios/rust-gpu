@@ -22,7 +22,7 @@ use std::sync::{LazyLock, Mutex};
 /// the `result_id` of the type declaration instruction, merely the contents.
 //
 // FIXME(eddyb) should `SpirvType`s be behind `&'tcx` from `tcx.arena.dropless`?
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Ord, PartialOrd, Hash)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum SpirvType<'tcx> {
     Void,
     Bool,

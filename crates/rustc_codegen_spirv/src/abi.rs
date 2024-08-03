@@ -12,8 +12,7 @@ use rustc_middle::query::Providers;
 use rustc_middle::ty::layout::{FnAbiOf, LayoutOf, TyAndLayout};
 use rustc_middle::ty::GenericArgsRef;
 use rustc_middle::ty::{
-    self, Const, CoroutineArgs, FloatTy, IntTy, ParamEnv, PolyFnSig, Ty, TyCtxt, TyKind,
-    TypeAndMut, UintTy,
+    self, Const, CoroutineArgs, FloatTy, IntTy, ParamEnv, PolyFnSig, Ty, TyCtxt, TyKind, UintTy,
 };
 use rustc_middle::{bug, span_bug};
 use rustc_span::def_id::DefId;
@@ -547,7 +546,7 @@ fn dig_scalar_pointee<'tcx>(
     if let FieldsShape::Primitive = layout.fields {
         assert_eq!(offset, Size::ZERO);
         let pointee = match *layout.ty.kind() {
-            TyKind::Ref(_, pointee_ty, _) | TyKind::RawPtr(TypeAndMut { ty: pointee_ty, .. }) => {
+            TyKind::Ref(_, pointee_ty, _) | TyKind::RawPtr(pointee_ty, _) => {
                 PointeeTy::Ty(cx.layout_of(pointee_ty))
             }
             TyKind::FnPtr(sig) => PointeeTy::Fn(sig),

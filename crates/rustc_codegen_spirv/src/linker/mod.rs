@@ -18,7 +18,7 @@ mod zombies;
 
 use std::borrow::Cow;
 
-use crate::codegen_cx::SpirvMetadata;
+use crate::codegen_cx::{ModuleOutputType, SpirvMetadata};
 use crate::custom_decorations::{CustomDecoration, SrcLocDecoration, ZombieDecoration};
 use crate::custom_insts;
 use either::Either;
@@ -45,8 +45,8 @@ pub struct Options {
     pub spirt_passes: Vec<String>,
 
     pub abort_strategy: Option<String>,
+    pub module_output_type: ModuleOutputType,
 
-    pub emit_multiple_modules: bool,
     pub spirv_metadata: SpirvMetadata,
 
     /// Whether to preserve `LinkageAttributes "..." Export` decorations,
@@ -620,7 +620,7 @@ pub fn link(
         simple_passes::sort_globals(&mut output);
     }
 
-    let mut output = if opts.emit_multiple_modules {
+    let mut output = if opts.module_output_type == ModuleOutputType::Multiple {
         let mut file_stem_to_entry_name_and_module = BTreeMap::new();
         for (i, entry) in output.entry_points.iter().enumerate() {
             let mut module = output.clone();
@@ -695,7 +695,7 @@ pub fn link(
             )
             .unwrap();
         }
-        // Run DCE again, even if emit_multiple_modules==false - the first DCE ran before
+        // Run DCE again, even if module_output_type == ModuleOutputType::Multiple - the first DCE ran before
         // structurization and mem2reg (for perf reasons), and mem2reg may remove references to
         // invalid types, so we need to DCE again.
         if opts.dce {

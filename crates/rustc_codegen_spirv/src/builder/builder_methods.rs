@@ -21,7 +21,7 @@ use rustc_data_structures::fx::FxHashSet;
 use rustc_middle::bug;
 use rustc_middle::middle::codegen_fn_attrs::CodegenFnAttrs;
 use rustc_middle::ty::layout::LayoutOf;
-use rustc_middle::ty::Ty;
+use rustc_middle::ty::{self, Ty};
 use rustc_span::Span;
 use rustc_target::abi::call::FnAbi;
 use rustc_target::abi::{Abi, Align, Scalar, Size, WrappingRange};
@@ -1175,9 +1175,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         then: Self::BasicBlock,
         _catch: Self::BasicBlock,
         funclet: Option<&Self::Funclet>,
+        instance: Option<ty::Instance<'tcx>>,
     ) -> Self::Value {
         // Exceptions don't exist, jump directly to then block
-        let result = self.call(llty, fn_attrs, fn_abi, llfn, args, funclet);
+        let result = self.call(llty, fn_attrs, fn_abi, llfn, args, funclet, instance);
         self.emit().branch(then).unwrap();
         result
     }
@@ -2616,6 +2617,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         callee: Self::Value,
         args: &[Self::Value],
         funclet: Option<&Self::Funclet>,
+        instance: Option<ty::Instance<'tcx>>,
     ) -> Self::Value {
         if funclet.is_some() {
             self.fatal("TODO: Funclets are not supported");
@@ -2674,17 +2676,19 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             .collect();
         let args = &args[..];
 
-        let libm_intrinsic = self.libm_intrinsics.borrow().get(&callee_val).copied();
-        let buffer_load_intrinsic = self
-            .buffer_load_intrinsic_fn_id
-            .borrow()
-            .get(&callee_val)
-            .copied();
-        let buffer_store_intrinsic = self
-            .buffer_store_intrinsic_fn_id
-            .borrow()
-            .get(&callee_val)
-            .copied();
+        // FIXME(eddyb) should the maps exist at all, now that the `DefId` is known
+        // at `call` time, and presumably its high-level details can be looked up?
+        let instance_def_id = instance.map(|instance| instance.def_id());
+
+        let libm_intrinsic =
+            instance_def_id.and_then(|def_id| self.libm_intrinsics.borrow().get(&def_id).copied());
+        let buffer_load_intrinsic = instance_def_id
+            .and_then(|def_id| self.buffer_load_intrinsics.borrow().get(&def_id).copied());
+        let buffer_store_intrinsic = instance_def_id
+            .and_then(|def_id| self.buffer_store_intrinsics.borrow().get(&def_id).copied());
+        let is_panic_entry_point = instance_def_id
+            .is_some_and(|def_id| self.panic_entry_points.borrow().contains(&def_id));
+
         if let Some(libm_intrinsic) = libm_intrinsic {
             let result = self.call_libm_intrinsic(libm_intrinsic, result_type, args);
             if result_type != result.ty {
@@ -2696,7 +2700,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 );
             }
             result
-        } else if self.panic_entry_point_ids.borrow().contains(&callee_val) {
+        } else if is_panic_entry_point {
             // HACK(eddyb) Rust 2021 `panic!` always uses `format_args!`, even
             // in the simple case that used to pass a `&str` constant, which
             // would not remain reachable in the SPIR-V - but `format_args!` is

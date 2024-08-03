@@ -1,13 +1,13 @@
 error: cannot memcpy dynamically sized data
-    --> $CORE_SRC/intrinsics.rs:3076:9
+    --> $CORE_SRC/intrinsics.rs:2987:9
      |
-3076 |         copy(src, dst, count)
+2987 |         copy(src, dst, count)
      |         ^^^^^^^^^^^^^^^^^^^^^
      |
 note: used from within `core::intrinsics::copy::<f32>`
-    --> $CORE_SRC/intrinsics.rs:3055:21
+    --> $CORE_SRC/intrinsics.rs:2966:21
      |
-3055 | pub const unsafe fn copy<T>(src: *const T, dst: *mut T, count: usize) {
+2966 | pub const unsafe fn copy<T>(src: *const T, dst: *mut T, count: usize) {
      |                     ^^^^
 note: called by `ptr_copy::copy_via_raw_ptr`
     --> $DIR/ptr_copy.rs:28:18
@@ -25,5 +25,46 @@ note: called by `main`
 32   | pub fn main(i: f32, o: &mut f32) {
      |        ^^^^
 
-error: aborting due to 1 previous error
+error: cannot cast between pointer types
+       from `*f32`
+         to `*struct () {  }`
+    --> $CORE_SRC/intrinsics.rs:2975:9
+     |
+2975 | /         ub_checks::assert_unsafe_precondition!(
+2976 | |             check_language_ub,
+2977 | |             "ptr::copy_nonoverlapping requires that both pointer arguments are aligned and non-null /
+2978 | |             and the specified memory ranges do not overlap",
+...    |
+2985 | |                 && ub_checks::is_aligned_and_not_null(dst, align)
+2986 | |         );
+     | |_________^
+     |
+note: used from within `core::intrinsics::copy::<f32>`
+    --> $CORE_SRC/intrinsics.rs:2975:9
+     |
+2975 | /         ub_checks::assert_unsafe_precondition!(
+2976 | |             check_language_ub,
+2977 | |             "ptr::copy_nonoverlapping requires that both pointer arguments are aligned and non-null /
+2978 | |             and the specified memory ranges do not overlap",
+...    |
+2985 | |                 && ub_checks::is_aligned_and_not_null(dst, align)
+2986 | |         );
+     | |_________^
+note: called by `ptr_copy::copy_via_raw_ptr`
+    --> $DIR/ptr_copy.rs:28:18
+     |
+28   |         unsafe { core::ptr::copy(src, dst, 1) }
+     |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+note: called by `ptr_copy::main`
+    --> $DIR/ptr_copy.rs:33:5
+     |
+33   |     copy_via_raw_ptr(&i, o);
+     |     ^^^^^^^^^^^^^^^^^^^^^^^
+note: called by `main`
+    --> $DIR/ptr_copy.rs:32:8
+     |
+32   | pub fn main(i: f32, o: &mut f32) {
+     |        ^^^^
+
+error: aborting due to 2 previous errors
 

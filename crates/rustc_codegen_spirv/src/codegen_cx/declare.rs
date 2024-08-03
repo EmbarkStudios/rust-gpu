@@ -59,9 +59,11 @@ impl<'tcx> CodegenCx<'tcx> {
     // MiscMethods::get_fn_addr -> get_fn_ext -> declare_fn_ext
     // PreDefineMethods::predefine_fn -> declare_fn_ext
     fn declare_fn_ext(&self, instance: Instance<'tcx>, linkage: Option<LinkageType>) -> SpirvValue {
-        let control = attrs_to_spirv(self.tcx.codegen_fn_attrs(instance.def_id()));
+        let def_id = instance.def_id();
+
+        let control = attrs_to_spirv(self.tcx.codegen_fn_attrs(def_id));
         let fn_abi = self.fn_abi_of_instance(instance, ty::List::empty());
-        let span = self.tcx.def_span(instance.def_id());
+        let span = self.tcx.def_span(def_id);
         let function_type = fn_abi.spirv_type(span, self);
         let (return_type, argument_types) = match self.lookup_type(function_type) {
             SpirvType::Function {
@@ -99,7 +101,7 @@ impl<'tcx> CodegenCx<'tcx> {
         // which prevents us from attaching `OpLine`s to `OpFunction` definitions,
         // but we can use our custom `SrcLocDecoration` instead.
         let src_loc_inst = SrcLocDecoration::from_rustc_span(
-            self.tcx.def_ident_span(instance.def_id()).unwrap_or(span),
+            self.tcx.def_ident_span(def_id).unwrap_or(span),
             &self.builder,
         )
         .map(|src_loc| src_loc.encode_to_inst(fn_id));
@@ -128,12 +130,12 @@ impl<'tcx> CodegenCx<'tcx> {
 
         let attrs = AggregatedSpirvAttributes::parse(
             self,
-            match self.tcx.def_kind(instance.def_id()) {
+            match self.tcx.def_kind(def_id) {
                 // This was made to ICE cross-crate at some point, but then got
                 // reverted in https://github.com/rust-lang/rust/pull/111381.
                 // FIXME(eddyb) remove this workaround once we rustup past that.
                 DefKind::Closure => &[],
-                _ => self.tcx.get_attrs_unchecked(instance.def_id()),
+                _ => self.tcx.get_attrs_unchecked(def_id),
             },
         );
         if let Some(entry) = attrs.entry.map(|attr| attr.value) {
@@ -143,28 +145,29 @@ impl<'tcx> CodegenCx<'tcx> {
                 .map_or_else(|| instance.to_string(), ToString::to_string);
             self.entry_stub(&instance, fn_abi, declared, entry_name, entry);
         }
+
+        // FIXME(eddyb) should the maps exist at all, now that the `DefId` is known
+        // at `call` time, and presumably its high-level details can be looked up?
         if attrs.buffer_load_intrinsic.is_some() {
             let mode = &fn_abi.ret.mode;
-            self.buffer_load_intrinsic_fn_id
+            self.buffer_load_intrinsics
                 .borrow_mut()
-                .insert(fn_id, mode);
+                .insert(def_id, mode);
         }
         if attrs.buffer_store_intrinsic.is_some() {
             let mode = &fn_abi.args.last().unwrap().mode;
-            self.buffer_store_intrinsic_fn_id
+            self.buffer_store_intrinsics
                 .borrow_mut()
-                .insert(fn_id, mode);
+                .insert(def_id, mode);
         }
 
-        let instance_def_id = instance.def_id();
-
-        if self.tcx.crate_name(instance_def_id.krate) == self.sym.libm {
-            let item_name = self.tcx.item_name(instance_def_id);
+        if self.tcx.crate_name(def_id.krate) == self.sym.libm {
+            let item_name = self.tcx.item_name(def_id);
             let intrinsic = self.sym.libm_intrinsics.get(&item_name);
-            if self.tcx.visibility(instance.def_id()) == ty::Visibility::Public {
+            if self.tcx.visibility(def_id) == ty::Visibility::Public {
                 match intrinsic {
                     Some(&intrinsic) => {
-                        self.libm_intrinsics.borrow_mut().insert(fn_id, intrinsic);
+                        self.libm_intrinsics.borrow_mut().insert(def_id, intrinsic);
                     }
                     None => {
                         self.tcx.dcx().err(format!(
@@ -179,9 +182,9 @@ impl<'tcx> CodegenCx<'tcx> {
             self.tcx.lang_items().panic_fn(),
             self.tcx.lang_items().panic_fmt(),
         ]
-        .contains(&Some(instance_def_id))
+        .contains(&Some(def_id))
         {
-            self.panic_entry_point_ids.borrow_mut().insert(fn_id);
+            self.panic_entry_points.borrow_mut().insert(def_id);
         }
 
         // HACK(eddyb) there is no good way to identify these definitions

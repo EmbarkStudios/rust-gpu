@@ -19,6 +19,7 @@ use rustc_codegen_ssa::traits::{
     AsmMethods, BackendTypes, DebugInfoMethods, GlobalAsmOperandRef, MiscMethods,
 };
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
+use rustc_hir::def_id::DefId;
 use rustc_middle::mir;
 use rustc_middle::mir::mono::CodegenUnit;
 use rustc_middle::ty::layout::{HasParamEnv, HasTyCtxt};
@@ -57,11 +58,14 @@ pub struct CodegenCx<'tcx> {
     /// Cache of all the builtin symbols we need
     pub sym: Rc<Symbols>,
     pub instruction_table: InstructionTable,
-    pub libm_intrinsics: RefCell<FxHashMap<Word, super::builder::libm_intrinsics::LibmIntrinsic>>,
+
+    // FIXME(eddyb) should the maps exist at all, now that the `DefId` is known
+    // at `call` time, and presumably its high-level details can be looked up?
+    pub libm_intrinsics: RefCell<FxHashMap<DefId, super::builder::libm_intrinsics::LibmIntrinsic>>,
 
     /// All `panic!(...)`s and builtin panics (from MIR `Assert`s) call into one
     /// of these lang items, which we always replace with an "abort".
-    pub panic_entry_point_ids: RefCell<FxHashSet<Word>>,
+    pub panic_entry_points: RefCell<FxHashSet<DefId>>,
 
     /// `core::fmt::Arguments::new_{v1,const}` instances (for Rust 2021 panics).
     pub fmt_args_new_fn_ids: RefCell<FxHashSet<Word>>,
@@ -72,18 +76,15 @@ pub struct CodegenCx<'tcx> {
     pub fmt_rt_arg_new_fn_ids_to_ty_and_spec: RefCell<FxHashMap<Word, (Ty<'tcx>, char)>>,
 
     /// Intrinsic for loading a `<T>` from a `&[u32]`. The `PassMode` is the mode of the `<T>`.
-    pub buffer_load_intrinsic_fn_id: RefCell<FxHashMap<Word, &'tcx PassMode>>,
+    pub buffer_load_intrinsics: RefCell<FxHashMap<DefId, &'tcx PassMode>>,
     /// Intrinsic for storing a `<T>` into a `&[u32]`. The `PassMode` is the mode of the `<T>`.
-    pub buffer_store_intrinsic_fn_id: RefCell<FxHashMap<Word, &'tcx PassMode>>,
+    pub buffer_store_intrinsics: RefCell<FxHashMap<DefId, &'tcx PassMode>>,
 
     /// Some runtimes (e.g. intel-compute-runtime) disallow atomics on i8 and i16, even though it's allowed by the spec.
     /// This enables/disables them.
     pub i8_i16_atomics_allowed: bool,
 
     pub codegen_args: CodegenArgs,
-
-    /// Information about the SPIR-V target.
-    pub target: SpirvTarget,
 }
 
 impl<'tcx> CodegenCx<'tcx> {
@@ -190,15 +191,14 @@ impl<'tcx> CodegenCx<'tcx> {
             vtables: Default::default(),
             ext_inst: Default::default(),
             zombie_decorations: Default::default(),
-            target,
             sym,
             instruction_table: InstructionTable::new(),
             libm_intrinsics: Default::default(),
-            panic_entry_point_ids: Default::default(),
+            panic_entry_points: Default::default(),
             fmt_args_new_fn_ids: Default::default(),
             fmt_rt_arg_new_fn_ids_to_ty_and_spec: Default::default(),
-            buffer_load_intrinsic_fn_id: Default::default(),
-            buffer_store_intrinsic_fn_id: Default::default(),
+            buffer_load_intrinsics: Default::default(),
+            buffer_store_intrinsics: Default::default(),
             i8_i16_atomics_allowed: false,
             codegen_args,
         }
@@ -296,7 +296,6 @@ pub enum SpirvMetadata {
 }
 
 pub struct CodegenArgs {
-    pub module_output_type: ModuleOutputType,
     pub disassemble: bool,
     pub disassemble_fn: Option<String>,
     pub disassemble_entry: Option<String>,
@@ -554,8 +553,6 @@ impl CodegenArgs {
             std::process::exit(1);
         }
 
-        let module_output_type =
-            matches.opt_get_default("module-output", ModuleOutputType::Single)?;
         let disassemble = matches.opt_present("disassemble");
         let disassemble_fn = matches.opt_str("disassemble-fn");
         let disassemble_entry = matches.opt_str("disassemble-entry");
@@ -617,9 +614,9 @@ impl CodegenArgs {
                 .collect(),
 
             abort_strategy: matches.opt_str("abort-strategy"),
+            module_output_type: matches.opt_get_default("module-output", Default::default())?,
 
             // FIXME(eddyb) deduplicate between `CodegenArgs` and `linker::Options`.
-            emit_multiple_modules: module_output_type == ModuleOutputType::Multiple,
             spirv_metadata,
             keep_link_exports: false,
 
@@ -639,7 +636,6 @@ impl CodegenArgs {
         };
 
         Ok(Self {
-            module_output_type,
             disassemble,
             disassemble_fn,
             disassemble_entry,
@@ -781,8 +777,9 @@ impl CodegenArgs {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ModuleOutputType {
+    #[default]
     Single,
     Multiple,
 }

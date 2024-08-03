@@ -199,6 +199,7 @@ impl<'tcx> CodegenCx<'tcx> {
             entry_func,
             &call_args,
             None,
+            None,
         );
         bx.ret_void();
 

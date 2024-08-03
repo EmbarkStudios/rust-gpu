@@ -21,7 +21,7 @@ use rustc_codegen_ssa::traits::{
     DebugInfoBuilderMethods, HasCodegen, StaticBuilderMethods, TypeMembershipMethods,
 };
 use rustc_errors::{Diag, DiagMessage};
-use rustc_middle::mir::Coverage;
+use rustc_middle::mir::coverage::CoverageKind;
 use rustc_middle::span_bug;
 use rustc_middle::ty::layout::{
     FnAbiError, FnAbiOfHelpers, FnAbiRequest, HasParamEnv, HasTyCtxt, LayoutError, LayoutOfHelpers,
@@ -147,7 +147,7 @@ impl<'a, 'tcx> Deref for Builder<'a, 'tcx> {
 }
 
 impl<'a, 'tcx> CoverageInfoBuilderMethods<'tcx> for Builder<'a, 'tcx> {
-    fn add_coverage(&mut self, _instance: Instance<'tcx>, _coverage: &Coverage) {}
+    fn add_coverage(&mut self, _instance: Instance<'tcx>, _kind: &CoverageKind) {}
 }
 
 impl<'a, 'tcx> DebugInfoBuilderMethods for Builder<'a, 'tcx> {
