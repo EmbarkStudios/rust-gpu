@@ -941,7 +941,7 @@ impl RenderCtx {
         let present_index = unsafe {
             match self.base.swapchain_loader.acquire_next_image(
                 self.swapchain,
-                std::u64::MAX,
+                u64::MAX,
                 self.sync.present_complete_semaphore,
                 vk::Fence::null(),
             ) {
@@ -1058,7 +1058,7 @@ impl RenderCtx {
         unsafe {
             self.base
                 .device
-                .wait_for_fences(&[self.sync.draw_commands_reuse_fence], true, std::u64::MAX)
+                .wait_for_fences(&[self.sync.draw_commands_reuse_fence], true, u64::MAX)
                 .expect("Wait for fence failed.");
 
             self.base

@@ -20,6 +20,11 @@ impl<'tcx> CodegenCx<'tcx> {
         self.def_constant(ty, SpirvConst::U32(val as u32))
     }
 
+    pub fn constant_i8(&self, span: Span, val: i8) -> SpirvValue {
+        let ty = SpirvType::Integer(8, true).def(span, self);
+        self.def_constant(ty, SpirvConst::U32(val as u32))
+    }
+
     pub fn constant_i16(&self, span: Span, val: i16) -> SpirvValue {
         let ty = SpirvType::Integer(16, true).def(span, self);
         self.def_constant(ty, SpirvConst::U32(val as u32))
@@ -156,6 +161,9 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
     fn const_bool(&self, val: bool) -> Self::Value {
         self.constant_bool(DUMMY_SP, val)
     }
+    fn const_i8(&self, i: i8) -> Self::Value {
+        self.constant_i8(DUMMY_SP, i)
+    }
     fn const_i16(&self, i: i16) -> Self::Value {
         self.constant_i16(DUMMY_SP, i)
     }
@@ -243,7 +251,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
         match scalar {
             Scalar::Int(int) => {
                 assert_eq!(int.size(), layout.primitive().size(self));
-                let data = int.to_bits(int.size()).unwrap();
+                let data = int.assert_uint(int.size());
 
                 match layout.primitive() {
                     Primitive::Int(int_size, int_signedness) => match self.lookup_type(ty) {

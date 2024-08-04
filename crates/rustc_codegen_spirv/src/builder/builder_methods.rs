@@ -1451,13 +1451,13 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             return OperandRef::zero_sized(place.layout);
         }
 
-        let val = if let Some(llextra) = place.llextra {
-            OperandValue::Ref(place.llval, Some(llextra), place.align)
+        let val = if place.val.llextra.is_some() {
+            OperandValue::Ref(place.val)
         } else if self.cx.is_backend_immediate(place.layout) {
             let llval = self.load(
                 place.layout.spirv_type(self.span(), self),
-                place.llval,
-                place.align,
+                place.val.llval,
+                place.val.align,
             );
             OperandValue::Immediate(self.to_immediate(llval, place.layout))
         } else if let Abi::ScalarPair(a, b) = place.layout.abi {
@@ -1468,9 +1468,9 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
 
             let mut load = |i, scalar: Scalar, align| {
                 let llptr = if i == 0 {
-                    place.llval
+                    place.val.llval
                 } else {
-                    self.inbounds_ptradd(place.llval, self.const_usize(b_offset.bytes()))
+                    self.inbounds_ptradd(place.val.llval, self.const_usize(b_offset.bytes()))
                 };
                 let load = self.load(
                     self.scalar_pair_element_backend_type(place.layout, i, false),
@@ -1481,11 +1481,11 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             };
 
             OperandValue::Pair(
-                load(0, a, place.align),
-                load(1, b, place.align.restrict_for_offset(b_offset)),
+                load(0, a, place.val.align),
+                load(1, b, place.val.align.restrict_for_offset(b_offset)),
             )
         } else {
-            OperandValue::Ref(place.llval, None, place.align)
+            OperandValue::Ref(place.val)
         };
         OperandRef {
             val,
@@ -1501,11 +1501,11 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         dest: PlaceRef<'tcx, Self::Value>,
     ) {
         let zero = self.const_usize(0);
-        let start = dest.project_index(self, zero).llval;
+        let start = dest.project_index(self, zero).val.llval;
 
         let elem_layout = dest.layout.field(self.cx(), 0);
         let elem_ty = elem_layout.spirv_type(self.span(), self);
-        let align = dest.align.restrict_for_offset(elem_layout.size);
+        let align = dest.val.align.restrict_for_offset(elem_layout.size);
 
         for i in 0..count {
             let current = self.inbounds_gep(elem_ty, start, &[self.const_usize(i)]);
@@ -2834,12 +2834,13 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 // are decoded to values of this `enum`. For instructions that
                 // produce results, the result ID is the first `ID` value.
                 #[derive(Debug)]
-                enum Inst<'tcx, ID> {
+                enum Inst<ID> {
                     Bitcast(ID, ID),
                     CompositeExtract(ID, ID, u32),
-                    InBoundsAccessChain(ID, ID, SpirvConst<'tcx, 'tcx>),
+                    InBoundsAccessChain(ID, ID, u32),
                     Store(ID, ID),
                     Load(ID, ID),
+                    CopyMemory(ID, ID),
                     Call(ID, ID, SmallVec<[ID; 4]>),
 
                     // HACK(eddyb) this only exists for better error reporting,
@@ -2882,14 +2883,17 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                             match (inst.class.opcode, inst.result_id, &id_operands[..]) {
                                 (Op::Bitcast, Some(r), &[x]) => Inst::Bitcast(r, x),
                                 (Op::InBoundsAccessChain, Some(r), &[p, i]) => {
-                                    Inst::InBoundsAccessChain(
-                                        r,
-                                        p,
-                                        self.builder.lookup_const_by_id(i)?,
-                                    )
+                                    if let Some(SpirvConst::U32(i)) =
+                                        self.builder.lookup_const_by_id(i)
+                                    {
+                                        Inst::InBoundsAccessChain(r, p, i)
+                                    } else {
+                                        Inst::Unsupported(inst.class.opcode)
+                                    }
                                 }
                                 (Op::Store, None, &[p, v]) => Inst::Store(p, v),
                                 (Op::Load, Some(r), &[p]) => Inst::Load(r, p),
+                                (Op::CopyMemory, None, &[a, b]) => Inst::CopyMemory(a, b),
                                 (Op::FunctionCall, Some(r), [f, args @ ..]) => {
                                     Inst::Call(r, *f, args.iter().copied().collect())
                                 }
@@ -2989,46 +2993,50 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     };
                     require_local_var(rt_args_array_ptr_id, "[fmt::rt::Argument; N]")?;
 
-                    // Each runtime argument has 3 instructions to call one of
-                    // the `fmt::rt::Argument::new_*` functions (and split its
-                    // scalar pair result), and 5 instructions to store it into
-                    // the appropriate slot in the array. The groups of 3 and 5
+                    // Each runtime argument has 4 instructions to call one of
+                    // the `fmt::rt::Argument::new_*` functions (and temporarily
+                    // store its result), and 4 instructions to copy it into
+                    // the appropriate slot in the array. The groups of 4 and 4
                     // instructions, for all runtime args, are each separate.
-                    let stores_to_rt_args_array =
-                        try_rev_take(rt_args_count * 5).ok_or_else(|| {
+                    let copies_to_rt_args_array =
+                        try_rev_take(rt_args_count * 4).ok_or_else(|| {
                             FormatArgsNotRecognized(
-                                "[fmt::rt::Argument; N] stores: ran out of instructions".into(),
+                                "[fmt::rt::Argument; N] copies: ran out of instructions".into(),
                             )
                         })?;
-                    let stores_to_rt_args_array = stores_to_rt_args_array.chunks(5);
-                    let rt_arg_new_calls = try_rev_take(rt_args_count * 3).ok_or_else(|| {
+                    let copies_to_rt_args_array = copies_to_rt_args_array.chunks(4);
+                    let rt_arg_new_calls = try_rev_take(rt_args_count * 4).ok_or_else(|| {
                         FormatArgsNotRecognized(
                             "fmt::rt::Argument::new calls: ran out of instructions".into(),
                         )
                     })?;
-                    let rt_arg_new_calls = rt_arg_new_calls.chunks(3);
+                    let rt_arg_new_calls = rt_arg_new_calls.chunks(4);
 
-                    for (rt_arg_idx, (rt_arg_new_call_insts, store_to_rt_args_array_insts)) in
-                        rt_arg_new_calls.zip(stores_to_rt_args_array).enumerate()
+                    for (rt_arg_idx, (rt_arg_new_call_insts, copy_to_rt_args_array_insts)) in
+                        rt_arg_new_calls.zip(copies_to_rt_args_array).enumerate()
                     {
-                        let (a, b) = match rt_arg_new_call_insts[..] {
+                        let call_ret_slot_ptr = match rt_arg_new_call_insts[..] {
                             [
                                 Inst::Call(call_ret_id, callee_id, ref call_args),
-                                Inst::CompositeExtract(a, a_parent_pair, 0),
-                                Inst::CompositeExtract(b, b_parent_pair, 1),
-                            ] if [a_parent_pair, b_parent_pair] == [call_ret_id; 2] => self
-                                .fmt_rt_arg_new_fn_ids_to_ty_and_spec
-                                .borrow()
-                                .get(&callee_id)
-                                .and_then(|&(ty, spec)| match call_args[..] {
-                                    [x] => {
-                                        decoded_format_args
-                                            .ref_arg_ids_with_ty_and_spec
-                                            .push((x, ty, spec));
-                                        Some((a, b))
-                                    }
-                                    _ => None,
-                                }),
+                                Inst::InBoundsAccessChain(tmp_slot_field_ptr, tmp_slot_ptr, 0),
+                                Inst::CompositeExtract(field, wrapper_newtype, 0),
+                                Inst::Store(st_dst_ptr, st_val),
+                            ] if wrapper_newtype == call_ret_id
+                                && (st_dst_ptr, st_val) == (tmp_slot_field_ptr, field) =>
+                            {
+                                self.fmt_rt_arg_new_fn_ids_to_ty_and_spec
+                                    .borrow()
+                                    .get(&callee_id)
+                                    .and_then(|&(ty, spec)| match call_args[..] {
+                                        [x] => {
+                                            decoded_format_args
+                                                .ref_arg_ids_with_ty_and_spec
+                                                .push((x, ty, spec));
+                                            Some(tmp_slot_ptr)
+                                        }
+                                        _ => None,
+                                    })
+                            }
                             _ => None,
                         }
                         .ok_or_else(|| {
@@ -3037,25 +3045,20 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                             ))
                         })?;
 
-                        match store_to_rt_args_array_insts[..] {
+                        match copy_to_rt_args_array_insts[..] {
                             [
-                                Inst::InBoundsAccessChain(
-                                    array_slot_ptr,
-                                    array_base_ptr,
-                                    SpirvConst::U32(array_idx),
-                                ),
-                                Inst::InBoundsAccessChain(a_ptr, a_base_ptr, SpirvConst::U32(0)),
-                                Inst::Store(a_st_dst, a_st_val),
-                                Inst::InBoundsAccessChain(b_ptr, b_base_ptr, SpirvConst::U32(1)),
-                                Inst::Store(b_st_dst, b_st_val),
-                            ] if array_base_ptr == rt_args_array_ptr_id
+                                Inst::InBoundsAccessChain(array_slot, array_base, array_idx),
+                                Inst::InBoundsAccessChain(dst_field_ptr, dst_base_ptr, 0),
+                                Inst::InBoundsAccessChain(src_field_ptr, src_base_ptr, 0),
+                                Inst::CopyMemory(copy_dst, copy_src),
+                            ] if array_base == rt_args_array_ptr_id
                                 && array_idx as usize == rt_arg_idx
-                                && [a_base_ptr, b_base_ptr] == [array_slot_ptr; 2]
-                                && (a, b) == (a_st_val, b_st_val)
-                                && (a_ptr, b_ptr) == (a_st_dst, b_st_dst) => {}
+                                && dst_base_ptr == array_slot
+                                && src_base_ptr == call_ret_slot_ptr
+                                && (copy_dst, copy_src) == (dst_field_ptr, src_field_ptr) => {}
                             _ => {
                                 return Err(FormatArgsNotRecognized(format!(
-                                    "[fmt::rt::Argument; N] stores sequence ({store_to_rt_args_array_insts:?})"
+                                    "[fmt::rt::Argument; N] copies sequence ({copy_to_rt_args_array_insts:?})"
                                 )));
                             }
                         }

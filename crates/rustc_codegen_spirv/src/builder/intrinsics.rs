@@ -46,11 +46,11 @@ impl Builder<'_, '_> {
         let (mask_sign, mask_value) = match width {
             32 => (
                 self.constant_u32(self.span(), 1 << 31),
-                self.constant_u32(self.span(), u32::max_value() >> 1),
+                self.constant_u32(self.span(), u32::MAX >> 1),
             ),
             64 => (
                 self.constant_u64(self.span(), 1 << 63),
-                self.constant_u64(self.span(), u64::max_value() >> 1),
+                self.constant_u64(self.span(), u64::MAX >> 1),
             ),
             _ => bug!("copysign must have width 32 or 64, not {}", width),
         };
@@ -106,7 +106,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                 let layout = self.layout_of(fn_args.type_at(0));
                 let load = self.volatile_load(layout.spirv_type(self.span(), self), ptr);
                 if !result.layout.is_zst() {
-                    self.store(load, result.llval, result.align);
+                    self.store(load, result.val.llval, result.val.align);
                 }
                 return Ok(());
             }

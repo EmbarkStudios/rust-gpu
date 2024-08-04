@@ -488,7 +488,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         if let Some(OutRegister::Place(place)) = out_register {
             self.emit()
                 .store(
-                    place.llval.def(self),
+                    place.val.llval.def(self),
                     result_id.unwrap(),
                     None,
                     std::iter::empty(),
@@ -946,14 +946,14 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 } => {
                     self.check_reg(span, reg);
                     match place {
-                        Some(place) => match self.lookup_type(place.llval.ty) {
+                        Some(place) => match self.lookup_type(place.val.llval.ty) {
                             SpirvType::Pointer { pointee } => Some(pointee),
                             other => {
                                 self.tcx.dcx().span_err(
                                     span,
                                     format!(
                                         "out register type not pointer: {}",
-                                        other.debug(place.llval.ty, self)
+                                        other.debug(place.val.llval.ty, self)
                                     ),
                                 );
                                 None

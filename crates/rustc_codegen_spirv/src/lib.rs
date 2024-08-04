@@ -359,6 +359,8 @@ impl WriteBackendMethods for SpirvCodegenBackend {
             object: Some(path),
             dwarf_object: None,
             bytecode: None,
+            assembly: None,
+            llvm_ir: None,
         })
     }
 

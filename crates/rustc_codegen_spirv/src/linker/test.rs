@@ -122,15 +122,27 @@ fn link_with_linker_opts(
     // is really a silent unwinding device, that should be treated the same as
     // `Err(ErrorGuaranteed)` returns from `link`).
     rustc_driver::catch_fatal_errors(|| {
+        rustc_data_structures::jobserver::initialize_checked(|err| {
+            unreachable!("jobserver error: {err}");
+        });
+
         let mut early_dcx =
             rustc_session::EarlyDiagCtxt::new(rustc_session::config::ErrorOutputType::default());
-        early_dcx.initialize_checked_jobserver();
         let matches =
             rustc_driver::handle_options(&early_dcx, &["".to_string(), "x.rs".to_string()])
                 .unwrap();
         let sopts = rustc_session::config::build_session_options(&mut early_dcx, &matches);
 
-        rustc_span::create_session_globals_then(sopts.edition, || {
+        let target = "spirv-unknown-spv1.0"
+            .parse::<crate::target::SpirvTarget>()
+            .unwrap()
+            .rustc_target();
+        let sm_inputs = rustc_span::source_map::SourceMapInputs {
+            file_loader: Box::new(rustc_span::source_map::RealFileLoader),
+            path_mapping: sopts.file_path_mapping(),
+            hash_kind: sopts.unstable_opts.src_hash_algorithm(&target),
+        };
+        rustc_span::create_session_globals_then(sopts.edition, Some(sm_inputs), || {
             let mut sess = rustc_session::build_session(
                 early_dcx,
                 sopts,
@@ -147,11 +159,7 @@ fn link_with_linker_opts(
                 Registry::new(&[]),
                 Default::default(),
                 Default::default(),
-                Default::default(),
-                "spirv-unknown-spv1.0"
-                    .parse::<crate::target::SpirvTarget>()
-                    .unwrap()
-                    .rustc_target(),
+                target,
                 Default::default(),
                 rustc_interface::util::rustc_version_str().unwrap_or("unknown"),
                 Default::default(),
