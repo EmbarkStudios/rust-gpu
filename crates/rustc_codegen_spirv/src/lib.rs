@@ -108,7 +108,6 @@ use rustc_middle::ty::{self, Instance, InstanceDef, TyCtxt};
 use rustc_session::config::{self, OutputFilenames, OutputType};
 use rustc_session::Session;
 use rustc_span::symbol::{sym, Symbol};
-use rustc_target::spec::{Target, TargetTriple};
 use std::any::Any;
 use std::fs::{create_dir_all, File};
 use std::io::Cursor;
@@ -205,16 +204,6 @@ impl CodegenBackend for SpirvCodegenBackend {
             .filter(|l| !l.is_empty())
             .map(Symbol::intern)
             .collect()
-    }
-
-    fn target_override(&self, opts: &config::Options) -> Option<Target> {
-        match opts.target_triple {
-            TargetTriple::TargetTriple(ref target) => target
-                .parse::<target::SpirvTarget>()
-                .map(|target| target.rustc_target())
-                .ok(),
-            TargetTriple::TargetJson { .. } => None,
-        }
     }
 
     fn provide(&self, providers: &mut rustc_middle::util::Providers) {

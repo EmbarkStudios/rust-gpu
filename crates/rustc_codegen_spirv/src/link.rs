@@ -218,7 +218,9 @@ fn link_exe(
     };
 
     let file = File::create(out_filename).unwrap();
-    serde_json::to_writer(BufWriter::new(file), &compile_result).unwrap();
+    // FIXME(eddyb) move this functionality into `rustc_codegen_spirv_types`.
+    rustc_codegen_spirv_types::serde_json::to_writer(BufWriter::new(file), &compile_result)
+        .unwrap();
 }
 
 fn entry_points(module: &rspirv::dr::Module) -> Vec<String> {

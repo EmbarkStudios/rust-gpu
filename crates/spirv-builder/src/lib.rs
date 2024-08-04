@@ -118,6 +118,8 @@ pub use rustc_codegen_spirv_types::{CompileResult, ModuleResult};
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum SpirvBuilderError {
+    NonSpirvTarget { target: String },
+    UnsupportedSpirvTargetEnv { target_env: String },
     CratePathDoesntExist(PathBuf),
     BuildFailed,
     MultiModuleWithPrintMetadata,
@@ -126,24 +128,49 @@ pub enum SpirvBuilderError {
     MetadataFileMalformed(serde_json::Error),
 }
 
+const SPIRV_TARGET_PREFIX: &str = "spirv-unknown-";
+
 impl fmt::Display for SpirvBuilderError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            SpirvBuilderError::CratePathDoesntExist(path) => {
-                write!(f, "Crate path {} does not exist", path.display())
+            Self::NonSpirvTarget { target } => {
+                write!(
+                    f,
+                    "expected `{SPIRV_TARGET_PREFIX}...` target, found `{target}`"
+                )
             }
-            SpirvBuilderError::BuildFailed => f.write_str("Build failed"),
-            SpirvBuilderError::MultiModuleWithPrintMetadata => f.write_str(
-                "Multi-module build cannot be used with print_metadata = MetadataPrintout::Full",
+            Self::UnsupportedSpirvTargetEnv { target_env } if target_env.starts_with("opencl") => {
+                write!(
+                    f,
+                    "OpenCL targets like `{SPIRV_TARGET_PREFIX}-{target_env}` are not supported"
+                )
+            }
+            Self::UnsupportedSpirvTargetEnv { target_env } if target_env.starts_with("webgpu") => {
+                write!(
+                    f,
+                    "WebGPU targets like `{SPIRV_TARGET_PREFIX}-{target_env}` are not supported, \
+                     consider using `{SPIRV_TARGET_PREFIX}-vulkan1.0` instead"
+                )
+            }
+            Self::UnsupportedSpirvTargetEnv { target_env } => {
+                write!(
+                    f,
+                    "SPIR-V target `{SPIRV_TARGET_PREFIX}-{target_env}` is not supported"
+                )
+            }
+            Self::CratePathDoesntExist(path) => {
+                write!(f, "crate path {} does not exist", path.display())
+            }
+            Self::BuildFailed => f.write_str("build failed"),
+            Self::MultiModuleWithPrintMetadata => f.write_str(
+                "multi-module build cannot be used with print_metadata = MetadataPrintout::Full",
             ),
-            SpirvBuilderError::WatchWithPrintMetadata => {
-                f.write_str("Watching within build scripts will prevent build completion")
+            Self::WatchWithPrintMetadata => {
+                f.write_str("watching within build scripts will prevent build completion")
             }
-            SpirvBuilderError::MetadataFileMissing(_) => {
-                f.write_str("Multi-module metadata file missing")
-            }
-            SpirvBuilderError::MetadataFileMalformed(_) => {
-                f.write_str("Unable to parse multi-module metadata file")
+            Self::MetadataFileMissing(_) => f.write_str("multi-module metadata file missing"),
+            Self::MetadataFileMalformed(_) => {
+                f.write_str("unable to parse multi-module metadata file")
             }
         }
     }
@@ -453,6 +480,31 @@ impl SpirvBuilder {
     }
 
     pub(crate) fn validate_running_conditions(&mut self) -> Result<(), SpirvBuilderError> {
+        let target_env = self
+            .target
+            .strip_prefix(SPIRV_TARGET_PREFIX)
+            .ok_or_else(|| SpirvBuilderError::NonSpirvTarget {
+                target: self.target.clone(),
+            })?;
+        // HACK(eddyb) used only to split the full list into groups.
+        #[allow(clippy::match_same_arms)]
+        match target_env {
+            // HACK(eddyb) hardcoded list to avoid checking if the JSON file
+            // for a particular target exists (and sanitizing strings for paths).
+            //
+            // FIXME(eddyb) consider moving this list, or even `target-specs`,
+            // into `rustc_codegen_spirv_types`'s code/source.
+            "spv1.0" | "spv1.1" | "spv1.2" | "spv1.3" | "spv1.4" | "spv1.5" => {}
+            "opengl4.0" | "opengl4.1" | "opengl4.2" | "opengl4.3" | "opengl4.5" => {}
+            "vulkan1.0" | "vulkan1.1" | "vulkan1.1spv1.4" | "vulkan1.2" => {}
+
+            _ => {
+                return Err(SpirvBuilderError::UnsupportedSpirvTargetEnv {
+                    target_env: target_env.into(),
+                });
+            }
+        }
+
         if (self.print_metadata == MetadataPrintout::Full) && self.multimodule {
             return Err(SpirvBuilderError::MultiModuleWithPrintMetadata);
         }
@@ -469,8 +521,10 @@ impl SpirvBuilder {
         at: &Path,
     ) -> Result<CompileResult, SpirvBuilderError> {
         let metadata_contents = File::open(at).map_err(SpirvBuilderError::MetadataFileMissing)?;
-        let metadata: CompileResult = serde_json::from_reader(BufReader::new(metadata_contents))
-            .map_err(SpirvBuilderError::MetadataFileMalformed)?;
+        // FIXME(eddyb) move this functionality into `rustc_codegen_spirv_types`.
+        let metadata: CompileResult =
+            rustc_codegen_spirv_types::serde_json::from_reader(BufReader::new(metadata_contents))
+                .map_err(SpirvBuilderError::MetadataFileMalformed)?;
         match &metadata.module {
             ModuleResult::SingleModule(spirv_module) => {
                 assert!(!self.multimodule);
@@ -691,9 +745,15 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
         "-Zbuild-std-features=compiler-builtins-mem",
         "--profile",
         profile,
-        "--target",
-        &*builder.target,
     ]);
+
+    // FIXME(eddyb) consider moving `target-specs` into `rustc_codegen_spirv_types`.
+    // FIXME(eddyb) consider the `RUST_TARGET_PATH` env var alternative.
+    cargo.arg("--target").arg(
+        Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("target-specs")
+            .join(&format!("{}.json", builder.target)),
+    );
 
     // NOTE(eddyb) see above how this is computed and why it might be missing.
     if let Some(target_dir) = target_dir {

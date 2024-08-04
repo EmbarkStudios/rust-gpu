@@ -10,6 +10,7 @@ use crate::spirv_type::{SpirvType, SpirvTypePrinter, TypeCache};
 use crate::symbols::Symbols;
 use crate::target::SpirvTarget;
 
+use itertools::Itertools as _;
 use rspirv::dr::{Module, Operand};
 use rspirv::spirv::{Decoration, LinkageType, Op, Word};
 use rustc_ast::ast::{InlineAsmOptions, InlineAsmTemplatePiece};
@@ -27,7 +28,7 @@ use rustc_span::symbol::Symbol;
 use rustc_span::{SourceFile, Span, DUMMY_SP};
 use rustc_target::abi::call::{FnAbi, PassMode};
 use rustc_target::abi::{AddressSpace, HasDataLayout, TargetDataLayout};
-use rustc_target::spec::{HasTargetSpec, Target};
+use rustc_target::spec::{HasTargetSpec, Target, TargetTriple};
 use std::cell::RefCell;
 use std::collections::BTreeSet;
 use std::iter::once;
@@ -87,6 +88,73 @@ pub struct CodegenCx<'tcx> {
 
 impl<'tcx> CodegenCx<'tcx> {
     pub fn new(tcx: TyCtxt<'tcx>, codegen_unit: &'tcx CodegenUnit<'tcx>) -> Self {
+        // Validate the target spec, as the backend doesn't control `--target`.
+        let target_triple = tcx.sess.opts.target_triple.triple();
+        let target: SpirvTarget = target_triple.parse().unwrap_or_else(|_| {
+            let qualifier = if !target_triple.starts_with("spirv-") {
+                "non-SPIR-V "
+            } else {
+                ""
+            };
+            tcx.dcx().fatal(format!(
+                "{qualifier}target `{target_triple}` not supported by `rustc_codegen_spirv`",
+            ))
+        });
+        let target_spec_mismatched_jsons = {
+            use rustc_target::json::ToJson;
+
+            // HACK(eddyb) this loads the same `serde_json` used by `rustc_target`.
+            extern crate serde_json;
+
+            let expected = &target.rustc_target();
+            let found = &tcx.sess.target;
+            match &tcx.sess.opts.target_triple {
+                // HACK(eddyb) if `--target=path/to/target/spec.json` was used,
+                // `tcx.sess.target.to_json()` could still differ from it, and
+                // ideally `spirv-builder` can be forced to pass an exact match.
+                //
+                // FIXME(eddyb) consider the `RUST_TARGET_PATH` env var alternative.
+                TargetTriple::TargetTriple(_) => {
+                    // FIXME(eddyb) this case should be impossible as upstream
+                    // `rustc` doesn't support `spirv-*` targets!
+                    (expected != found).then(|| [expected, found].map(|spec| spec.to_json()))
+                }
+                TargetTriple::TargetJson { contents, .. } => {
+                    let expected = expected.to_json();
+                    let found = serde_json::from_str(contents).unwrap();
+                    (expected != found).then_some([expected, found])
+                }
+            }
+        };
+        if let Some([expected, found]) = target_spec_mismatched_jsons {
+            let diff_keys = [&expected, &found]
+                .into_iter()
+                .flat_map(|json| json.as_object().into_iter().flat_map(|obj| obj.keys()))
+                .unique()
+                .filter(|k| expected.get(k) != found.get(k));
+
+            tcx.dcx()
+                .struct_fatal(format!("mismatched `{target_triple}` target spec"))
+                .with_note(format!(
+                    "expected (built into `rustc_codegen_spirv`):\n{expected:#}"
+                ))
+                .with_note(match &tcx.sess.opts.target_triple {
+                    TargetTriple::TargetJson {
+                        path_for_rustdoc,
+                        contents,
+                        ..
+                    } if !path_for_rustdoc.as_os_str().is_empty() => {
+                        format!("found (`{}`):\n{contents}", path_for_rustdoc.display())
+                    }
+                    _ => format!("found:\n{found:#}"),
+                })
+                .with_help(format!(
+                    "mismatched properties: {}",
+                    diff_keys.map(|k| format!("{k:?}")).join(", ")
+                ))
+                .emit();
+        }
+
         let sym = Symbols::get();
 
         let mut feature_names = tcx
@@ -111,7 +179,6 @@ impl<'tcx> CodegenCx<'tcx> {
             });
 
         let codegen_args = CodegenArgs::from_session(tcx.sess);
-        let target = tcx.sess.target.llvm_target.parse().unwrap();
 
         Self {
             tcx,

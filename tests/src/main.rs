@@ -1,7 +1,7 @@
 use clap::Parser;
+use itertools::Itertools as _;
 use std::{
-    env,
-    io::{Error, ErrorKind, Result},
+    env, io,
     path::{Path, PathBuf},
 };
 
@@ -27,7 +27,14 @@ impl Opt {
     }
 }
 
-const TARGET_PREFIX: &str = "spirv-unknown-";
+const SPIRV_TARGET_PREFIX: &str = "spirv-unknown-";
+
+fn target_spec_json(target: &str) -> String {
+    format!(
+        "{}/../crates/spirv-builder/target-specs/{target}.json",
+        env!("CARGO_MANIFEST_DIR")
+    )
+}
 
 #[derive(Copy, Clone)]
 enum DepKind {
@@ -140,7 +147,7 @@ impl Runner {
             // which offer `// only-S` and `// ignore-S` for any stage ID `S`.
             let stage_id = variation.name;
 
-            let target = format!("{TARGET_PREFIX}{env}");
+            let target = format!("{SPIRV_TARGET_PREFIX}{env}");
             let libs = build_deps(&self.deps_target_dir, &self.codegen_backend_path, &target);
             let mut flags = test_rustc_flags(
                 &self.codegen_backend_path,
@@ -160,7 +167,7 @@ impl Runner {
                 stage_id: stage_id.to_string(),
                 target_rustcflags: Some(flags),
                 mode: mode.parse().expect("Invalid mode"),
-                target,
+                target: target_spec_json(&target),
                 src_base: self.tests_dir.join(mode),
                 build_base: self.compiletest_build_dir.clone(),
                 bless: self.opt.bless,
@@ -185,7 +192,7 @@ fn build_deps(deps_target_dir: &Path, codegen_backend_path: &Path, target: &str)
             "compiletests-deps-helper",
             "-Zbuild-std=core",
             "-Zbuild-std-features=compiler-builtins-mem",
-            &*format!("--target={target}"),
+            &*format!("--target={}", target_spec_json(target)),
         ])
         .arg("--target-dir")
         .arg(deps_target_dir)
@@ -201,38 +208,48 @@ fn build_deps(deps_target_dir: &Path, codegen_backend_path: &Path, target: &str)
         "compiler_builtins",
         DepKind::SpirvLib,
         target,
-    )
-    .unwrap();
-    let core = find_lib(deps_target_dir, "core", DepKind::SpirvLib, target).unwrap();
-    let spirv_std = find_lib(deps_target_dir, "spirv_std", DepKind::SpirvLib, target).unwrap();
-    let glam = find_lib(deps_target_dir, "glam", DepKind::SpirvLib, target).unwrap();
+    );
+    let core = find_lib(deps_target_dir, "core", DepKind::SpirvLib, target);
+    let spirv_std = find_lib(deps_target_dir, "spirv_std", DepKind::SpirvLib, target);
+    let glam = find_lib(deps_target_dir, "glam", DepKind::SpirvLib, target);
     let spirv_std_macros = find_lib(
         deps_target_dir,
         "spirv_std_macros",
         DepKind::ProcMacro,
         target,
-    )
-    .unwrap();
+    );
 
-    if [
+    let all_libs = [
         &compiler_builtins,
         &core,
         &spirv_std,
         &glam,
         &spirv_std_macros,
-    ]
-    .iter()
-    .any(|o| o.is_none())
-    {
+    ];
+    if all_libs.iter().any(|r| r.is_err()) {
+        // FIXME(eddyb) `missing_count` should always be `0` anyway.
+        // FIXME(eddyb) use `--message-format=json-render-diagnostics` to
+        // avoid caring about duplicates (or search within files at all).
+        let missing_count = all_libs
+            .iter()
+            .filter(|r| matches!(r, Err(FindLibError::Missing)))
+            .count();
+        let duplicate_count = all_libs
+            .iter()
+            .filter(|r| matches!(r, Err(FindLibError::Duplicate)))
+            .count();
+        eprintln!(
+            "warning: cleaning deps ({missing_count} missing libs, {duplicate_count} duplicated libs)"
+        );
         clean_deps(deps_target_dir);
         build_deps(deps_target_dir, codegen_backend_path, target)
     } else {
         TestDeps {
-            core: core.unwrap(),
-            glam: glam.unwrap(),
-            compiler_builtins: compiler_builtins.unwrap(),
-            spirv_std: spirv_std.unwrap(),
-            spirv_std_macros: spirv_std_macros.unwrap(),
+            core: core.ok().unwrap(),
+            glam: glam.ok().unwrap(),
+            compiler_builtins: compiler_builtins.ok().unwrap(),
+            spirv_std: spirv_std.ok().unwrap(),
+            spirv_std_macros: spirv_std_macros.ok().unwrap(),
         }
     }
 }
@@ -249,24 +266,29 @@ fn clean_deps(deps_target_dir: &Path) {
         .unwrap();
 }
 
-/// Attempt find the rlib that matches `base`, if multiple rlibs are found
-/// then a clean build is required and `None` is returned.
+enum FindLibError {
+    Missing,
+    Duplicate,
+}
+
+/// Attempt find the rlib that matches `base`, if multiple rlibs are found then
+/// a clean build is required and `Err(FindLibError::Duplicate)` is returned.
 fn find_lib(
     deps_target_dir: &Path,
     base: impl AsRef<Path>,
     dep_kind: DepKind,
     target: &str,
-) -> Result<Option<PathBuf>> {
+) -> Result<PathBuf, FindLibError> {
     let base = base.as_ref();
     let (expected_prefix, expected_extension) = dep_kind.prefix_and_extension();
     let expected_name = format!("{}{}", expected_prefix, base.display());
 
     let dir = deps_target_dir.join(dep_kind.target_dir_suffix(target));
 
-    let paths = std::fs::read_dir(dir)?
-        .filter_map(Result::ok)
-        .map(|entry| entry.path())
-        .filter(|path| {
+    std::fs::read_dir(dir)
+        .unwrap()
+        .map(|entry| entry.unwrap().path())
+        .filter(move |path| {
             let name = {
                 let name = path.file_stem();
                 if name.is_none() {
@@ -284,13 +306,14 @@ fn find_lib(
 
             name_matches && extension_matches
         })
-        .collect::<Vec<_>>();
-
-    Ok(if paths.len() > 1 {
-        None
-    } else {
-        paths.into_iter().next()
-    })
+        .exactly_one()
+        .map_err(|mut iter| {
+            if iter.next().is_none() {
+                FindLibError::Missing
+            } else {
+                FindLibError::Duplicate
+            }
+        })
 }
 
 /// Returns whether this string ends with a dash ('-'), followed by 16 lowercase hexadecimal characters
@@ -359,11 +382,11 @@ fn rust_flags(codegen_backend_path: &Path) -> String {
 }
 
 /// Convience function to map process failure to results in Rust.
-fn map_status_to_result(status: std::process::ExitStatus) -> Result<()> {
+fn map_status_to_result(status: std::process::ExitStatus) -> io::Result<()> {
     match status.success() {
         true => Ok(()),
-        false => Err(Error::new(
-            ErrorKind::Other,
+        false => Err(io::Error::new(
+            io::ErrorKind::Other,
             format!(
                 "process terminated with non-zero code: {}",
                 status.code().unwrap_or(0)
