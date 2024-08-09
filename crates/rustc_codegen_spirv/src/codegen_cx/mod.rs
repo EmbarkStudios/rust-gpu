@@ -10,6 +10,7 @@ use crate::spirv_type::{SpirvType, SpirvTypePrinter, TypeCache};
 use crate::symbols::Symbols;
 use crate::target::SpirvTarget;
 
+use itertools::Itertools as _;
 use rspirv::dr::{Module, Operand};
 use rspirv::spirv::{Decoration, LinkageType, Op, Word};
 use rustc_ast::ast::{InlineAsmOptions, InlineAsmTemplatePiece};
@@ -18,6 +19,7 @@ use rustc_codegen_ssa::traits::{
     AsmMethods, BackendTypes, DebugInfoMethods, GlobalAsmOperandRef, MiscMethods,
 };
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
+use rustc_hir::def_id::DefId;
 use rustc_middle::mir;
 use rustc_middle::mir::mono::CodegenUnit;
 use rustc_middle::ty::layout::{HasParamEnv, HasTyCtxt};
@@ -27,7 +29,7 @@ use rustc_span::symbol::Symbol;
 use rustc_span::{SourceFile, Span, DUMMY_SP};
 use rustc_target::abi::call::{FnAbi, PassMode};
 use rustc_target::abi::{AddressSpace, HasDataLayout, TargetDataLayout};
-use rustc_target::spec::{HasTargetSpec, Target};
+use rustc_target::spec::{HasTargetSpec, Target, TargetTriple};
 use std::cell::RefCell;
 use std::collections::BTreeSet;
 use std::iter::once;
@@ -56,11 +58,14 @@ pub struct CodegenCx<'tcx> {
     /// Cache of all the builtin symbols we need
     pub sym: Rc<Symbols>,
     pub instruction_table: InstructionTable,
-    pub libm_intrinsics: RefCell<FxHashMap<Word, super::builder::libm_intrinsics::LibmIntrinsic>>,
+
+    // FIXME(eddyb) should the maps exist at all, now that the `DefId` is known
+    // at `call` time, and presumably its high-level details can be looked up?
+    pub libm_intrinsics: RefCell<FxHashMap<DefId, super::builder::libm_intrinsics::LibmIntrinsic>>,
 
     /// All `panic!(...)`s and builtin panics (from MIR `Assert`s) call into one
     /// of these lang items, which we always replace with an "abort".
-    pub panic_entry_point_ids: RefCell<FxHashSet<Word>>,
+    pub panic_entry_points: RefCell<FxHashSet<DefId>>,
 
     /// `core::fmt::Arguments::new_{v1,const}` instances (for Rust 2021 panics).
     pub fmt_args_new_fn_ids: RefCell<FxHashSet<Word>>,
@@ -70,23 +75,87 @@ pub struct CodegenCx<'tcx> {
     /// "specifier" as a `char` (' ' for `Display`, `x` for `LowerHex`, etc.)
     pub fmt_rt_arg_new_fn_ids_to_ty_and_spec: RefCell<FxHashMap<Word, (Ty<'tcx>, char)>>,
 
-    /// Intrinsic for loading a <T> from a &[u32]. The PassMode is the mode of the <T>.
-    pub buffer_load_intrinsic_fn_id: RefCell<FxHashMap<Word, &'tcx PassMode>>,
-    /// Intrinsic for storing a <T> into a &[u32]. The PassMode is the mode of the <T>.
-    pub buffer_store_intrinsic_fn_id: RefCell<FxHashMap<Word, &'tcx PassMode>>,
+    /// Intrinsic for loading a `<T>` from a `&[u32]`. The `PassMode` is the mode of the `<T>`.
+    pub buffer_load_intrinsics: RefCell<FxHashMap<DefId, &'tcx PassMode>>,
+    /// Intrinsic for storing a `<T>` into a `&[u32]`. The `PassMode` is the mode of the `<T>`.
+    pub buffer_store_intrinsics: RefCell<FxHashMap<DefId, &'tcx PassMode>>,
 
     /// Some runtimes (e.g. intel-compute-runtime) disallow atomics on i8 and i16, even though it's allowed by the spec.
     /// This enables/disables them.
     pub i8_i16_atomics_allowed: bool,
 
     pub codegen_args: CodegenArgs,
-
-    /// Information about the SPIR-V target.
-    pub target: SpirvTarget,
 }
 
 impl<'tcx> CodegenCx<'tcx> {
     pub fn new(tcx: TyCtxt<'tcx>, codegen_unit: &'tcx CodegenUnit<'tcx>) -> Self {
+        // Validate the target spec, as the backend doesn't control `--target`.
+        let target_triple = tcx.sess.opts.target_triple.triple();
+        let target: SpirvTarget = target_triple.parse().unwrap_or_else(|_| {
+            let qualifier = if !target_triple.starts_with("spirv-") {
+                "non-SPIR-V "
+            } else {
+                ""
+            };
+            tcx.dcx().fatal(format!(
+                "{qualifier}target `{target_triple}` not supported by `rustc_codegen_spirv`",
+            ))
+        });
+        let target_spec_mismatched_jsons = {
+            use rustc_target::json::ToJson;
+
+            // HACK(eddyb) this loads the same `serde_json` used by `rustc_target`.
+            extern crate serde_json;
+
+            let expected = &target.rustc_target();
+            let found = &tcx.sess.target;
+            match &tcx.sess.opts.target_triple {
+                // HACK(eddyb) if `--target=path/to/target/spec.json` was used,
+                // `tcx.sess.target.to_json()` could still differ from it, and
+                // ideally `spirv-builder` can be forced to pass an exact match.
+                //
+                // FIXME(eddyb) consider the `RUST_TARGET_PATH` env var alternative.
+                TargetTriple::TargetTriple(_) => {
+                    // FIXME(eddyb) this case should be impossible as upstream
+                    // `rustc` doesn't support `spirv-*` targets!
+                    (expected != found).then(|| [expected, found].map(|spec| spec.to_json()))
+                }
+                TargetTriple::TargetJson { contents, .. } => {
+                    let expected = expected.to_json();
+                    let found = serde_json::from_str(contents).unwrap();
+                    (expected != found).then_some([expected, found])
+                }
+            }
+        };
+        if let Some([expected, found]) = target_spec_mismatched_jsons {
+            let diff_keys = [&expected, &found]
+                .into_iter()
+                .flat_map(|json| json.as_object().into_iter().flat_map(|obj| obj.keys()))
+                .unique()
+                .filter(|k| expected.get(k) != found.get(k));
+
+            tcx.dcx()
+                .struct_fatal(format!("mismatched `{target_triple}` target spec"))
+                .with_note(format!(
+                    "expected (built into `rustc_codegen_spirv`):\n{expected:#}"
+                ))
+                .with_note(match &tcx.sess.opts.target_triple {
+                    TargetTriple::TargetJson {
+                        path_for_rustdoc,
+                        contents,
+                        ..
+                    } if !path_for_rustdoc.as_os_str().is_empty() => {
+                        format!("found (`{}`):\n{contents}", path_for_rustdoc.display())
+                    }
+                    _ => format!("found:\n{found:#}"),
+                })
+                .with_help(format!(
+                    "mismatched properties: {}",
+                    diff_keys.map(|k| format!("{k:?}")).join(", ")
+                ))
+                .emit();
+        }
+
         let sym = Symbols::get();
 
         let mut feature_names = tcx
@@ -106,12 +175,11 @@ impl<'tcx> CodegenCx<'tcx> {
             .map(|s| s.parse())
             .collect::<Result<_, String>>()
             .unwrap_or_else(|error| {
-                tcx.sess.err(error);
+                tcx.dcx().err(error);
                 Vec::new()
             });
 
         let codegen_args = CodegenArgs::from_session(tcx.sess);
-        let target = tcx.sess.target.llvm_target.parse().unwrap();
 
         Self {
             tcx,
@@ -123,15 +191,14 @@ impl<'tcx> CodegenCx<'tcx> {
             vtables: Default::default(),
             ext_inst: Default::default(),
             zombie_decorations: Default::default(),
-            target,
             sym,
             instruction_table: InstructionTable::new(),
             libm_intrinsics: Default::default(),
-            panic_entry_point_ids: Default::default(),
+            panic_entry_points: Default::default(),
             fmt_args_new_fn_ids: Default::default(),
             fmt_rt_arg_new_fn_ids_to_ty_and_spec: Default::default(),
-            buffer_load_intrinsic_fn_id: Default::default(),
-            buffer_store_intrinsic_fn_id: Default::default(),
+            buffer_load_intrinsics: Default::default(),
+            buffer_store_intrinsics: Default::default(),
             i8_i16_atomics_allowed: false,
             codegen_args,
         }
@@ -229,7 +296,6 @@ pub enum SpirvMetadata {
 }
 
 pub struct CodegenArgs {
-    pub module_output_type: ModuleOutputType,
     pub disassemble: bool,
     pub disassemble_fn: Option<String>,
     pub disassemble_entry: Option<String>,
@@ -269,7 +335,9 @@ impl CodegenArgs {
     pub fn from_session(sess: &Session) -> Self {
         match CodegenArgs::parse(&sess.opts.cg.llvm_args) {
             Ok(ok) => ok,
-            Err(err) => sess.fatal(format!("Unable to parse llvm-args: {err}")),
+            Err(err) => sess
+                .dcx()
+                .fatal(format!("Unable to parse llvm-args: {err}")),
         }
     }
 
@@ -394,6 +462,11 @@ impl CodegenArgs {
             );
             opts.optflag(
                 "",
+                "spirt-keep-unstructured-cfg-in-dumps",
+                "include initial unstructured CFG when dumping SPIR-T",
+            );
+            opts.optflag(
+                "",
                 "specializer-debug",
                 "enable debug logging for the specializer",
             );
@@ -485,8 +558,6 @@ impl CodegenArgs {
             std::process::exit(1);
         }
 
-        let module_output_type =
-            matches.opt_get_default("module-output", ModuleOutputType::Single)?;
         let disassemble = matches.opt_present("disassemble");
         let disassemble_fn = matches.opt_str("disassemble-fn");
         let disassemble_entry = matches.opt_str("disassemble-entry");
@@ -548,9 +619,9 @@ impl CodegenArgs {
                 .collect(),
 
             abort_strategy: matches.opt_str("abort-strategy"),
+            module_output_type: matches.opt_get_default("module-output", Default::default())?,
 
             // FIXME(eddyb) deduplicate between `CodegenArgs` and `linker::Options`.
-            emit_multiple_modules: module_output_type == ModuleOutputType::Multiple,
             spirv_metadata,
             keep_link_exports: false,
 
@@ -563,6 +634,8 @@ impl CodegenArgs {
                 .opt_present("spirt-strip-custom-debuginfo-from-dumps"),
             spirt_keep_debug_sources_in_dumps: matches
                 .opt_present("spirt-keep-debug-sources-in-dumps"),
+            spirt_keep_unstructured_cfg_in_dumps: matches
+                .opt_present("spirt-keep-unstructured-cfg-in-dumps"),
             specializer_debug: matches.opt_present("specializer-debug"),
             specializer_dump_instances: matches_opt_path("specializer-dump-instances"),
             print_all_zombie: matches.opt_present("print-all-zombie"),
@@ -570,7 +643,6 @@ impl CodegenArgs {
         };
 
         Ok(Self {
-            module_output_type,
             disassemble,
             disassemble_fn,
             disassemble_entry,
@@ -712,8 +784,9 @@ impl CodegenArgs {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ModuleOutputType {
+    #[default]
     Single,
     Multiple,
 }

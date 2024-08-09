@@ -122,20 +122,29 @@ fn link_with_linker_opts(
     // is really a silent unwinding device, that should be treated the same as
     // `Err(ErrorGuaranteed)` returns from `link`).
     rustc_driver::catch_fatal_errors(|| {
-        let mut early_error_handler = rustc_session::EarlyErrorHandler::new(
-            rustc_session::config::ErrorOutputType::default(),
-        );
-        let matches = rustc_driver::handle_options(
-            &early_error_handler,
-            &["".to_string(), "x.rs".to_string()],
-        )
-        .unwrap();
-        let sopts =
-            rustc_session::config::build_session_options(&mut early_error_handler, &matches);
+        rustc_data_structures::jobserver::initialize_checked(|err| {
+            unreachable!("jobserver error: {err}");
+        });
 
-        rustc_span::create_session_globals_then(sopts.edition, || {
+        let mut early_dcx =
+            rustc_session::EarlyDiagCtxt::new(rustc_session::config::ErrorOutputType::default());
+        let matches =
+            rustc_driver::handle_options(&early_dcx, &["".to_string(), "x.rs".to_string()])
+                .unwrap();
+        let sopts = rustc_session::config::build_session_options(&mut early_dcx, &matches);
+
+        let target = "spirv-unknown-spv1.0"
+            .parse::<crate::target::SpirvTarget>()
+            .unwrap()
+            .rustc_target();
+        let sm_inputs = rustc_span::source_map::SourceMapInputs {
+            file_loader: Box::new(rustc_span::source_map::RealFileLoader),
+            path_mapping: sopts.file_path_mapping(),
+            hash_kind: sopts.unstable_opts.src_hash_algorithm(&target),
+        };
+        rustc_span::create_session_globals_then(sopts.edition, Some(sm_inputs), || {
             let mut sess = rustc_session::build_session(
-                &early_error_handler,
+                early_dcx,
                 sopts,
                 CompilerIO {
                     input: Input::Str {
@@ -150,16 +159,17 @@ fn link_with_linker_opts(
                 Registry::new(&[]),
                 Default::default(),
                 Default::default(),
-                Default::default(),
+                target,
                 Default::default(),
                 rustc_interface::util::rustc_version_str().unwrap_or("unknown"),
+                Default::default(),
                 Default::default(),
                 Default::default(),
             );
 
             // HACK(eddyb) inject `write_diags` into `sess`, to work around
             // the removals in https://github.com/rust-lang/rust/pull/102992.
-            sess.parse_sess.span_diagnostic = {
+            sess.psess.dcx = {
                 let fallback_bundle = {
                     extern crate rustc_error_messages;
                     rustc_error_messages::fallback_fluent_bundle(
@@ -168,11 +178,11 @@ fn link_with_linker_opts(
                     )
                 };
                 let emitter =
-                    rustc_errors::emitter::EmitterWriter::new(Box::new(buf), fallback_bundle)
-                        .sm(Some(sess.parse_sess.clone_source_map()));
+                    rustc_errors::emitter::HumanEmitter::new(Box::new(buf), fallback_bundle)
+                        .sm(Some(sess.psess.clone_source_map()));
 
-                rustc_errors::Handler::with_emitter(Box::new(emitter))
-                    .with_flags(sess.opts.unstable_opts.diagnostic_handler_flags(true))
+                rustc_errors::DiagCtxt::new(Box::new(emitter))
+                    .with_flags(sess.opts.unstable_opts.dcx_flags(true))
             };
 
             let res = link(
@@ -190,15 +200,17 @@ fn link_with_linker_opts(
                 ),
                 Default::default(),
             );
-            assert_eq!(sess.has_errors(), res.as_ref().err().copied());
+            assert_eq!(sess.dcx().has_errors(), res.as_ref().err().copied());
             res.map(|res| match res {
                 LinkResult::SingleModule(m) => *m,
                 LinkResult::MultipleModules { .. } => unreachable!(),
             })
+            .map_err(|_guar| ())
         })
     })
+    .map_err(|_fatal| ())
     .flatten()
-    .map_err(|_e| {
+    .map_err(|()| {
         let mut diags = output.unwrap_to_string();
         if let Some(diags_without_trailing_newlines) = diags.strip_suffix("\n\n") {
             diags.truncate(diags_without_trailing_newlines.len());

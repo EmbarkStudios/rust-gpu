@@ -22,7 +22,7 @@ use std::sync::{LazyLock, Mutex};
 /// the `result_id` of the type declaration instruction, merely the contents.
 //
 // FIXME(eddyb) should `SpirvType`s be behind `&'tcx` from `tcx.arena.dropless`?
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Ord, PartialOrd, Hash)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum SpirvType<'tcx> {
     Void,
     Bool,
@@ -132,12 +132,17 @@ impl SpirvType<'_> {
             Self::Float(width) => {
                 let result = cx.emit_global().type_float_id(id, width);
                 match width {
+                    16 if !cx.builder.has_capability(Capability::Float16) => cx.zombie_with_span(
+                        result,
+                        def_span,
+                        "`f16` without `OpCapability Float16`",
+                    ),
                     64 if !cx.builder.has_capability(Capability::Float64) => cx.zombie_with_span(
                         result,
                         def_span,
                         "`f64` without `OpCapability Float64`",
                     ),
-                    32 | 64 => (),
+                    16 | 32 | 64 => (),
                     other => cx.zombie_with_span(
                         result,
                         def_span,
@@ -297,7 +302,7 @@ impl SpirvType<'_> {
             }
             ref other => cx
                 .tcx
-                .sess
+                .dcx()
                 .fatal(format!("def_with_id invalid for type {other:?}")),
         };
         cx.type_cache_def(result, self.tcx_arena_alloc_slices(cx), def_span);
@@ -342,9 +347,8 @@ impl SpirvType<'_> {
             | Self::AccelerationStructureKhr
             | Self::RayQueryKhr
             | Self::Sampler
-            | Self::SampledImage { .. } => Size::from_bytes(4),
-
-            Self::InterfaceBlock { inner_type } => cx.lookup_type(inner_type).sizeof(cx)?,
+            | Self::SampledImage { .. }
+            | Self::InterfaceBlock { .. } => Size::from_bytes(4),
         };
         Some(result)
     }
@@ -372,9 +376,8 @@ impl SpirvType<'_> {
             | Self::AccelerationStructureKhr
             | Self::RayQueryKhr
             | Self::Sampler
-            | Self::SampledImage { .. } => Align::from_bytes(4).unwrap(),
-
-            Self::InterfaceBlock { inner_type } => cx.lookup_type(inner_type).alignof(cx),
+            | Self::SampledImage { .. }
+            | Self::InterfaceBlock { .. } => Align::from_bytes(4).unwrap(),
         }
     }
 

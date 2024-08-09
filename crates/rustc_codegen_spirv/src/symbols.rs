@@ -19,9 +19,7 @@ pub struct Symbols {
     pub discriminant: Symbol,
     pub rust_gpu: Symbol,
     pub spirv: Symbol,
-    pub spirv_std: Symbol,
     pub libm: Symbol,
-    pub num_traits: Symbol,
     pub entry_point_name: Symbol,
     pub spv_intel_shader_integer_functions2: Symbol,
     pub spv_khr_vulkan_memory_model: Symbol,
@@ -343,6 +341,10 @@ impl Symbols {
                 SpirvAttribute::IntrinsicType(IntrinsicType::RuntimeArray),
             ),
             (
+                "typed_buffer",
+                SpirvAttribute::IntrinsicType(IntrinsicType::TypedBuffer),
+            ),
+            (
                 "matrix",
                 SpirvAttribute::IntrinsicType(IntrinsicType::Matrix),
             ),
@@ -383,9 +385,7 @@ impl Symbols {
             discriminant: Symbol::intern("discriminant"),
             rust_gpu: Symbol::intern("rust_gpu"),
             spirv: Symbol::intern("spirv"),
-            spirv_std: Symbol::intern("spirv_std"),
             libm: Symbol::intern("libm"),
-            num_traits: Symbol::intern("num_traits"),
             entry_point_name: Symbol::intern("entry_point_name"),
             spv_intel_shader_integer_functions2: Symbol::intern(
                 "SPV_INTEL_shader_integer_functions2",
@@ -545,7 +545,7 @@ fn parse_attr_int_value(arg: &NestedMetaItem) -> Result<u32, ParseAttrError> {
         Some(&MetaItemLit {
             kind: LitKind::Int(x, LitIntType::Unsuffixed),
             ..
-        }) if x <= u32::MAX as u128 => Ok(x as u32),
+        }) if x <= u32::MAX as u128 => Ok(x.get() as u32),
         _ => Err((arg.span, "attribute value must be integer".to_string())),
     }
 }
@@ -563,13 +563,13 @@ fn parse_local_size_attr(arg: &NestedMetaItem) -> Result<[u32; 3], ParseAttrErro
                     NestedMetaItem::Lit(MetaItemLit {
                         kind: LitKind::Int(x, LitIntType::Unsuffixed),
                         ..
-                    }) if *x <= u32::MAX as u128 => local_size[idx] = *x as u32,
+                    }) if *x <= u32::MAX as u128 => local_size[idx] = x.get() as u32,
                     _ => return Err((lit.span(), "must be a u32 literal".to_string())),
                 }
             }
             Ok(local_size)
         }
-        Some(tuple) if tuple.is_empty() => Err((
+        Some([]) => Err((
             arg.span,
             "#[spirv(compute(threads(x, y, z)))] must have the x dimension specified, trailing ones may be elided".to_string(),
         )),

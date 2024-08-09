@@ -1,6 +1,6 @@
 use crate::{maybe_watch, CompiledShaderModules, Options};
 
-use std::{convert::TryInto, time::Duration};
+use std::time::Duration;
 use wgpu::util::DeviceExt;
 
 pub fn start(options: &Options) {

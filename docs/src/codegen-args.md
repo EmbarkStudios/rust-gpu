@@ -208,3 +208,11 @@ all the "file contents debuginfo" (i.e. from SPIR-V `OpSource` instructions),
 which will end up being included, in full, at the start of the dump.
 
 The default (of hiding the file contents) is less verbose, but (arguably) lossier.
+
+### `--spirt-keep-unstructured-cfg-in-dumps`
+
+When dumping (pretty-printed) `SPIR-🇹` (e.g. with `--dump-spirt-passes`), include
+the initial unstructured state, as well (i.e. just after lowering from SPIR-V).
+
+The default (of only dumping structured SPIR-T) can have far less noisy dataflow,
+but unstructured SPIR-T may be needed for e.g. debugging the structurizer itself.

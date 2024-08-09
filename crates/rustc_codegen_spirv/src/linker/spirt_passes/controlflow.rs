@@ -4,13 +4,17 @@ use crate::custom_insts::{self, CustomInst, CustomOp};
 use smallvec::SmallVec;
 use spirt::func_at::FuncAt;
 use spirt::{
-    cfg, spv, Attr, AttrSet, ConstCtor, ConstDef, ControlNodeKind, DataInstFormDef, DataInstKind,
-    DeclDef, EntityDefs, ExportKey, Exportee, Module, Type, TypeCtor, TypeCtorArg, TypeDef, Value,
+    cfg, spv, Attr, AttrSet, ConstDef, ConstKind, ControlNodeKind, DataInstFormDef, DataInstKind,
+    DeclDef, EntityDefs, ExportKey, Exportee, Module, Type, TypeDef, TypeKind, TypeOrConst, Value,
 };
 use std::fmt::Write as _;
 
 /// Replace our custom extended instruction `Abort`s with standard `OpReturn`s,
 /// but only in entry-points (and only before CFG structurization).
+//
+// FIXME(eddyb) no longer relying on structurization, try porting this
+// to replace custom aborts in `Block`s and inject `ExitInvocation`s
+// after them (truncating the `Block` and/or parent region if necessary).
 pub fn convert_custom_aborts_to_unstructured_returns_in_entry_points(
     linker_options: &crate::linker::Options,
     module: &mut Module,
@@ -66,8 +70,8 @@ pub fn convert_custom_aborts_to_unstructured_returns_in_entry_points(
         };
 
         let func_decl = &mut module.funcs[func];
-        assert!(match &cx[func_decl.ret_type].ctor {
-            TypeCtor::SpvInst(spv_inst) => spv_inst.opcode == wk.OpTypeVoid,
+        assert!(match &cx[func_decl.ret_type].kind {
+            TypeKind::SpvInst { spv_inst, .. } => spv_inst.opcode == wk.OpTypeVoid,
             _ => false,
         });
 
@@ -112,7 +116,7 @@ pub fn convert_custom_aborts_to_unstructured_returns_in_entry_points(
                     if let DataInstKind::SpvInst(spv_inst) = &data_inst_form_def.kind {
                         if spv_inst.opcode == wk.OpLoad {
                             if let Value::Const(ct) = data_inst_def.inputs[0] {
-                                if let ConstCtor::PtrToGlobalVar(gv) = cx[ct].ctor {
+                                if let ConstKind::PtrToGlobalVar(gv) = cx[ct].kind {
                                     if interface_global_vars.contains(&gv) {
                                         return Some((
                                             gv,
@@ -129,8 +133,8 @@ pub fn convert_custom_aborts_to_unstructured_returns_in_entry_points(
             if inputs {
                 let mut first_input = true;
                 for (gv, ty, value) in loaded_inputs {
-                    let scalar_type = |ty: Type| match &cx[ty].ctor {
-                        TypeCtor::SpvInst(spv_inst) => match spv_inst.imms[..] {
+                    let scalar_type = |ty: Type| match &cx[ty].kind {
+                        TypeKind::SpvInst { spv_inst, .. } => match spv_inst.imms[..] {
                             [spv::Imm::Short(_, 32), spv::Imm::Short(_, signedness)]
                                 if spv_inst.opcode == wk.OpTypeInt =>
                             {
@@ -145,14 +149,16 @@ pub fn convert_custom_aborts_to_unstructured_returns_in_entry_points(
                     };
                     let vector_or_scalar_type = |ty: Type| {
                         let ty_def = &cx[ty];
-                        match (&ty_def.ctor, &ty_def.ctor_args[..]) {
-                            (TypeCtor::SpvInst(spv_inst), &[TypeCtorArg::Type(elem)])
-                                if spv_inst.opcode == wk.OpTypeVector =>
-                            {
-                                match spv_inst.imms[..] {
-                                    [spv::Imm::Short(_, vlen @ 2..=4)] => {
-                                        Some((scalar_type(elem)?, Some(vlen)))
-                                    }
+                        match &ty_def.kind {
+                            TypeKind::SpvInst {
+                                spv_inst,
+                                type_and_const_inputs,
+                            } if spv_inst.opcode == wk.OpTypeVector => {
+                                match (&type_and_const_inputs[..], &spv_inst.imms[..]) {
+                                    (
+                                        &[TypeOrConst::Type(elem)],
+                                        &[spv::Imm::Short(_, vlen @ 2..=4)],
+                                    ) => Some((scalar_type(elem)?, Some(vlen))),
                                     _ => None,
                                 }
                             }
@@ -250,7 +256,9 @@ pub fn convert_custom_aborts_to_unstructured_returns_in_entry_points(
             )) = custom_terminator_inst
             {
                 let abort_inst = func_at_abort_inst.position;
-                terminator.kind = cfg::ControlInstKind::Return;
+                terminator.kind = cfg::ControlInstKind::ExitInvocation(
+                    cfg::ExitInvocationKind::SpvInst(wk.OpReturn.into()),
+                );
 
                 match abort_strategy {
                     Some(Strategy::Unreachable) => {
@@ -260,16 +268,19 @@ pub fn convert_custom_aborts_to_unstructured_returns_in_entry_points(
                         inputs: _,
                         backtrace,
                     }) => {
-                        let const_ctor = |v: Value| match v {
-                            Value::Const(ct) => &cx[ct].ctor,
+                        let const_kind = |v: Value| match v {
+                            Value::Const(ct) => &cx[ct].kind,
                             _ => unreachable!(),
                         };
-                        let const_str = |v: Value| match const_ctor(v) {
-                            &ConstCtor::SpvStringLiteralForExtInst(s) => s,
+                        let const_str = |v: Value| match const_kind(v) {
+                            &ConstKind::SpvStringLiteralForExtInst(s) => s,
                             _ => unreachable!(),
                         };
-                        let const_u32 = |v: Value| match const_ctor(v) {
-                            ConstCtor::SpvInst(spv_inst) => {
+                        let const_u32 = |v: Value| match const_kind(v) {
+                            ConstKind::SpvInst {
+                                spv_inst_and_const_inputs,
+                            } => {
+                                let (spv_inst, _const_inputs) = &**spv_inst_and_const_inputs;
                                 assert!(spv_inst.opcode == wk.OpConstant);
                                 match spv_inst.imms[..] {
                                     [spv::Imm::Short(_, x)] => x,
@@ -283,11 +294,9 @@ pub fn convert_custom_aborts_to_unstructured_returns_in_entry_points(
                                 attrs: Default::default(),
                                 ty: cx.intern(TypeDef {
                                     attrs: Default::default(),
-                                    ctor: TypeCtor::SpvStringLiteralForExtInst,
-                                    ctor_args: Default::default(),
+                                    kind: TypeKind::SpvStringLiteralForExtInst,
                                 }),
-                                ctor: ConstCtor::SpvStringLiteralForExtInst(s),
-                                ctor_args: Default::default(),
+                                kind: ConstKind::SpvStringLiteralForExtInst(s),
                             })
                         };
 

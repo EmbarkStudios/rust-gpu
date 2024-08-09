@@ -17,7 +17,6 @@ use spirt::{
     FuncDefBody, GlobalVar, Module, Type, Value,
 };
 use std::collections::VecDeque;
-use std::hash::Hash;
 use std::iter;
 
 // HACK(eddyb) `spv::spec::Spec` with extra `WellKnown`s (that should be upstreamed).
@@ -264,87 +263,10 @@ const _: () = {
         }
         fn visit_control_node_def(&mut self, func_at_control_node: FuncAt<'a, ControlNode>) {
             (self.visit_control_node)(&mut self.state, func_at_control_node);
-            // HACK(eddyb) accidentally private `inner_visit_with` method.
-            fn control_node_inner_visit_with<'a>(
-                self_: FuncAt<'a, ControlNode>,
-                visitor: &mut impl Visitor<'a>,
-            ) {
-                let ControlNodeDef { kind, outputs } = self_.def();
-
-                match kind {
-                    ControlNodeKind::Block { insts } => {
-                        for func_at_inst in self_.at(*insts) {
-                            visitor.visit_data_inst_def(func_at_inst.def());
-                        }
-                    }
-                    ControlNodeKind::Select {
-                        kind: SelectionKind::BoolCond | SelectionKind::SpvInst(_),
-                        scrutinee,
-                        cases,
-                    } => {
-                        visitor.visit_value_use(scrutinee);
-                        for &case in cases {
-                            visitor.visit_control_region_def(self_.at(case));
-                        }
-                    }
-                    ControlNodeKind::Loop {
-                        initial_inputs,
-                        body,
-                        repeat_condition,
-                    } => {
-                        for v in initial_inputs {
-                            visitor.visit_value_use(v);
-                        }
-                        visitor.visit_control_region_def(self_.at(*body));
-                        visitor.visit_value_use(repeat_condition);
-                    }
-                }
-                for output in outputs {
-                    output.inner_visit_with(visitor);
-                }
-            }
-            control_node_inner_visit_with(func_at_control_node, self);
+            func_at_control_node.inner_visit_with(self);
         }
     }
 };
-
-// HACK(eddyb) this works around the accidental lack of `spirt::Value: Hash`.
-#[derive(Copy, Clone, PartialEq, Eq)]
-struct HashableValue(Value);
-#[allow(clippy::derived_hash_with_manual_eq)]
-impl Hash for HashableValue {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        use spirt::*;
-        #[derive(Hash)]
-        enum ValueH {
-            Const(Const),
-            ControlRegionInput {
-                region: ControlRegion,
-                input_idx: u32,
-            },
-            ControlNodeOutput {
-                control_node: ControlNode,
-                output_idx: u32,
-            },
-            DataInstOutput(DataInst),
-        }
-        match self.0 {
-            Value::Const(ct) => ValueH::Const(ct),
-            Value::ControlRegionInput { region, input_idx } => {
-                ValueH::ControlRegionInput { region, input_idx }
-            }
-            Value::ControlNodeOutput {
-                control_node,
-                output_idx,
-            } => ValueH::ControlNodeOutput {
-                control_node,
-                output_idx,
-            },
-            Value::DataInstOutput(inst) => ValueH::DataInstOutput(inst),
-        }
-        .hash(state);
-    }
-}
 
 // FIXME(eddyb) maybe this should be provided by `spirt::transform`.
 struct ReplaceValueWith<F>(F);
@@ -378,7 +300,7 @@ fn remove_unused_values_in_func(cx: &Context, func_def_body: &mut FuncDefBody) {
 
         // FIXME(eddyb) entity-keyed dense sets might be better for performance,
         // but would require separate sets/maps for separate `Value` cases.
-        used: FxHashSet<HashableValue>,
+        used: FxHashSet<Value>,
 
         queue: VecDeque<Value>,
     }
@@ -396,7 +318,7 @@ fn remove_unused_values_in_func(cx: &Context, func_def_body: &mut FuncDefBody) {
                     return;
                 }
             }
-            if self.used.insert(HashableValue(v)) {
+            if self.used.insert(v) {
                 self.queue.push_back(v);
             }
         }
@@ -476,8 +398,8 @@ fn remove_unused_values_in_func(cx: &Context, func_def_body: &mut FuncDefBody) {
                         propagator.mark_used(v);
                         propagator.propagate_used(func_at_control_node.at(()));
                     };
-                    match func_at_control_node.def().kind {
-                        ControlNodeKind::Block { insts } => {
+                    match &func_at_control_node.def().kind {
+                        &ControlNodeKind::Block { insts } => {
                             for func_at_inst in func_at_control_node.at(insts) {
                                 // Ignore pure instructions (i.e. they're only used
                                 // if their output value is used, from somewhere else).
@@ -496,11 +418,20 @@ fn remove_unused_values_in_func(cx: &Context, func_def_body: &mut FuncDefBody) {
                             }
                         }
 
-                        ControlNodeKind::Select { scrutinee: v, .. }
-                        | ControlNodeKind::Loop {
+                        &ControlNodeKind::Select { scrutinee: v, .. }
+                        | &ControlNodeKind::Loop {
                             repeat_condition: v,
                             ..
                         } => mark_used_and_propagate(v),
+
+                        ControlNodeKind::ExitInvocation {
+                            kind: spirt::cfg::ExitInvocationKind::SpvInst(_),
+                            inputs,
+                        } => {
+                            for &v in inputs {
+                                mark_used_and_propagate(v);
+                            }
+                        }
                     }
                 },
         };
@@ -535,9 +466,7 @@ fn remove_unused_values_in_func(cx: &Context, func_def_body: &mut FuncDefBody) {
                             continue;
                         }
                     }
-                    if !used_values
-                        .contains(&HashableValue(Value::DataInstOutput(func_at_inst.position)))
-                    {
+                    if !used_values.contains(&Value::DataInstOutput(func_at_inst.position)) {
                         // Replace the removed `DataInstDef` itself with `OpNop`,
                         // removing the ability to use its "name" as a value.
                         //
@@ -574,7 +503,7 @@ fn remove_unused_values_in_func(cx: &Context, func_def_body: &mut FuncDefBody) {
                         output_idx: original_idx as u32,
                     };
 
-                    if !used_values.contains(&HashableValue(original_output)) {
+                    if !used_values.contains(&original_output) {
                         // Remove the output definition and corresponding value from all cases.
                         func_def_body
                             .at_mut(control_node)
@@ -593,11 +522,12 @@ fn remove_unused_values_in_func(cx: &Context, func_def_body: &mut FuncDefBody) {
                             control_node,
                             output_idx: new_idx as u32,
                         };
-                        value_replacements.insert(HashableValue(original_output), new_output);
+                        value_replacements.insert(original_output, new_output);
                     }
                     new_idx += 1;
                 }
             }
+
             ControlNodeKind::Loop {
                 body,
                 initial_inputs,
@@ -612,7 +542,7 @@ fn remove_unused_values_in_func(cx: &Context, func_def_body: &mut FuncDefBody) {
                         input_idx: original_idx as u32,
                     };
 
-                    if !used_values.contains(&HashableValue(original_input)) {
+                    if !used_values.contains(&original_input) {
                         // Remove the input definition and corresponding values.
                         match &mut func_def_body.at_mut(control_node).def().kind {
                             ControlNodeKind::Loop { initial_inputs, .. } => {
@@ -632,18 +562,20 @@ fn remove_unused_values_in_func(cx: &Context, func_def_body: &mut FuncDefBody) {
                             region: body,
                             input_idx: new_idx as u32,
                         };
-                        value_replacements.insert(HashableValue(original_input), new_input);
+                        value_replacements.insert(original_input, new_input);
                     }
                     new_idx += 1;
                 }
             }
+
+            ControlNodeKind::ExitInvocation { .. } => {}
         }
     }
 
     if !value_replacements.is_empty() {
         func_def_body.inner_in_place_transform_with(&mut ReplaceValueWith(|v| match v {
             Value::Const(_) => None,
-            _ => value_replacements.get(&HashableValue(v)).copied(),
+            _ => value_replacements.get(&v).copied(),
         }));
     }
 }

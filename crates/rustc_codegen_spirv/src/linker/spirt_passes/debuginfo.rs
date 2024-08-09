@@ -6,7 +6,7 @@ use smallvec::SmallVec;
 use spirt::transform::{InnerInPlaceTransform, Transformer};
 use spirt::visit::InnerVisit;
 use spirt::{
-    spv, Attr, AttrSetDef, ConstCtor, Context, ControlNode, ControlNodeKind, DataInstKind,
+    spv, Attr, AttrSetDef, ConstKind, Context, ControlNode, ControlNodeKind, DataInstKind,
     InternedStr, Module, OrdAssertEq, Value,
 };
 
@@ -95,16 +95,20 @@ impl Transformer for CustomDebuginfoToSpv<'_> {
                                 col_start: col,
                                 col_end: _,
                             } => {
-                                let const_ctor = |v: Value| match v {
-                                    Value::Const(ct) => &self.cx[ct].ctor,
+                                let const_kind = |v: Value| match v {
+                                    Value::Const(ct) => &self.cx[ct].kind,
                                     _ => unreachable!(),
                                 };
-                                let const_str = |v: Value| match const_ctor(v) {
-                                    &ConstCtor::SpvStringLiteralForExtInst(s) => s,
+                                let const_str = |v: Value| match const_kind(v) {
+                                    &ConstKind::SpvStringLiteralForExtInst(s) => s,
                                     _ => unreachable!(),
                                 };
-                                let const_u32 = |v: Value| match const_ctor(v) {
-                                    ConstCtor::SpvInst(spv_inst) => {
+                                let const_u32 = |v: Value| match const_kind(v) {
+                                    ConstKind::SpvInst {
+                                        spv_inst_and_const_inputs,
+                                    } => {
+                                        let (spv_inst, _const_inputs) =
+                                            &**spv_inst_and_const_inputs;
                                         assert!(spv_inst.opcode == self.wk.OpConstant);
                                         match spv_inst.imms[..] {
                                             [spv::Imm::Short(_, x)] => x,

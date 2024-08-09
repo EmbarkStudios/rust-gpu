@@ -3,14 +3,14 @@ use crate::custom_decorations::{
 };
 use crate::custom_insts::{self, CustomInst, CustomOp};
 use rustc_data_structures::fx::FxIndexSet;
-use rustc_errors::DiagnosticBuilder;
+use rustc_errors::EmissionGuarantee;
 use rustc_session::Session;
 use rustc_span::{Span, DUMMY_SP};
 use smallvec::SmallVec;
 use spirt::func_at::FuncAt;
 use spirt::visit::{InnerVisit, Visitor};
 use spirt::{
-    spv, Attr, AttrSet, AttrSetDef, Const, ConstCtor, Context, ControlNode, ControlNodeKind,
+    spv, Attr, AttrSet, AttrSetDef, Const, ConstKind, Context, ControlNode, ControlNodeKind,
     DataInstDef, DataInstForm, DataInstKind, Diag, DiagLevel, ExportKey, Exportee, Func, FuncDecl,
     GlobalVar, InternedStr, Module, Type, Value,
 };
@@ -275,16 +275,19 @@ impl UseOrigin<'_> {
                             } => (file, line_start, line_end, col_start, col_end),
                             _ => unreachable!(),
                         };
-                    let const_ctor = |v: Value| match v {
-                        Value::Const(ct) => &cx[ct].ctor,
+                    let const_kind = |v: Value| match v {
+                        Value::Const(ct) => &cx[ct].kind,
                         _ => unreachable!(),
                     };
-                    let const_str = |v: Value| match const_ctor(v) {
-                        &ConstCtor::SpvStringLiteralForExtInst(s) => s,
+                    let const_str = |v: Value| match const_kind(v) {
+                        &ConstKind::SpvStringLiteralForExtInst(s) => s,
                         _ => unreachable!(),
                     };
-                    let const_u32 = |v: Value| match const_ctor(v) {
-                        ConstCtor::SpvInst(spv_inst) => {
+                    let const_u32 = |v: Value| match const_kind(v) {
+                        ConstKind::SpvInst {
+                            spv_inst_and_const_inputs,
+                        } => {
+                            let (spv_inst, _const_inputs) = &**spv_inst_and_const_inputs;
                             assert!(spv_inst.opcode == wk.OpConstant);
                             match spv_inst.imms[..] {
                                 [spv::Imm::Short(_, x)] => x,
@@ -306,11 +309,11 @@ impl UseOrigin<'_> {
         }
     }
 
-    fn note(
+    fn note<G: EmissionGuarantee>(
         &self,
         cx: &Context,
         span_regen: &mut SpanRegenerator<'_>,
-        err: &mut DiagnosticBuilder<'_, impl rustc_errors::EmissionGuarantee>,
+        err: &mut rustc_errors::Diag<'_, G>,
     ) {
         let wk = &super::SpvSpecWithExtras::get().well_known;
 
@@ -420,7 +423,10 @@ impl DiagnosticReporter<'_> {
                         self.span_regen.spirt_attrs_to_rustc_span(self.cx, attrs)
                     })
                     .unwrap_or(DUMMY_SP);
-                let mut err = self.sess.struct_span_err(def_span, reason.to_string());
+                let mut err = self
+                    .sess
+                    .dcx()
+                    .struct_span_err(def_span, reason.to_string());
                 for use_origin in use_stack_for_def.iter().rev() {
                     use_origin.note(self.cx, &mut self.span_regen, &mut err);
                 }
@@ -463,14 +469,14 @@ impl DiagnosticReporter<'_> {
             let msg = [prefix, msg.to_string(), suffix].concat();
             match level {
                 DiagLevel::Bug(_) | DiagLevel::Error => {
-                    let mut err = self.sess.struct_span_err(def_span, msg);
+                    let mut err = self.sess.dcx().struct_span_err(def_span, msg);
                     for use_origin in use_stack_for_def.iter().rev() {
                         use_origin.note(self.cx, &mut self.span_regen, &mut err);
                     }
                     self.overall_result = Err(err.emit());
                 }
                 DiagLevel::Warning => {
-                    let mut warn = self.sess.struct_span_warn(def_span, msg);
+                    let mut warn = self.sess.dcx().struct_span_warn(def_span, msg);
                     for use_origin in use_stack_for_def.iter().rev() {
                         use_origin.note(self.cx, &mut self.span_regen, &mut warn);
                     }
@@ -502,9 +508,9 @@ impl<'a> Visitor<'a> for DiagnosticReporter<'a> {
     fn visit_const_use(&mut self, ct: Const) {
         if self.seen_consts.insert(ct) {
             let ct_def = &self.cx[ct];
-            match ct_def.ctor {
+            match ct_def.kind {
                 // HACK(eddyb) don't push an `UseOrigin` for `GlobalVar` pointers.
-                ConstCtor::PtrToGlobalVar(_) if ct_def.attrs == AttrSet::default() => {
+                ConstKind::PtrToGlobalVar(_) if ct_def.attrs == AttrSet::default() => {
                     self.visit_const_def(ct_def);
                 }
                 _ => {
@@ -639,12 +645,12 @@ impl<'a> Visitor<'a> for DiagnosticReporter<'a> {
                                     // Treat this like a call, in the caller.
                                     replace_origin(self, IntraFuncUseOrigin::CallCallee);
 
-                                    let const_ctor = |v: Value| match v {
-                                        Value::Const(ct) => &self.cx[ct].ctor,
+                                    let const_kind = |v: Value| match v {
+                                        Value::Const(ct) => &self.cx[ct].kind,
                                         _ => unreachable!(),
                                     };
-                                    let const_str = |v: Value| match const_ctor(v) {
-                                        &ConstCtor::SpvStringLiteralForExtInst(s) => s,
+                                    let const_str = |v: Value| match const_kind(v) {
+                                        &ConstKind::SpvStringLiteralForExtInst(s) => s,
                                         _ => unreachable!(),
                                     };
                                     self.use_stack.push(UseOrigin::IntraFunc {

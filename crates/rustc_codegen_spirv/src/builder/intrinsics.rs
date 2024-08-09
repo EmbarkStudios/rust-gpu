@@ -9,11 +9,11 @@ use rspirv::spirv::GLOp;
 use rustc_codegen_ssa::mir::operand::OperandRef;
 use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{BuilderMethods, IntrinsicCallMethods};
-use rustc_middle::bug;
 use rustc_middle::ty::layout::LayoutOf;
 use rustc_middle::ty::{FnDef, Instance, ParamEnv, Ty, TyKind};
-use rustc_span::source_map::Span;
+use rustc_middle::{bug, ty};
 use rustc_span::sym;
+use rustc_span::Span;
 use rustc_target::abi::call::{FnAbi, PassMode};
 use std::assert_matches::assert_matches;
 
@@ -46,11 +46,11 @@ impl Builder<'_, '_> {
         let (mask_sign, mask_value) = match width {
             32 => (
                 self.constant_u32(self.span(), 1 << 31),
-                self.constant_u32(self.span(), u32::max_value() >> 1),
+                self.constant_u32(self.span(), u32::MAX >> 1),
             ),
             64 => (
                 self.constant_u64(self.span(), 1 << 63),
-                self.constant_u64(self.span(), u64::max_value() >> 1),
+                self.constant_u64(self.span(), u64::MAX >> 1),
             ),
             _ => bug!("copysign must have width 32 or 64, not {}", width),
         };
@@ -71,7 +71,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
         args: &[OperandRef<'tcx, Self::Value>],
         llresult: Self::Value,
         _span: Span,
-    ) {
+    ) -> Result<(), ty::Instance<'tcx>> {
         let callee_ty = instance.ty(self.tcx, ParamEnv::reveal_all());
 
         let (def_id, fn_args) = match *callee_ty.kind() {
@@ -98,14 +98,17 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
             sym::breakpoint => {
                 self.abort();
                 assert!(fn_abi.ret.is_ignore());
-                return;
+                return Ok(());
             }
 
             sym::volatile_load | sym::unaligned_volatile_load => {
                 let ptr = args[0].immediate();
                 let layout = self.layout_of(fn_args.type_at(0));
                 let load = self.volatile_load(layout.spirv_type(self.span(), self), ptr);
-                self.to_immediate(load, layout)
+                if !result.layout.is_zst() {
+                    self.store(load, result.val.llval, result.val.align);
+                }
+                return Ok(());
             }
 
             sym::prefetch_read_data
@@ -114,7 +117,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
             | sym::prefetch_write_instruction => {
                 // ignore
                 assert!(fn_abi.ret.is_ignore());
-                return;
+                return Ok(());
             }
 
             sym::saturating_add => {
@@ -333,7 +336,10 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                 undef
             }
 
-            _ => self.fatal(format!("TODO: Unknown intrinsic '{name}'")),
+            _ => {
+                // Call the fallback body instead of generating the intrinsic code
+                return Err(ty::Instance::new(instance.def_id(), instance.args));
+            }
         };
 
         if !fn_abi.ret.is_ignore() {
@@ -342,6 +348,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                 .val
                 .store(self, result);
         }
+        Ok(())
     }
 
     fn abort(&mut self) {

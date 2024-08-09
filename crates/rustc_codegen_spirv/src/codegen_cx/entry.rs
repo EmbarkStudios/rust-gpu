@@ -75,7 +75,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 id
             } else {
                 self.tcx
-                    .sess
+                    .dcx()
                     .span_err(span, format!("cannot declare {name} as an entry point"));
                 return;
             };
@@ -93,7 +93,7 @@ impl<'tcx> CodegenCx<'tcx> {
                     // the `FnAbi` readjustment to only use `PassMode::Pair` for
                     // pointers to `!Sized` types, but not other `ScalarPair`s.
                     if !matches!(arg_abi.layout.ty.kind(), ty::Ref(..)) {
-                        self.tcx.sess.span_err(
+                        self.tcx.dcx().span_err(
                             hir_param.ty_span,
                             format!(
                                 "entry point parameter type not yet supported \
@@ -105,7 +105,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 }
                 // FIXME(eddyb) support these (by just ignoring them) - if there
                 // is any validation concern, it should be done on the types.
-                PassMode::Ignore => self.tcx.sess.span_fatal(
+                PassMode::Ignore => self.tcx.dcx().span_fatal(
                     hir_param.ty_span,
                     format!(
                         "entry point parameter type not yet supported \
@@ -123,7 +123,7 @@ impl<'tcx> CodegenCx<'tcx> {
         if fn_abi.ret.layout.ty.is_unit() {
             assert_matches!(fn_abi.ret.mode, PassMode::Ignore);
         } else {
-            self.tcx.sess.span_err(
+            self.tcx.dcx().span_err(
                 span,
                 format!(
                     "entry point should return `()`, not `{}`",
@@ -198,6 +198,7 @@ impl<'tcx> CodegenCx<'tcx> {
             Some(entry_fn_abi),
             entry_func,
             &call_args,
+            None,
             None,
         );
         bx.ret_void();
@@ -274,7 +275,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 if is_ref {
                     Some(StorageClass::UniformConstant)
                 } else {
-                    self.tcx.sess.span_err(
+                    self.tcx.dcx().span_err(
                         hir_param.ty_span,
                         format!(
                             "entry parameter type must be by-reference: `&{}`",
@@ -291,7 +292,7 @@ impl<'tcx> CodegenCx<'tcx> {
             let storage_class = storage_class_attr.value;
 
             if !is_ref {
-                self.tcx.sess.span_fatal(
+                self.tcx.dcx().span_fatal(
                     hir_param.ty_span,
                     format!(
                         "invalid entry param type `{}` for storage class `{storage_class:?}` \
@@ -303,28 +304,25 @@ impl<'tcx> CodegenCx<'tcx> {
             }
 
             match deduced_storage_class_from_ty {
-                Some(deduced) if storage_class == deduced => self.tcx.sess.span_warn(
+                Some(deduced) if storage_class == deduced => self.tcx.dcx().span_warn(
                     storage_class_attr.span,
                     "redundant storage class attribute, storage class is deduced from type",
                 ),
                 Some(deduced) => {
                     self.tcx
-                        .sess
+                        .dcx()
                         .struct_span_err(hir_param.span, "storage class mismatch")
-                        .span_label(
+                        .with_span_label(
                             storage_class_attr.span,
                             format!("`{storage_class:?}` specified in attribute"),
                         )
-                        .span_label(
+                        .with_span_label(
                             hir_param.ty_span,
                             format!("`{deduced:?}` deduced from type"),
                         )
-                        .span_help(
-                            storage_class_attr.span,
-                            format!(
-                                "remove storage class attribute to use `{deduced:?}` as storage class"
-                            ),
-                        )
+                        .with_help(format!(
+                            "remove storage class attribute to use `{deduced:?}` as storage class"
+                        ))
                         .emit();
                 }
                 None => (),
@@ -338,7 +336,7 @@ impl<'tcx> CodegenCx<'tcx> {
             .unwrap_or_else(|| match (is_ref, explicit_mutbl) {
                 (false, _) => StorageClass::Input,
                 (true, hir::Mutability::Mut) => StorageClass::Output,
-                (true, hir::Mutability::Not) => self.tcx.sess.span_fatal(
+                (true, hir::Mutability::Not) => self.tcx.dcx().span_fatal(
                     hir_param.ty_span,
                     format!(
                         "invalid entry param type `{}` (expected `{}` or `&mut {1}`)",
@@ -355,7 +353,7 @@ impl<'tcx> CodegenCx<'tcx> {
             let storage_class_requires_read_only =
                 expected_mutbl_for(storage_class) == hir::Mutability::Not;
             if !ref_is_read_only && storage_class_requires_read_only {
-                let mut err = self.tcx.sess.struct_span_err(
+                let mut err = self.tcx.dcx().struct_span_err(
                     hir_param.ty_span,
                     format!(
                         "entry-point requires {}...",
@@ -395,7 +393,7 @@ impl<'tcx> CodegenCx<'tcx> {
         let mut storage_class = Ok(storage_class);
         if let Some(spec_constant) = attrs.spec_constant {
             if ref_or_value_layout.ty != self.tcx.types.u32 {
-                self.tcx.sess.span_err(
+                self.tcx.dcx().span_err(
                     hir_param.ty_span,
                     format!(
                         "unsupported `#[spirv(spec_constant)]` type `{}` (expected `{}`)",
@@ -403,7 +401,7 @@ impl<'tcx> CodegenCx<'tcx> {
                     ),
                 );
             } else if let Some(storage_class) = attrs.storage_class {
-                self.tcx.sess.span_err(
+                self.tcx.dcx().span_err(
                     storage_class.span,
                     "`#[spirv(spec_constant)]` cannot have a storage class",
                 );
@@ -494,94 +492,119 @@ impl<'tcx> CodegenCx<'tcx> {
             // value. We currently only do that with unsized types, so if a type is a pair for some
             // other reason (e.g. a tuple), we bail.
             self.tcx
-                .sess
+                .dcx()
                 .span_fatal(hir_param.ty_span, "pair type not supported yet")
         }
-        let var_ptr_spirv_type;
-        let (value_ptr, value_len) = match storage_class {
-            Ok(
-                StorageClass::PushConstant | StorageClass::Uniform | StorageClass::StorageBuffer,
-            ) => {
-                let var_spirv_type = SpirvType::InterfaceBlock {
-                    inner_type: value_spirv_type,
-                }
-                .def(hir_param.span, self);
-                var_ptr_spirv_type = self.type_ptr_to(var_spirv_type);
-
-                let value_ptr = bx.struct_gep(
-                    var_spirv_type,
-                    var_id.unwrap().with_type(var_ptr_spirv_type),
-                    0,
-                );
-
-                let value_len = if is_unsized_with_len {
-                    match self.lookup_type(value_spirv_type) {
-                        SpirvType::RuntimeArray { .. } => {}
-                        _ => {
-                            self.tcx.sess.span_err(
-                                hir_param.ty_span,
-                                "only plain slices are supported as unsized types",
-                            );
-                        }
+        // FIXME(eddyb) should this talk about "typed buffers" instead of "interface blocks"?
+        // FIXME(eddyb) should we talk about "descriptor indexing" or
+        // actually use more reasonable terms like "resource arrays"?
+        let needs_interface_block_and_supports_descriptor_indexing = matches!(
+            storage_class,
+            Ok(StorageClass::Uniform | StorageClass::StorageBuffer)
+        );
+        let needs_interface_block = needs_interface_block_and_supports_descriptor_indexing
+            || storage_class == Ok(StorageClass::PushConstant);
+        // NOTE(eddyb) `#[spirv(typed_buffer)]` adds `SpirvType::InterfaceBlock`s
+        // which must bypass the automated ones (i.e. the user is taking control).
+        let has_explicit_interface_block = needs_interface_block_and_supports_descriptor_indexing
+            && {
+                // Peel off arrays first (used for "descriptor indexing").
+                let outermost_or_array_element = match self.lookup_type(value_spirv_type) {
+                    SpirvType::Array { element, .. } | SpirvType::RuntimeArray { element } => {
+                        element
                     }
-
-                    // FIXME(eddyb) shouldn't this be `usize`?
-                    let len_spirv_type = self.type_isize();
-                    let len = bx
-                        .emit()
-                        .array_length(len_spirv_type, None, var_id.unwrap(), 0)
-                        .unwrap();
-
-                    Some(len.with_type(len_spirv_type))
-                } else {
-                    if is_unsized {
-                        // It's OK to use a RuntimeArray<u32> and not have a length parameter, but
-                        // it's just nicer ergonomics to use a slice.
-                        self.tcx
-                            .sess
-                            .span_warn(hir_param.ty_span, "use &[T] instead of &RuntimeArray<T>");
-                    }
-                    None
+                    _ => value_spirv_type,
                 };
-
-                (Ok(value_ptr), value_len)
+                matches!(
+                    self.lookup_type(outermost_or_array_element),
+                    SpirvType::InterfaceBlock { .. }
+                )
+            };
+        let var_ptr_spirv_type;
+        let (value_ptr, value_len) = if needs_interface_block && !has_explicit_interface_block {
+            let var_spirv_type = SpirvType::InterfaceBlock {
+                inner_type: value_spirv_type,
             }
-            Ok(StorageClass::UniformConstant) => {
-                var_ptr_spirv_type = self.type_ptr_to(value_spirv_type);
+            .def(hir_param.span, self);
+            var_ptr_spirv_type = self.type_ptr_to(var_spirv_type);
 
+            let zero_u32 = self.constant_u32(hir_param.span, 0).def_cx(self);
+            let value_ptr_spirv_type = self.type_ptr_to(value_spirv_type);
+            let value_ptr = bx
+                .emit()
+                .in_bounds_access_chain(
+                    value_ptr_spirv_type,
+                    None,
+                    var_id.unwrap(),
+                    [zero_u32].iter().cloned(),
+                )
+                .unwrap()
+                .with_type(value_ptr_spirv_type);
+
+            let value_len = if is_unsized_with_len {
+                match self.lookup_type(value_spirv_type) {
+                    SpirvType::RuntimeArray { .. } => {}
+                    _ => {
+                        self.tcx.dcx().span_err(
+                            hir_param.ty_span,
+                            "only plain slices are supported as unsized types",
+                        );
+                    }
+                }
+
+                // FIXME(eddyb) shouldn't this be `usize`?
+                let len_spirv_type = self.type_isize();
+                let len = bx
+                    .emit()
+                    .array_length(len_spirv_type, None, var_id.unwrap(), 0)
+                    .unwrap();
+
+                Some(len.with_type(len_spirv_type))
+            } else {
+                if is_unsized {
+                    // It's OK to use a RuntimeArray<u32> and not have a length parameter, but
+                    // it's just nicer ergonomics to use a slice.
+                    self.tcx
+                        .dcx()
+                        .span_warn(hir_param.ty_span, "use &[T] instead of &RuntimeArray<T>");
+                }
+                None
+            };
+
+            (Ok(value_ptr), value_len)
+        } else {
+            var_ptr_spirv_type = self.type_ptr_to(value_spirv_type);
+
+            // FIXME(eddyb) should we talk about "descriptor indexing" or
+            // actually use more reasonable terms like "resource arrays"?
+            let unsized_is_descriptor_indexing =
+                needs_interface_block_and_supports_descriptor_indexing
+                    || storage_class == Ok(StorageClass::UniformConstant);
+            if unsized_is_descriptor_indexing {
                 match self.lookup_type(value_spirv_type) {
                     SpirvType::RuntimeArray { .. } => {
                         if is_unsized_with_len {
-                            self.tcx.sess.span_err(
+                            self.tcx.dcx().span_err(
                                 hir_param.ty_span,
-                                "uniform_constant must use &RuntimeArray<T>, not &[T]",
+                                "descriptor indexing must use &RuntimeArray<T>, not &[T]",
                             );
                         }
                     }
                     _ => {
                         if is_unsized {
-                            self.tcx.sess.span_err(
+                            self.tcx.dcx().span_err(
                                 hir_param.ty_span,
-                                "only plain slices are supported as unsized types",
+                                "only RuntimeArray is supported, not other unsized types",
                             );
                         }
                     }
                 }
-
-                let value_len = if is_pair {
-                    // We've already emitted an error, fill in a placeholder value
-                    Some(bx.undef(self.type_isize()))
-                } else {
-                    None
-                };
-
-                (Ok(var_id.unwrap().with_type(var_ptr_spirv_type)), value_len)
-            }
-            _ => {
-                var_ptr_spirv_type = self.type_ptr_to(value_spirv_type);
-
+            } else {
+                // FIXME(eddyb) determine, based on the type, what kind of type
+                // this is, to narrow it further to e.g. "buffer in a non-buffer
+                // storage class" or "storage class expects fixed data sizes".
                 if is_unsized {
-                    self.tcx.sess.span_fatal(
+                    self.tcx.dcx().span_fatal(
                         hir_param.ty_span,
                         format!(
                             "unsized types are not supported for {}",
@@ -592,12 +615,19 @@ impl<'tcx> CodegenCx<'tcx> {
                         ),
                     );
                 }
-
-                (
-                    var_id.map(|var_id| var_id.with_type(var_ptr_spirv_type)),
-                    None,
-                )
             }
+
+            let value_len = if is_pair {
+                // We've already emitted an error, fill in a placeholder value
+                Some(bx.undef(self.type_isize()))
+            } else {
+                None
+            };
+
+            (
+                var_id.map(|var_id| var_id.with_type(var_ptr_spirv_type)),
+                value_len,
+            )
         };
 
         // Compute call argument(s) to match what the Rust entry `fn` expects,
@@ -644,7 +674,7 @@ impl<'tcx> CodegenCx<'tcx> {
         let mut decoration_supersedes_location = false;
         if let Some(builtin) = attrs.builtin {
             if let Err(SpecConstant { .. }) = storage_class {
-                self.tcx.sess.span_fatal(
+                self.tcx.dcx().span_fatal(
                     builtin.span,
                     format!(
                         "`#[spirv(spec_constant)]` cannot be `{:?}` builtin",
@@ -661,7 +691,7 @@ impl<'tcx> CodegenCx<'tcx> {
         }
         if let Some(descriptor_set) = attrs.descriptor_set {
             if let Err(SpecConstant { .. }) = storage_class {
-                self.tcx.sess.span_fatal(
+                self.tcx.dcx().span_fatal(
                     descriptor_set.span,
                     "`#[spirv(descriptor_set = ...)]` cannot apply to `#[spirv(spec_constant)]`",
                 );
@@ -675,7 +705,7 @@ impl<'tcx> CodegenCx<'tcx> {
         }
         if let Some(binding) = attrs.binding {
             if let Err(SpecConstant { .. }) = storage_class {
-                self.tcx.sess.span_fatal(
+                self.tcx.dcx().span_fatal(
                     binding.span,
                     "`#[spirv(binding = ...)]` cannot apply to `#[spirv(spec_constant)]`",
                 );
@@ -689,7 +719,7 @@ impl<'tcx> CodegenCx<'tcx> {
         }
         if let Some(flat) = attrs.flat {
             if let Err(SpecConstant { .. }) = storage_class {
-                self.tcx.sess.span_fatal(
+                self.tcx.dcx().span_fatal(
                     flat.span,
                     "`#[spirv(flat)]` cannot apply to `#[spirv(spec_constant)]`",
                 );
@@ -699,7 +729,7 @@ impl<'tcx> CodegenCx<'tcx> {
         }
         if let Some(invariant) = attrs.invariant {
             if storage_class != Ok(StorageClass::Output) {
-                self.tcx.sess.span_fatal(
+                self.tcx.dcx().span_fatal(
                     invariant.span,
                     "`#[spirv(invariant)]` is only valid on Output variables",
                 );
@@ -732,17 +762,17 @@ impl<'tcx> CodegenCx<'tcx> {
                 );
             } else if is_subpass_input {
                 self.tcx
-                    .sess
+                    .dcx()
                     .span_err(hir_param.ty_span, "Missing capability InputAttachment");
             } else {
-                self.tcx.sess.span_err(
+                self.tcx.dcx().span_err(
                     attachment_index.span,
                     "#[spirv(input_attachment_index)] is only valid on Image types with dim = SubpassData"
                 );
             }
             decoration_supersedes_location = true;
         } else if is_subpass_input {
-            self.tcx.sess.span_err(
+            self.tcx.dcx().span_err(
                 hir_param.ty_span,
                 "Image types with dim = SubpassData require #[spirv(input_attachment_index)] decoration",
             );
@@ -839,7 +869,7 @@ impl<'tcx> CodegenCx<'tcx> {
             && !(is_builtin && matches!(storage_class, StorageClass::Input | StorageClass::Output))
         {
             self.tcx
-                .sess
+                .dcx()
                 .span_err(span, "entry-point parameter cannot contain `bool`s");
         }
 
@@ -887,7 +917,7 @@ impl<'tcx> CodegenCx<'tcx> {
             _ => None,
         };
         if let Some((span, must_or_cannot)) = flat_mismatch {
-            self.tcx.sess.span_err(
+            self.tcx.dcx().span_err(
                 span,
                 format!(
                     "`{execution_model:?}` entry-point `{storage_class:?}` parameter \

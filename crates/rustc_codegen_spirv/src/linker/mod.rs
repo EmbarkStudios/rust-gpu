@@ -18,7 +18,7 @@ mod zombies;
 
 use std::borrow::Cow;
 
-use crate::codegen_cx::SpirvMetadata;
+use crate::codegen_cx::{ModuleOutputType, SpirvMetadata};
 use crate::custom_decorations::{CustomDecoration, SrcLocDecoration, ZombieDecoration};
 use crate::custom_insts;
 use either::Either;
@@ -45,8 +45,8 @@ pub struct Options {
     pub spirt_passes: Vec<String>,
 
     pub abort_strategy: Option<String>,
+    pub module_output_type: ModuleOutputType,
 
-    pub emit_multiple_modules: bool,
     pub spirv_metadata: SpirvMetadata,
 
     /// Whether to preserve `LinkageAttributes "..." Export` decorations,
@@ -62,6 +62,7 @@ pub struct Options {
     pub dump_spirt_passes: Option<PathBuf>,
     pub spirt_strip_custom_debuginfo_from_dumps: bool,
     pub spirt_keep_debug_sources_in_dumps: bool,
+    pub spirt_keep_unstructured_cfg_in_dumps: bool,
     pub specializer_debug: bool,
     pub specializer_dump_instances: Option<PathBuf>,
     pub print_all_zombie: bool,
@@ -167,7 +168,7 @@ pub fn link(
             bound += module.header.as_ref().unwrap().bound - 1;
             let this_version = module.header.as_ref().unwrap().version();
             if version != this_version {
-                return Err(sess.err(format!(
+                return Err(sess.dcx().err(format!(
                     "cannot link two modules with different SPIR-V versions: v{}.{} and v{}.{}",
                     version.0, version.1, this_version.0, this_version.1
                 )));
@@ -426,16 +427,24 @@ pub fn link(
                     };
 
                     return Err(sess
+                        .dcx()
                         .struct_err(format!("{e}"))
-                        .note("while lowering SPIR-V module to SPIR-T (spirt::spv::lower)")
-                        .note(format!("input SPIR-V module {was_saved_msg}"))
+                        .with_note("while lowering SPIR-V module to SPIR-T (spirt::spv::lower)")
+                        .with_note(format!("input SPIR-V module {was_saved_msg}"))
                         .emit());
                 }
             }
         };
-        after_pass("lower_from_spv", &module);
+        // HACK(eddyb) don't dump the unstructured state if not requested, as
+        // after SPIR-T 0.4.0 it's extremely verbose (due to def-use hermeticity).
+        if opts.spirt_keep_unstructured_cfg_in_dumps || !opts.structurize {
+            after_pass("lower_from_spv", &module);
+        }
 
         // NOTE(eddyb) this *must* run on unstructured CFGs, to do its job.
+        // FIXME(eddyb) no longer relying on structurization, try porting this
+        // to replace custom aborts in `Block`s and inject `ExitInvocation`s
+        // after them (truncating the `Block` and/or parent region if necessary).
         {
             let _timer = sess.timer("spirt_passes::controlflow::convert_custom_aborts_to_unstructured_returns_in_entry_points");
             spirt_passes::controlflow::convert_custom_aborts_to_unstructured_returns_in_entry_points(opts, &mut module);
@@ -534,7 +543,7 @@ pub fn link(
         }
 
         if any_spirt_bugs {
-            let mut note = sess.struct_note_without_error("SPIR-T bugs were reported");
+            let mut note = sess.dcx().struct_note("SPIR-T bugs were reported");
             note.help(format!(
                 "pretty-printed SPIR-T was saved to {}.html",
                 dump_spirt_file_path.as_ref().unwrap().display()
@@ -542,7 +551,7 @@ pub fn link(
             if opts.dump_spirt_passes.is_none() {
                 note.help("re-run with `RUSTGPU_CODEGEN_ARGS=\"--dump-spirt-passes=$PWD\"` for more details");
             }
-            note.note("pretty-printed SPIR-T is preferred when reporting Rust-GPU issues")
+            note.with_note("pretty-printed SPIR-T is preferred when reporting Rust-GPU issues")
                 .emit();
         }
 
@@ -576,12 +585,12 @@ pub fn link(
         if ext_inst_set.starts_with(custom_insts::CUSTOM_EXT_INST_SET_PREFIX) {
             let expected = &custom_insts::CUSTOM_EXT_INST_SET[..];
             if ext_inst_set == expected {
-                return Err(sess.err(format!(
+                return Err(sess.dcx().err(format!(
                     "`OpExtInstImport {ext_inst_set:?}` should not have been \
                          left around after SPIR-T passes"
                 )));
             } else {
-                return Err(sess.err(format!(
+                return Err(sess.dcx().err(format!(
                     "unsupported `OpExtInstImport {ext_inst_set:?}`
                      (expected {expected:?} name - version mismatch?)"
                 )));
@@ -619,7 +628,7 @@ pub fn link(
         simple_passes::sort_globals(&mut output);
     }
 
-    let mut output = if opts.emit_multiple_modules {
+    let mut output = if opts.module_output_type == ModuleOutputType::Multiple {
         let mut file_stem_to_entry_name_and_module = BTreeMap::new();
         for (i, entry) in output.entry_points.iter().enumerate() {
             let mut module = output.clone();
@@ -646,6 +655,9 @@ pub fn link(
                         entry.insert((entry_name, module));
                         break;
                     }
+                    // FIXME(eddyb) false positive: `file_stem` was moved out of,
+                    // so assigning it is necessary, but clippy doesn't know that.
+                    #[allow(clippy::assigning_clones)]
                     Entry::Occupied(entry) => {
                         // FIXME(eddyb) there's no way to access the owned key
                         // passed to `BTreeMap::entry` from `OccupiedEntry`.
@@ -691,7 +703,7 @@ pub fn link(
             )
             .unwrap();
         }
-        // Run DCE again, even if emit_multiple_modules==false - the first DCE ran before
+        // Run DCE again, even if module_output_type == ModuleOutputType::Multiple - the first DCE ran before
         // structurization and mem2reg (for perf reasons), and mem2reg may remove references to
         // invalid types, so we need to DCE again.
         if opts.dce {

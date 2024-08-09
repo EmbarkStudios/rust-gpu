@@ -16,7 +16,6 @@
 //! [`spirv-tools`]: https://embarkstudios.github.io/rust-gpu/api/spirv_tools
 //! [`spirv-tools-sys`]: https://embarkstudios.github.io/rust-gpu/api/spirv_tools_sys
 #![feature(rustc_private)]
-#![feature(array_methods)]
 #![feature(assert_matches)]
 #![feature(result_flattening)]
 #![feature(lint_reasons)]
@@ -99,7 +98,7 @@ use rustc_codegen_ssa::traits::{
 };
 use rustc_codegen_ssa::{CodegenResults, CompiledModule, ModuleCodegen, ModuleKind};
 use rustc_data_structures::fx::FxIndexMap;
-use rustc_errors::{ErrorGuaranteed, FatalError, Handler};
+use rustc_errors::{DiagCtxt, ErrorGuaranteed, FatalError};
 use rustc_metadata::EncodedMetadata;
 use rustc_middle::dep_graph::{WorkProduct, WorkProductId};
 use rustc_middle::mir::mono::{MonoItem, MonoItemData};
@@ -109,7 +108,6 @@ use rustc_middle::ty::{self, Instance, InstanceDef, TyCtxt};
 use rustc_session::config::{self, OutputFilenames, OutputType};
 use rustc_session::Session;
 use rustc_span::symbol::{sym, Symbol};
-use rustc_target::spec::{Target, TargetTriple};
 use std::any::Any;
 use std::fs::{create_dir_all, File};
 use std::io::Cursor;
@@ -208,16 +206,6 @@ impl CodegenBackend for SpirvCodegenBackend {
             .collect()
     }
 
-    fn target_override(&self, opts: &config::Options) -> Option<Target> {
-        match opts.target_triple {
-            TargetTriple::TargetTriple(ref target) => target
-                .parse::<target::SpirvTarget>()
-                .map(|target| target.rustc_target())
-                .ok(),
-            TargetTriple::TargetJson { .. } => None,
-        }
-    }
-
     fn provide(&self, providers: &mut rustc_middle::util::Providers) {
         // FIXME(eddyb) this is currently only passed back to us, specifically
         // into `target_machine_factory` (which is a noop), but it might make
@@ -253,15 +241,11 @@ impl CodegenBackend for SpirvCodegenBackend {
         ongoing_codegen: Box<dyn Any>,
         sess: &Session,
         _outputs: &OutputFilenames,
-    ) -> Result<(CodegenResults, FxIndexMap<WorkProductId, WorkProduct>), ErrorGuaranteed> {
-        let (codegen_results, work_products) = ongoing_codegen
+    ) -> (CodegenResults, FxIndexMap<WorkProductId, WorkProduct>) {
+        ongoing_codegen
             .downcast::<OngoingCodegen<Self>>()
             .expect("Expected OngoingCodegen, found Box<Any>")
-            .join(sess);
-
-        sess.compile_status()?;
-
-        Ok((codegen_results, work_products))
+            .join(sess)
     }
 
     fn link(
@@ -279,8 +263,7 @@ impl CodegenBackend for SpirvCodegenBackend {
         );
         drop(timer);
 
-        sess.compile_status()?;
-        Ok(())
+        sess.dcx().has_errors().map_or(Ok(()), Err)
     }
 }
 
@@ -294,7 +277,7 @@ impl WriteBackendMethods for SpirvCodegenBackend {
 
     fn run_link(
         _cgcx: &CodegenContext<Self>,
-        _diag_handler: &Handler,
+        _diag_handler: &DiagCtxt,
         _modules: Vec<ModuleCodegen<Self::Module>>,
     ) -> Result<ModuleCodegen<Self::Module>, FatalError> {
         todo!()
@@ -326,7 +309,7 @@ impl WriteBackendMethods for SpirvCodegenBackend {
 
     unsafe fn optimize(
         _: &CodegenContext<Self>,
-        _: &Handler,
+        _: &DiagCtxt,
         _: &ModuleCodegen<Self::Module>,
         _: &ModuleConfig,
     ) -> Result<(), FatalError> {
@@ -357,7 +340,7 @@ impl WriteBackendMethods for SpirvCodegenBackend {
 
     unsafe fn codegen(
         cgcx: &CodegenContext<Self>,
-        _diag_handler: &Handler,
+        _diag_handler: &DiagCtxt,
         module: ModuleCodegen<Self::Module>,
         _config: &ModuleConfig,
     ) -> Result<CompiledModule, FatalError> {
@@ -376,6 +359,8 @@ impl WriteBackendMethods for SpirvCodegenBackend {
             object: Some(path),
             dwarf_object: None,
             bytecode: None,
+            assembly: None,
+            llvm_ir: None,
         })
     }
 
@@ -500,7 +485,7 @@ pub fn __rustc_codegen_backend() -> Box<dyn CodegenBackend> {
     rustc_driver::install_ice_hook(
         "https://github.com/EmbarkStudios/rust-gpu/issues/new",
         |handler| {
-            handler.note_without_error(concat!(
+            handler.note(concat!(
                 "`rust-gpu` version `",
                 env!("CARGO_PKG_VERSION"),
                 "`"

@@ -21,15 +21,15 @@ use rustc_data_structures::fx::FxHashSet;
 use rustc_middle::bug;
 use rustc_middle::middle::codegen_fn_attrs::CodegenFnAttrs;
 use rustc_middle::ty::layout::LayoutOf;
-use rustc_middle::ty::Ty;
+use rustc_middle::ty::{self, Ty};
 use rustc_span::Span;
 use rustc_target::abi::call::FnAbi;
 use rustc_target::abi::{Abi, Align, Scalar, Size, WrappingRange};
 use smallvec::SmallVec;
 use std::borrow::Cow;
 use std::cell::Cell;
-use std::convert::TryInto;
 use std::iter::{self, empty};
+use std::ops::RangeInclusive;
 
 macro_rules! simple_op {
     (
@@ -412,9 +412,12 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         // FIXME(eddyb) this isn't efficient, `recover_access_chain_from_offset`
         // could instead be doing all the extra digging itself.
         let mut indices = SmallVec::<[_; 8]>::new();
-        while let Some((inner_indices, inner_ty)) =
-            self.recover_access_chain_from_offset(leaf_ty, Size::ZERO, Some(size), None)
-        {
+        while let Some((inner_indices, inner_ty)) = self.recover_access_chain_from_offset(
+            leaf_ty,
+            Size::ZERO,
+            Some(size)..=Some(size),
+            None,
+        ) {
             indices.extend(inner_indices);
             leaf_ty = inner_ty;
         }
@@ -431,7 +434,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 .map(|idx| self.constant_u32(self.span(), idx).def(self))
                 .collect::<Vec<_>>();
             self.emit()
-                .access_chain(leaf_ptr_ty, None, ptr.def(self), indices)
+                .in_bounds_access_chain(leaf_ptr_ty, None, ptr.def(self), indices)
                 .unwrap()
                 .with_type(leaf_ptr_ty)
         };
@@ -439,8 +442,9 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
     }
 
     /// If possible, return the appropriate `OpAccessChain` indices for going
-    /// from a pointer to `ty`, to a pointer to some leaf field/element of size
-    /// `leaf_size` (and optionally type `leaf_ty`), while adding `offset` bytes.
+    /// from a pointer to `ty`, to a pointer to some leaf field/element having
+    /// a size that fits `leaf_size_range` (and, optionally, the type `leaf_ty`),
+    /// while adding `offset` bytes.
     ///
     /// That is, try to turn `((_: *T) as *u8).add(offset) as *Leaf` into a series
     /// of struct field and array/vector element accesses.
@@ -449,7 +453,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         mut ty: <Self as BackendTypes>::Type,
         mut offset: Size,
         // FIXME(eddyb) using `None` for "unsized" is a pretty bad design.
-        leaf_size_or_unsized: Option<Size>,
+        leaf_size_or_unsized_range: RangeInclusive<Option<Size>>,
         leaf_ty: Option<<Self as BackendTypes>::Type>,
     ) -> Option<(SmallVec<[u32; 8]>, <Self as BackendTypes>::Type)> {
         assert_ne!(Some(ty), leaf_ty);
@@ -460,7 +464,12 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             Sized(Size),
             Unsized,
         }
-        let leaf_size = leaf_size_or_unsized.map_or(MaybeSized::Unsized, MaybeSized::Sized);
+        let leaf_size_range = {
+            let r = leaf_size_or_unsized_range;
+            let [start, end] =
+                [r.start(), r.end()].map(|x| x.map_or(MaybeSized::Unsized, MaybeSized::Sized));
+            start..=end
+        };
 
         // NOTE(eddyb) `ty` and `ty_kind`/`ty_size` should be kept in sync.
         let mut ty_kind = self.lookup_type(ty);
@@ -493,7 +502,8 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                             if MaybeSized::Sized(offset_in_field) < field_ty_size
                                 // If the field is a zero sized type, check the
                                 // expected size and type to get the correct entry
-                                || offset_in_field == Size::ZERO && leaf_size == MaybeSized::Sized(Size::ZERO) && leaf_ty == Some(field_ty)
+                                || offset_in_field == Size::ZERO
+                                    && leaf_size_range.contains(&MaybeSized::Sized(Size::ZERO)) && leaf_ty == Some(field_ty)
                             {
                                 Some((i, field_ty, field_ty_kind, field_ty_size, offset_in_field))
                             } else {
@@ -525,17 +535,209 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             }
 
             // Avoid digging beyond the point the leaf could actually fit.
-            if ty_size < leaf_size {
+            if ty_size < *leaf_size_range.start() {
                 return None;
             }
 
             if offset == Size::ZERO
-                && ty_size == leaf_size
+                && leaf_size_range.contains(&ty_size)
                 && leaf_ty.map_or(true, |leaf_ty| leaf_ty == ty)
             {
                 return Some((indices, ty));
             }
         }
+    }
+
+    fn maybe_inbounds_gep(
+        &mut self,
+        ty: Word,
+        ptr: SpirvValue,
+        combined_indices: &[SpirvValue],
+        is_inbounds: bool,
+    ) -> SpirvValue {
+        let (&ptr_base_index, indices) = combined_indices.split_first().unwrap();
+
+        // The first index is an offset to the pointer, the rest are actual members.
+        // https://llvm.org/docs/GetElementPtr.html
+        // "An OpAccessChain instruction is the equivalent of an LLVM getelementptr instruction where the first index element is zero."
+        // https://github.com/gpuweb/gpuweb/issues/33
+        let mut result_pointee_type = ty;
+        let indices: Vec<_> = indices
+            .iter()
+            .map(|index| {
+                result_pointee_type = match self.lookup_type(result_pointee_type) {
+                    SpirvType::Array { element, .. } | SpirvType::RuntimeArray { element } => {
+                        element
+                    }
+                    _ => self.fatal(format!(
+                        "GEP not implemented for type {}",
+                        self.debug_type(result_pointee_type)
+                    )),
+                };
+                index.def(self)
+            })
+            .collect();
+
+        // Special-case field accesses through a `pointercast`, to accesss the
+        // right field in the original type, for the `Logical` addressing model.
+        let ptr = ptr.strip_ptrcasts();
+        let ptr_id = ptr.def(self);
+        let original_pointee_ty = match self.lookup_type(ptr.ty) {
+            SpirvType::Pointer { pointee } => pointee,
+            other => self.fatal(format!("gep called on non-pointer type: {other:?}")),
+        };
+
+        // HACK(eddyb) `struct_gep` itself is falling out of use, as it's being
+        // replaced upstream by `ptr_add` (aka `inbounds_gep` with byte offsets).
+        //
+        // FIXME(eddyb) get rid of everything other than:
+        // - constant byte offset (`ptr_add`?)
+        // - dynamic indexing of a single array
+        let const_ptr_offset = self
+            .builder
+            .lookup_const_u64(ptr_base_index)
+            .and_then(|idx| Some(idx * self.lookup_type(ty).sizeof(self)?));
+        if let Some(const_ptr_offset) = const_ptr_offset {
+            if let Some((base_indices, base_pointee_ty)) = self.recover_access_chain_from_offset(
+                original_pointee_ty,
+                const_ptr_offset,
+                Some(Size::ZERO)..=None,
+                None,
+            ) {
+                // FIXME(eddyb) this condition is pretty limiting, but
+                // eventually it shouldn't matter if GEPs are going away.
+                if ty == base_pointee_ty || indices.is_empty() {
+                    let result_pointee_type = if indices.is_empty() {
+                        base_pointee_ty
+                    } else {
+                        result_pointee_type
+                    };
+                    let indices = base_indices
+                        .into_iter()
+                        .map(|idx| self.constant_u32(self.span(), idx).def(self))
+                        .chain(indices)
+                        .collect();
+                    return self.emit_access_chain(
+                        self.type_ptr_to(result_pointee_type),
+                        ptr_id,
+                        None,
+                        indices,
+                        is_inbounds,
+                    );
+                }
+            }
+        }
+
+        let result_type = self.type_ptr_to(result_pointee_type);
+
+        // Check if `ptr_id` is defined by an `OpAccessChain`, and if it is,
+        // grab its base pointer and indices.
+        //
+        // FIXME(eddyb) this could get ridiculously expensive, at the very least
+        // it could use `.rev()`, hoping the base pointer was recently defined?
+        let maybe_original_access_chain = if ty == original_pointee_ty {
+            let emit = self.emit();
+            let module = emit.module_ref();
+            let func = &module.functions[emit.selected_function().unwrap()];
+            let base_ptr_and_combined_indices = func
+                .all_inst_iter()
+                .find(|inst| inst.result_id == Some(ptr_id))
+                .and_then(|ptr_def_inst| {
+                    if matches!(
+                        ptr_def_inst.class.opcode,
+                        Op::AccessChain | Op::InBoundsAccessChain
+                    ) {
+                        let base_ptr = ptr_def_inst.operands[0].unwrap_id_ref();
+                        let indices = ptr_def_inst.operands[1..]
+                            .iter()
+                            .map(|op| op.unwrap_id_ref())
+                            .collect::<Vec<_>>();
+                        Some((base_ptr, indices))
+                    } else {
+                        None
+                    }
+                });
+            base_ptr_and_combined_indices
+        } else {
+            None
+        };
+        if let Some((original_ptr, mut original_indices)) = maybe_original_access_chain {
+            // Transform the following:
+            // OpAccessChain original_ptr [a, b, c]
+            // OpPtrAccessChain ptr base [d, e, f]
+            // into
+            // OpAccessChain original_ptr [a, b, c + base, d, e, f]
+            // to remove the need for OpPtrAccessChain
+            let last = original_indices.last_mut().unwrap();
+            *last = self
+                .add(last.with_type(ptr_base_index.ty), ptr_base_index)
+                .def(self);
+            original_indices.extend(indices);
+            return self.emit_access_chain(
+                result_type,
+                original_ptr,
+                None,
+                original_indices,
+                is_inbounds,
+            );
+        }
+
+        // HACK(eddyb) temporary workaround for untyped pointers upstream.
+        // FIXME(eddyb) replace with untyped memory SPIR-V + `qptr` or similar.
+        let ptr = self.pointercast(ptr, self.type_ptr_to(ty));
+        let ptr_id = ptr.def(self);
+
+        self.emit_access_chain(
+            result_type,
+            ptr_id,
+            Some(ptr_base_index),
+            indices,
+            is_inbounds,
+        )
+    }
+
+    fn emit_access_chain(
+        &self,
+        result_type: <Self as BackendTypes>::Type,
+        pointer: Word,
+        ptr_base_index: Option<SpirvValue>,
+        indices: Vec<Word>,
+        is_inbounds: bool,
+    ) -> SpirvValue {
+        let mut emit = self.emit();
+
+        let non_zero_ptr_base_index =
+            ptr_base_index.filter(|&idx| self.builder.lookup_const_u64(idx) != Some(0));
+        if let Some(ptr_base_index) = non_zero_ptr_base_index {
+            let result = if is_inbounds {
+                emit.in_bounds_ptr_access_chain(
+                    result_type,
+                    None,
+                    pointer,
+                    ptr_base_index.def(self),
+                    indices,
+                )
+            } else {
+                emit.ptr_access_chain(
+                    result_type,
+                    None,
+                    pointer,
+                    ptr_base_index.def(self),
+                    indices,
+                )
+            }
+            .unwrap();
+            self.zombie(result, "cannot offset a pointer to an arbitrary element");
+            result
+        } else {
+            if is_inbounds {
+                emit.in_bounds_access_chain(result_type, None, pointer, indices)
+            } else {
+                emit.access_chain(result_type, None, pointer, indices)
+            }
+            .unwrap()
+        }
+        .with_type(result_type)
     }
 
     fn fptoint_sat(
@@ -973,9 +1175,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         then: Self::BasicBlock,
         _catch: Self::BasicBlock,
         funclet: Option<&Self::Funclet>,
+        instance: Option<ty::Instance<'tcx>>,
     ) -> Self::Value {
         // Exceptions don't exist, jump directly to then block
-        let result = self.call(llty, fn_attrs, fn_abi, llfn, args, funclet);
+        let result = self.call(llty, fn_attrs, fn_abi, llfn, args, funclet, instance);
         self.emit().branch(then).unwrap();
         result
     }
@@ -990,11 +1193,14 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             int(a, b) => a.wrapping_add(b)
         }
     }
+    // FIXME(eddyb) try to annotate the SPIR-V for `fast` and `algebraic`.
     simple_op! {fadd, f_add}
     simple_op! {fadd_fast, f_add} // fast=normal
+    simple_op! {fadd_algebraic, f_add} // algebraic=normal
     simple_op! {sub, i_sub}
     simple_op! {fsub, f_sub}
     simple_op! {fsub_fast, f_sub} // fast=normal
+    simple_op! {fsub_algebraic, f_sub} // algebraic=normal
     simple_op! {
         mul, i_mul,
         // HACK(eddyb) `rustc_codegen_ssa` relies on `Builder` methods doing
@@ -1005,6 +1211,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
     simple_op! {fmul, f_mul}
     simple_op! {fmul_fast, f_mul} // fast=normal
+    simple_op! {fmul_algebraic, f_mul} // algebraic=normal
     simple_op! {udiv, u_div}
     // Note: exactudiv is UB when there's a remainder, so it's valid to implement as a normal div.
     // TODO: Can we take advantage of the UB and emit something else?
@@ -1014,10 +1221,12 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     simple_op! {exactsdiv, s_div}
     simple_op! {fdiv, f_div}
     simple_op! {fdiv_fast, f_div} // fast=normal
+    simple_op! {fdiv_algebraic, f_div} // algebraic=normal
     simple_op! {urem, u_mod}
     simple_op! {srem, s_rem}
     simple_op! {frem, f_rem}
     simple_op! {frem_fast, f_rem} // fast=normal
+    simple_op! {frem_algebraic, f_rem} // algebraic=normal
     simple_op_unchecked_type! {shl, shift_left_logical}
     simple_op_unchecked_type! {lshr, shift_right_logical}
     simple_op_unchecked_type! {ashr, shift_right_arithmetic}
@@ -1242,13 +1451,13 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             return OperandRef::zero_sized(place.layout);
         }
 
-        let val = if let Some(llextra) = place.llextra {
-            OperandValue::Ref(place.llval, Some(llextra), place.align)
+        let val = if place.val.llextra.is_some() {
+            OperandValue::Ref(place.val)
         } else if self.cx.is_backend_immediate(place.layout) {
             let llval = self.load(
                 place.layout.spirv_type(self.span(), self),
-                place.llval,
-                place.align,
+                place.val.llval,
+                place.val.align,
             );
             OperandValue::Immediate(self.to_immediate(llval, place.layout))
         } else if let Abi::ScalarPair(a, b) = place.layout.abi {
@@ -1257,9 +1466,12 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 .size(self)
                 .align_to(b.primitive().align(self).abi);
 
-            let pair_ty = place.layout.spirv_type(self.span(), self);
             let mut load = |i, scalar: Scalar, align| {
-                let llptr = self.struct_gep(pair_ty, place.llval, i as u64);
+                let llptr = if i == 0 {
+                    place.val.llval
+                } else {
+                    self.inbounds_ptradd(place.val.llval, self.const_usize(b_offset.bytes()))
+                };
                 let load = self.load(
                     self.scalar_pair_element_backend_type(place.layout, i, false),
                     llptr,
@@ -1269,11 +1481,11 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             };
 
             OperandValue::Pair(
-                load(0, a, place.align),
-                load(1, b, place.align.restrict_for_offset(b_offset)),
+                load(0, a, place.val.align),
+                load(1, b, place.val.align.restrict_for_offset(b_offset)),
             )
         } else {
-            OperandValue::Ref(place.llval, None, place.align)
+            OperandValue::Ref(place.val)
         };
         OperandRef {
             val,
@@ -1289,11 +1501,11 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         dest: PlaceRef<'tcx, Self::Value>,
     ) {
         let zero = self.const_usize(0);
-        let start = dest.project_index(self, zero).llval;
+        let start = dest.project_index(self, zero).val.llval;
 
         let elem_layout = dest.layout.field(self.cx(), 0);
         let elem_ty = elem_layout.spirv_type(self.span(), self);
-        let align = dest.align.restrict_for_offset(elem_layout.size);
+        let align = dest.val.align.restrict_for_offset(elem_layout.size);
 
         for i in 0..count {
             let current = self.inbounds_gep(elem_ty, start, &[self.const_usize(i)]);
@@ -1361,7 +1573,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn gep(&mut self, ty: Self::Type, ptr: Self::Value, indices: &[Self::Value]) -> Self::Value {
-        self.gep_help(ty, ptr, indices, false)
+        self.maybe_inbounds_gep(ty, ptr, indices, false)
     }
 
     fn inbounds_gep(
@@ -1370,79 +1582,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         ptr: Self::Value,
         indices: &[Self::Value],
     ) -> Self::Value {
-        self.gep_help(ty, ptr, indices, true)
-    }
-
-    fn struct_gep(&mut self, ty: Self::Type, ptr: Self::Value, idx: u64) -> Self::Value {
-        let (offset, result_pointee_type) = match self.lookup_type(ty) {
-            SpirvType::Adt {
-                field_offsets,
-                field_types,
-                ..
-            } => (field_offsets[idx as usize], field_types[idx as usize]),
-            SpirvType::Array { element, .. }
-            | SpirvType::RuntimeArray { element, .. }
-            | SpirvType::Vector { element, .. }
-            | SpirvType::Matrix { element, .. } => (
-                self.lookup_type(element).sizeof(self).unwrap() * idx,
-                element,
-            ),
-            SpirvType::InterfaceBlock { inner_type } => {
-                assert_eq!(idx, 0);
-                (Size::ZERO, inner_type)
-            }
-            other => self.fatal(format!(
-                "struct_gep not on struct, array, or vector type: {other:?}, index {idx}"
-            )),
-        };
-        let result_type = self.type_ptr_to(result_pointee_type);
-
-        // Special-case field accesses through a `pointercast`, to accesss the
-        // right field in the original type, for the `Logical` addressing model.
-        let ptr = ptr.strip_ptrcasts();
-        let original_pointee_ty = match self.lookup_type(ptr.ty) {
-            SpirvType::Pointer { pointee } => pointee,
-            other => self.fatal(format!("struct_gep called on non-pointer type: {other:?}")),
-        };
-        if let Some((indices, _)) = self.recover_access_chain_from_offset(
-            original_pointee_ty,
-            offset,
-            self.lookup_type(result_pointee_type).sizeof(self),
-            Some(result_pointee_type),
-        ) {
-            let original_ptr = ptr.def(self);
-            let indices = indices
-                .into_iter()
-                .map(|idx| self.constant_u32(self.span(), idx).def(self))
-                .collect::<Vec<_>>();
-            return self
-                .emit()
-                .access_chain(result_type, None, original_ptr, indices)
-                .unwrap()
-                .with_type(result_type);
-        }
-
-        // FIXME(eddyb) can we even get to this point, with valid SPIR-V?
-
-        // HACK(eddyb) temporary workaround for untyped pointers upstream.
-        // FIXME(eddyb) replace with untyped memory SPIR-V + `qptr` or similar.
-        let ptr = self.pointercast(ptr, self.type_ptr_to(ty));
-
-        // Important! LLVM, and therefore intel-compute-runtime, require the `getelementptr` instruction (and therefore
-        // OpAccessChain) on structs to be a constant i32. Not i64! i32.
-        if idx > u32::MAX as u64 {
-            self.fatal("struct_gep bigger than u32::MAX");
-        }
-        let index_const = self.constant_u32(self.span(), idx as u32).def(self);
-        self.emit()
-            .access_chain(
-                result_type,
-                None,
-                ptr.def(self),
-                [index_const].iter().cloned(),
-            )
-            .unwrap()
-            .with_type(result_type)
+        self.maybe_inbounds_gep(ty, ptr, indices, true)
     }
 
     // intcast has the logic for dealing with bools, so use that
@@ -1586,9 +1726,12 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 // FIXME(eddyb) this isn't efficient, `recover_access_chain_from_offset`
                 // could instead be doing all the extra digging itself.
                 let mut indices = SmallVec::<[_; 8]>::new();
-                while let Some((inner_indices, inner_ty)) =
-                    self.recover_access_chain_from_offset(leaf_ty, Size::ZERO, Some(size), None)
-                {
+                while let Some((inner_indices, inner_ty)) = self.recover_access_chain_from_offset(
+                    leaf_ty,
+                    Size::ZERO,
+                    Some(size)..=Some(size),
+                    None,
+                ) {
                     indices.extend(inner_indices);
                     leaf_ty = inner_ty;
                 }
@@ -1716,8 +1859,16 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             return self.const_bitcast(ptr, dest_ty);
         }
 
+        if ptr.ty == dest_ty {
+            return ptr;
+        }
+
         // Strip a previous `pointercast`, to reveal the original pointer type.
         let ptr = ptr.strip_ptrcasts();
+
+        if ptr.ty == dest_ty {
+            return ptr;
+        }
 
         let ptr_pointee = match self.lookup_type(ptr.ty) {
             SpirvType::Pointer { pointee } => pointee,
@@ -1731,12 +1882,12 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 "pointercast called on non-pointer dest type: {other:?}"
             )),
         };
-        if ptr.ty == dest_ty {
-            ptr
-        } else if let Some((indices, _)) = self.recover_access_chain_from_offset(
+        let dest_pointee_size = self.lookup_type(dest_pointee).sizeof(self);
+
+        if let Some((indices, _)) = self.recover_access_chain_from_offset(
             ptr_pointee,
             Size::ZERO,
-            self.lookup_type(dest_pointee).sizeof(self),
+            dest_pointee_size..=dest_pointee_size,
             Some(dest_pointee),
         ) {
             let indices = indices
@@ -1744,7 +1895,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 .map(|idx| self.constant_u32(self.span(), idx).def(self))
                 .collect::<Vec<_>>();
             self.emit()
-                .access_chain(dest_ty, None, ptr.def(self), indices)
+                .in_bounds_access_chain(dest_ty, None, ptr.def(self), indices)
                 .unwrap()
                 .with_type(dest_ty)
         } else {
@@ -2282,7 +2433,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         order: AtomicOrdering,
         failure_order: AtomicOrdering,
         _weak: bool,
-    ) -> Self::Value {
+    ) -> (Self::Value, Self::Value) {
         assert_ty_eq!(self, cmp.ty, src.ty);
         let ty = src.ty;
 
@@ -2310,7 +2461,11 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             )
             .unwrap()
             .with_type(access_ty);
-        self.bitcast(result, ty)
+
+        let val = self.bitcast(result, ty);
+        let success = self.icmp(IntPredicate::IntEQ, val, cmp);
+
+        (val, success)
     }
 
     fn atomic_rmw(
@@ -2462,6 +2617,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         callee: Self::Value,
         args: &[Self::Value],
         funclet: Option<&Self::Funclet>,
+        instance: Option<ty::Instance<'tcx>>,
     ) -> Self::Value {
         if funclet.is_some() {
             self.fatal("TODO: Funclets are not supported");
@@ -2520,17 +2676,19 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             .collect();
         let args = &args[..];
 
-        let libm_intrinsic = self.libm_intrinsics.borrow().get(&callee_val).copied();
-        let buffer_load_intrinsic = self
-            .buffer_load_intrinsic_fn_id
-            .borrow()
-            .get(&callee_val)
-            .copied();
-        let buffer_store_intrinsic = self
-            .buffer_store_intrinsic_fn_id
-            .borrow()
-            .get(&callee_val)
-            .copied();
+        // FIXME(eddyb) should the maps exist at all, now that the `DefId` is known
+        // at `call` time, and presumably its high-level details can be looked up?
+        let instance_def_id = instance.map(|instance| instance.def_id());
+
+        let libm_intrinsic =
+            instance_def_id.and_then(|def_id| self.libm_intrinsics.borrow().get(&def_id).copied());
+        let buffer_load_intrinsic = instance_def_id
+            .and_then(|def_id| self.buffer_load_intrinsics.borrow().get(&def_id).copied());
+        let buffer_store_intrinsic = instance_def_id
+            .and_then(|def_id| self.buffer_store_intrinsics.borrow().get(&def_id).copied());
+        let is_panic_entry_point = instance_def_id
+            .is_some_and(|def_id| self.panic_entry_points.borrow().contains(&def_id));
+
         if let Some(libm_intrinsic) = libm_intrinsic {
             let result = self.call_libm_intrinsic(libm_intrinsic, result_type, args);
             if result_type != result.ty {
@@ -2542,7 +2700,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 );
             }
             result
-        } else if self.panic_entry_point_ids.borrow().contains(&callee_val) {
+        } else if is_panic_entry_point {
             // HACK(eddyb) Rust 2021 `panic!` always uses `format_args!`, even
             // in the simple case that used to pass a `&str` constant, which
             // would not remain reachable in the SPIR-V - but `format_args!` is
@@ -2676,14 +2834,21 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 // are decoded to values of this `enum`. For instructions that
                 // produce results, the result ID is the first `ID` value.
                 #[derive(Debug)]
-                enum Inst<'tcx, ID> {
+                enum Inst<ID> {
                     Bitcast(ID, ID),
                     CompositeExtract(ID, ID, u32),
-                    AccessChain(ID, ID, SpirvConst<'tcx, 'tcx>),
-                    InBoundsAccessChain(ID, ID, SpirvConst<'tcx, 'tcx>),
+                    InBoundsAccessChain(ID, ID, u32),
                     Store(ID, ID),
                     Load(ID, ID),
+                    CopyMemory(ID, ID),
                     Call(ID, ID, SmallVec<[ID; 4]>),
+
+                    // HACK(eddyb) this only exists for better error reporting,
+                    // as `Result<Inst<...>, Op>` would only report one `Op`.
+                    Unsupported(
+                        // HACK(eddyb) only exists for `fmt::Debug` in case of error.
+                        #[allow(dead_code)] Op,
+                    ),
                 }
 
                 let taken_inst_idx_range = Cell::new(func.blocks[block_idx].instructions.len())..;
@@ -2717,22 +2882,22 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                         Some(
                             match (inst.class.opcode, inst.result_id, &id_operands[..]) {
                                 (Op::Bitcast, Some(r), &[x]) => Inst::Bitcast(r, x),
-                                (Op::AccessChain, Some(r), &[p, i]) => {
-                                    Inst::AccessChain(r, p, self.builder.lookup_const_by_id(i)?)
-                                }
                                 (Op::InBoundsAccessChain, Some(r), &[p, i]) => {
-                                    Inst::InBoundsAccessChain(
-                                        r,
-                                        p,
-                                        self.builder.lookup_const_by_id(i)?,
-                                    )
+                                    if let Some(SpirvConst::U32(i)) =
+                                        self.builder.lookup_const_by_id(i)
+                                    {
+                                        Inst::InBoundsAccessChain(r, p, i)
+                                    } else {
+                                        Inst::Unsupported(inst.class.opcode)
+                                    }
                                 }
                                 (Op::Store, None, &[p, v]) => Inst::Store(p, v),
                                 (Op::Load, Some(r), &[p]) => Inst::Load(r, p),
+                                (Op::CopyMemory, None, &[a, b]) => Inst::CopyMemory(a, b),
                                 (Op::FunctionCall, Some(r), [f, args @ ..]) => {
                                     Inst::Call(r, *f, args.iter().copied().collect())
                                 }
-                                _ => return None,
+                                _ => Inst::Unsupported(inst.class.opcode),
                             },
                         )
                     });
@@ -2828,46 +2993,50 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     };
                     require_local_var(rt_args_array_ptr_id, "[fmt::rt::Argument; N]")?;
 
-                    // Each runtime argument has 3 instructions to call one of
-                    // the `fmt::rt::Argument::new_*` functions (and split its
-                    // scalar pair result), and 5 instructions to store it into
-                    // the appropriate slot in the array. The groups of 3 and 5
+                    // Each runtime argument has 4 instructions to call one of
+                    // the `fmt::rt::Argument::new_*` functions (and temporarily
+                    // store its result), and 4 instructions to copy it into
+                    // the appropriate slot in the array. The groups of 4 and 4
                     // instructions, for all runtime args, are each separate.
-                    let stores_to_rt_args_array =
-                        try_rev_take(rt_args_count * 5).ok_or_else(|| {
+                    let copies_to_rt_args_array =
+                        try_rev_take(rt_args_count * 4).ok_or_else(|| {
                             FormatArgsNotRecognized(
-                                "[fmt::rt::Argument; N] stores: ran out of instructions".into(),
+                                "[fmt::rt::Argument; N] copies: ran out of instructions".into(),
                             )
                         })?;
-                    let stores_to_rt_args_array = stores_to_rt_args_array.chunks(5);
-                    let rt_arg_new_calls = try_rev_take(rt_args_count * 3).ok_or_else(|| {
+                    let copies_to_rt_args_array = copies_to_rt_args_array.chunks(4);
+                    let rt_arg_new_calls = try_rev_take(rt_args_count * 4).ok_or_else(|| {
                         FormatArgsNotRecognized(
                             "fmt::rt::Argument::new calls: ran out of instructions".into(),
                         )
                     })?;
-                    let rt_arg_new_calls = rt_arg_new_calls.chunks(3);
+                    let rt_arg_new_calls = rt_arg_new_calls.chunks(4);
 
-                    for (rt_arg_idx, (rt_arg_new_call_insts, store_to_rt_args_array_insts)) in
-                        rt_arg_new_calls.zip(stores_to_rt_args_array).enumerate()
+                    for (rt_arg_idx, (rt_arg_new_call_insts, copy_to_rt_args_array_insts)) in
+                        rt_arg_new_calls.zip(copies_to_rt_args_array).enumerate()
                     {
-                        let (a, b) = match rt_arg_new_call_insts[..] {
+                        let call_ret_slot_ptr = match rt_arg_new_call_insts[..] {
                             [
                                 Inst::Call(call_ret_id, callee_id, ref call_args),
-                                Inst::CompositeExtract(a, a_parent_pair, 0),
-                                Inst::CompositeExtract(b, b_parent_pair, 1),
-                            ] if [a_parent_pair, b_parent_pair] == [call_ret_id; 2] => self
-                                .fmt_rt_arg_new_fn_ids_to_ty_and_spec
-                                .borrow()
-                                .get(&callee_id)
-                                .and_then(|&(ty, spec)| match call_args[..] {
-                                    [x] => {
-                                        decoded_format_args
-                                            .ref_arg_ids_with_ty_and_spec
-                                            .push((x, ty, spec));
-                                        Some((a, b))
-                                    }
-                                    _ => None,
-                                }),
+                                Inst::InBoundsAccessChain(tmp_slot_field_ptr, tmp_slot_ptr, 0),
+                                Inst::CompositeExtract(field, wrapper_newtype, 0),
+                                Inst::Store(st_dst_ptr, st_val),
+                            ] if wrapper_newtype == call_ret_id
+                                && (st_dst_ptr, st_val) == (tmp_slot_field_ptr, field) =>
+                            {
+                                self.fmt_rt_arg_new_fn_ids_to_ty_and_spec
+                                    .borrow()
+                                    .get(&callee_id)
+                                    .and_then(|&(ty, spec)| match call_args[..] {
+                                        [x] => {
+                                            decoded_format_args
+                                                .ref_arg_ids_with_ty_and_spec
+                                                .push((x, ty, spec));
+                                            Some(tmp_slot_ptr)
+                                        }
+                                        _ => None,
+                                    })
+                            }
                             _ => None,
                         }
                         .ok_or_else(|| {
@@ -2876,25 +3045,20 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                             ))
                         })?;
 
-                        match store_to_rt_args_array_insts[..] {
+                        match copy_to_rt_args_array_insts[..] {
                             [
-                                Inst::InBoundsAccessChain(
-                                    array_slot_ptr,
-                                    array_base_ptr,
-                                    SpirvConst::U32(array_idx),
-                                ),
-                                Inst::AccessChain(a_ptr, a_base_ptr, SpirvConst::U32(0)),
-                                Inst::Store(a_st_dst, a_st_val),
-                                Inst::AccessChain(b_ptr, b_base_ptr, SpirvConst::U32(1)),
-                                Inst::Store(b_st_dst, b_st_val),
-                            ] if array_base_ptr == rt_args_array_ptr_id
+                                Inst::InBoundsAccessChain(array_slot, array_base, array_idx),
+                                Inst::InBoundsAccessChain(dst_field_ptr, dst_base_ptr, 0),
+                                Inst::InBoundsAccessChain(src_field_ptr, src_base_ptr, 0),
+                                Inst::CopyMemory(copy_dst, copy_src),
+                            ] if array_base == rt_args_array_ptr_id
                                 && array_idx as usize == rt_arg_idx
-                                && [a_base_ptr, b_base_ptr] == [array_slot_ptr; 2]
-                                && (a, b) == (a_st_val, b_st_val)
-                                && (a_ptr, b_ptr) == (a_st_dst, b_st_dst) => {}
+                                && dst_base_ptr == array_slot
+                                && src_base_ptr == call_ret_slot_ptr
+                                && (copy_dst, copy_src) == (dst_field_ptr, src_field_ptr) => {}
                             _ => {
                                 return Err(FormatArgsNotRecognized(format!(
-                                    "[fmt::rt::Argument; N] stores sequence ({store_to_rt_args_array_insts:?})"
+                                    "[fmt::rt::Argument; N] copies sequence ({copy_to_rt_args_array_insts:?})"
                                 )));
                             }
                         }
@@ -2987,7 +3151,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
 
                 Err(FormatArgsNotRecognized(step)) => {
                     if let Some(current_span) = self.current_span {
-                        let mut warn = self.tcx.sess.struct_span_warn(
+                        let mut warn = self.tcx.dcx().struct_span_warn(
                             current_span,
                             "failed to find and remove `format_args!` construction for this `panic!`",
                         );
@@ -3037,7 +3201,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         self.intcast(val, dest_ty, false)
     }
 
-    fn do_not_inline(&mut self, _llret: Self::Value) {
+    fn apply_attrs_to_cleanup_callsite(&mut self, _llret: Self::Value) {
         // Ignore
     }
 }

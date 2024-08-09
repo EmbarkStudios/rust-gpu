@@ -107,10 +107,10 @@ enum IdentifiedOperand {
     /// The operand to the vectorized operation is a straight-up vector.
     Vector(Word),
     /// The operand to the vectorized operation is a collection of scalars that need to be packed
-    /// together with OpCompositeConstruct before using the vectorized operation.
+    /// together with `OpCompositeConstruct` before using the vectorized operation.
     Scalars(Vec<Word>),
     /// The operand to the vectorized operation is some non-value: for example, the `instruction`
-    /// operand in OpExtInst.
+    /// operand in `OpExtInst`.
     NonValue(Operand),
 }
 
