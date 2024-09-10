@@ -88,6 +88,7 @@ async fn run(
                 label: None,
                 required_features,
                 required_limits,
+                memory_hints: wgpu::MemoryHints::Performance,
             },
             None,
         )
@@ -379,12 +380,14 @@ fn create_pipeline(
     };
 
     device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+        cache: None,
         label: None,
         layout: Some(pipeline_layout),
         vertex: wgpu::VertexState {
             module: vs_module,
             entry_point: vs_entry_point,
             buffers: &[],
+            compilation_options: Default::default(),
         },
         primitive: wgpu::PrimitiveState {
             topology: wgpu::PrimitiveTopology::TriangleList,
@@ -402,6 +405,7 @@ fn create_pipeline(
             alpha_to_coverage_enabled: false,
         },
         fragment: Some(wgpu::FragmentState {
+            compilation_options: Default::default(),
             module: fs_module,
             entry_point: fs_entry_point,
             targets: &[Some(wgpu::ColorTargetState {
