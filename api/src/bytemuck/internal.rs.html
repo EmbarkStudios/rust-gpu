@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bytemuck-1.14.0/src/internal.rs`."><title>internal.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="bytemuck" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../bytemuck/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bytemuck-1.18.0/src/internal.rs`."><title>internal.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="bytemuck" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (8ce4540bd 2023-09-29)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../bytemuck/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -394,12 +394,6 @@
 <a href="#394" id="394">394</a>
 <a href="#395" id="395">395</a>
 <a href="#396" id="396">396</a>
-<a href="#397" id="397">397</a>
-<a href="#398" id="398">398</a>
-<a href="#399" id="399">399</a>
-<a href="#400" id="400">400</a>
-<a href="#401" id="401">401</a>
-<a href="#402" id="402">402</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Internal implementation of casting functions not bound by marker traits
 //! and therefore marked as unsafe. This is used so that we don&#39;t need to
 //! duplicate the business logic contained in these functions between the
@@ -453,13 +447,9 @@ possibility code branch.
 /// empty slice might not match the pointer value of the input reference.
 </span><span class="attr">#[inline(always)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>bytes_of&lt;T: Copy&gt;(t: <span class="kw-2">&amp;</span>T) -&gt; <span class="kw-2">&amp;</span>[u8] {
-  <span class="kw">if </span>size_of::&lt;T&gt;() == <span class="number">0 </span>{
-    <span class="kw-2">&amp;</span>[]
-  } <span class="kw">else </span>{
-    <span class="kw">match </span>try_cast_slice::&lt;T, u8&gt;(core::slice::from_ref(t)) {
-      <span class="prelude-val">Ok</span>(s) =&gt; s,
-      <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
-    }
+  <span class="kw">match </span>try_cast_slice::&lt;T, u8&gt;(core::slice::from_ref(t)) {
+    <span class="prelude-val">Ok</span>(s) =&gt; s,
+    <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
   }
 }
 
@@ -469,13 +459,9 @@ possibility code branch.
 /// empty slice might not match the pointer value of the input reference.
 </span><span class="attr">#[inline]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>bytes_of_mut&lt;T: Copy&gt;(t: <span class="kw-2">&amp;mut </span>T) -&gt; <span class="kw-2">&amp;mut </span>[u8] {
-  <span class="kw">if </span>size_of::&lt;T&gt;() == <span class="number">0 </span>{
-    <span class="kw-2">&amp;mut </span>[]
-  } <span class="kw">else </span>{
-    <span class="kw">match </span>try_cast_slice_mut::&lt;T, u8&gt;(core::slice::from_mut(t)) {
-      <span class="prelude-val">Ok</span>(s) =&gt; s,
-      <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
-    }
+  <span class="kw">match </span>try_cast_slice_mut::&lt;T, u8&gt;(core::slice::from_mut(t)) {
+    <span class="prelude-val">Ok</span>(s) =&gt; s,
+    <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
   }
 }
 
@@ -749,12 +735,11 @@ possibility code branch.
 ///   type, and the output slice wouldn&#39;t be a whole number of elements when
 ///   accounting for the size change (eg: 3 `u16` values is 1.5 `u32` values, so
 ///   that&#39;s a failure).
-/// * Similarly, you can&#39;t convert between a [ZST](https://doc.rust-lang.org/nomicon/exotic-sizes.html#zero-sized-types-zsts)
-///   and a non-ZST.
 </span><span class="attr">#[inline]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>try_cast_slice&lt;A: Copy, B: Copy&gt;(
   a: <span class="kw-2">&amp;</span>[A],
 ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>[B], PodCastError&gt; {
+  <span class="kw">let </span>input_bytes = core::mem::size_of_val::&lt;[A]&gt;(a);
   <span class="comment">// Note(Lokathor): everything with `align_of` and `size_of` will optimize away
   // after monomorphization.
   </span><span class="kw">if </span>align_of::&lt;B&gt;() &gt; align_of::&lt;A&gt;()
@@ -763,10 +748,11 @@ possibility code branch.
     <span class="prelude-val">Err</span>(PodCastError::TargetAlignmentGreaterAndInputNotAligned)
   } <span class="kw">else if </span>size_of::&lt;B&gt;() == size_of::&lt;A&gt;() {
     <span class="prelude-val">Ok</span>(<span class="kw">unsafe </span>{ core::slice::from_raw_parts(a.as_ptr() <span class="kw">as </span><span class="kw-2">*const </span>B, a.len()) })
-  } <span class="kw">else if </span>size_of::&lt;A&gt;() == <span class="number">0 </span>|| size_of::&lt;B&gt;() == <span class="number">0 </span>{
-    <span class="prelude-val">Err</span>(PodCastError::SizeMismatch)
-  } <span class="kw">else if </span>core::mem::size_of_val(a) % size_of::&lt;B&gt;() == <span class="number">0 </span>{
-    <span class="kw">let </span>new_len = core::mem::size_of_val(a) / size_of::&lt;B&gt;();
+  } <span class="kw">else if </span>(size_of::&lt;B&gt;() != <span class="number">0 </span>&amp;&amp; input_bytes % size_of::&lt;B&gt;() == <span class="number">0</span>)
+    || (size_of::&lt;B&gt;() == <span class="number">0 </span>&amp;&amp; input_bytes == <span class="number">0</span>)
+  {
+    <span class="kw">let </span>new_len =
+      <span class="kw">if </span>size_of::&lt;B&gt;() != <span class="number">0 </span>{ input_bytes / size_of::&lt;B&gt;() } <span class="kw">else </span>{ <span class="number">0 </span>};
     <span class="prelude-val">Ok</span>(<span class="kw">unsafe </span>{ core::slice::from_raw_parts(a.as_ptr() <span class="kw">as </span><span class="kw-2">*const </span>B, new_len) })
   } <span class="kw">else </span>{
     <span class="prelude-val">Err</span>(PodCastError::OutputSliceWouldHaveSlop)
@@ -781,6 +767,7 @@ possibility code branch.
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>try_cast_slice_mut&lt;A: Copy, B: Copy&gt;(
   a: <span class="kw-2">&amp;mut </span>[A],
 ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;mut </span>[B], PodCastError&gt; {
+  <span class="kw">let </span>input_bytes = core::mem::size_of_val::&lt;[A]&gt;(a);
   <span class="comment">// Note(Lokathor): everything with `align_of` and `size_of` will optimize away
   // after monomorphization.
   </span><span class="kw">if </span>align_of::&lt;B&gt;() &gt; align_of::&lt;A&gt;()
@@ -791,10 +778,11 @@ possibility code branch.
     <span class="prelude-val">Ok</span>(<span class="kw">unsafe </span>{
       core::slice::from_raw_parts_mut(a.as_mut_ptr() <span class="kw">as </span><span class="kw-2">*mut </span>B, a.len())
     })
-  } <span class="kw">else if </span>size_of::&lt;A&gt;() == <span class="number">0 </span>|| size_of::&lt;B&gt;() == <span class="number">0 </span>{
-    <span class="prelude-val">Err</span>(PodCastError::SizeMismatch)
-  } <span class="kw">else if </span>core::mem::size_of_val(a) % size_of::&lt;B&gt;() == <span class="number">0 </span>{
-    <span class="kw">let </span>new_len = core::mem::size_of_val(a) / size_of::&lt;B&gt;();
+  } <span class="kw">else if </span>(size_of::&lt;B&gt;() != <span class="number">0 </span>&amp;&amp; input_bytes % size_of::&lt;B&gt;() == <span class="number">0</span>)
+    || (size_of::&lt;B&gt;() == <span class="number">0 </span>&amp;&amp; input_bytes == <span class="number">0</span>)
+  {
+    <span class="kw">let </span>new_len =
+      <span class="kw">if </span>size_of::&lt;B&gt;() != <span class="number">0 </span>{ input_bytes / size_of::&lt;B&gt;() } <span class="kw">else </span>{ <span class="number">0 </span>};
     <span class="prelude-val">Ok</span>(<span class="kw">unsafe </span>{
       core::slice::from_raw_parts_mut(a.as_mut_ptr() <span class="kw">as </span><span class="kw-2">*mut </span>B, new_len)
     })

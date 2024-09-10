@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["all","x86_64"]};
+window.SIDEBAR_ITEMS = {"mod":["aarch64","all"]};
