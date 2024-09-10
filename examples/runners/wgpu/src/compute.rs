@@ -34,6 +34,7 @@ async fn start_internal(options: &Options, compiled_shader_modules: CompiledShad
                 label: None,
                 required_features,
                 required_limits: wgpu::Limits::default(),
+                memory_hints: wgpu::MemoryHints::Performance,
             },
             None,
         )
@@ -87,6 +88,8 @@ async fn start_internal(options: &Options, compiled_shader_modules: CompiledShad
     });
 
     let compute_pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+        compilation_options: Default::default(),
+        cache: None,
         label: None,
         layout: Some(&pipeline_layout),
         module: &module,
