@@ -31,7 +31,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         constant_offset: u32,
     ) -> SpirvValue {
         let actual_index = if constant_offset != 0 {
-            let const_offset_val = self.constant_u32(DUMMY_SP, constant_offset);
+            let const_offset_val = self.constant_bit32(DUMMY_SP, constant_offset);
             self.add(dynamic_index, const_offset_val)
         } else {
             dynamic_index
@@ -199,7 +199,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         // Note that the &[u32] gets split into two arguments - pointer, length
         let array = args[0];
         let byte_index = args[2];
-        let two = self.constant_u32(DUMMY_SP, 2);
+        let two = self.constant_bit32(DUMMY_SP, 2);
         let word_index = self.lshr(byte_index, two);
         self.recurse_load_type(result_type, result_type, array, word_index, 0)
     }
@@ -223,7 +223,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         value: SpirvValue,
     ) -> Result<(), ErrorGuaranteed> {
         let actual_index = if constant_offset != 0 {
-            let const_offset_val = self.constant_u32(DUMMY_SP, constant_offset);
+            let const_offset_val = self.constant_bit32(DUMMY_SP, constant_offset);
             self.add(dynamic_index, const_offset_val)
         } else {
             dynamic_index
@@ -367,7 +367,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         // Note that the &[u32] gets split into two arguments - pointer, length
         let array = args[0];
         let byte_index = args[2];
-        let two = self.constant_u32(DUMMY_SP, 2);
+        let two = self.constant_bit32(DUMMY_SP, 2);
         let word_index = self.lshr(byte_index, two);
         if is_pair {
             let value_one = args[3];

@@ -267,7 +267,7 @@ pub fn remove_duplicate_types(module: &mut Module) {
             && (inst.class.opcode != Op::MemberName
                 || member_name_ids.insert((
                     inst.operands[0].unwrap_id_ref(),
-                    inst.operands[1].unwrap_literal_int32(),
+                    inst.operands[1].unwrap_literal_bit32(),
                 )))
     });
 }

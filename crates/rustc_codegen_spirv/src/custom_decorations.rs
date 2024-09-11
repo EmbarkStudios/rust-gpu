@@ -379,8 +379,8 @@ impl<'a> SpanRegenerator<'a> {
         let (file_id, line_start, line_end, col_start, col_end) = match inst.class.opcode {
             Op::Line => {
                 let file = inst.operands[0].unwrap_id_ref();
-                let line = inst.operands[1].unwrap_literal_int32();
-                let col = inst.operands[2].unwrap_literal_int32();
+                let line = inst.operands[1].unwrap_literal_bit32();
+                let col = inst.operands[2].unwrap_literal_bit32();
                 (file, line, line, col, col)
             }
             Op::ExtInst
@@ -397,7 +397,7 @@ impl<'a> SpanRegenerator<'a> {
                     } => {
                         let const_u32 = |operand: Operand| {
                             spv_debug_info.id_to_op_constant_operand[&operand.unwrap_id_ref()]
-                                .unwrap_literal_int32()
+                                .unwrap_literal_bit32()
                         };
                         (
                             file.unwrap_id_ref(),

@@ -175,7 +175,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     | MemorySemantics::SEQUENTIALLY_CONSISTENT
             }
         };
-        let semantics = self.constant_u32(self.span(), semantics.bits());
+        let semantics = self.constant_bit32(self.span(), semantics.bits());
         if invalid_seq_cst {
             self.zombie(
                 semantics.def(self),
@@ -196,10 +196,10 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     .constant_u16(self.span(), memset_fill_u16(fill_byte))
                     .def(self),
                 32 => self
-                    .constant_u32(self.span(), memset_fill_u32(fill_byte))
+                    .constant_bit32(self.span(), memset_fill_u32(fill_byte))
                     .def(self),
                 64 => self
-                    .constant_u64(self.span(), memset_fill_u64(fill_byte))
+                    .constant_bit64(self.span(), memset_fill_u64(fill_byte))
                     .def(self),
                 _ => self.fatal(format!(
                     "memset on integer width {width} not implemented yet"
@@ -314,7 +314,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             self.store(pat, ptr, Align::from_bytes(0).unwrap());
         } else {
             for index in 0..count {
-                let const_index = self.constant_u32(self.span(), index as u32);
+                let const_index = self.constant_bit32(self.span(), index as u32);
                 let gep_ptr = self.gep(pat.ty, ptr, &[const_index]);
                 self.store(pat, gep_ptr, Align::from_bytes(0).unwrap());
             }
@@ -428,7 +428,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         } else {
             let indices = indices
                 .into_iter()
-                .map(|idx| self.constant_u32(self.span(), idx).def(self))
+                .map(|idx| self.constant_bit32(self.span(), idx).def(self))
                 .collect::<Vec<_>>();
             self.emit()
                 .access_chain(leaf_ptr_ty, None, ptr.def(self), indices)
@@ -904,9 +904,9 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 ))
             } else if signed {
                 // this cast chain can probably be collapsed, but, whatever, be safe
-                Operand::LiteralInt32(v as u8 as i8 as i32 as u32)
+                Operand::LiteralBit32(v as u8 as i8 as i32 as u32)
             } else {
-                Operand::LiteralInt32(v as u8 as u32)
+                Operand::LiteralBit32(v as u8 as u32)
             }
         }
         fn construct_16(self_: &Builder<'_, '_>, signed: bool, v: u128) -> Operand {
@@ -915,9 +915,9 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     "Switches to values above u16::MAX not supported: {v:?}"
                 ))
             } else if signed {
-                Operand::LiteralInt32(v as u16 as i16 as i32 as u32)
+                Operand::LiteralBit32(v as u16 as i16 as i32 as u32)
             } else {
-                Operand::LiteralInt32(v as u16 as u32)
+                Operand::LiteralBit32(v as u16 as u32)
             }
         }
         fn construct_32(self_: &Builder<'_, '_>, _signed: bool, v: u128) -> Operand {
@@ -926,7 +926,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     "Switches to values above u32::MAX not supported: {v:?}"
                 ))
             } else {
-                Operand::LiteralInt32(v as u32)
+                Operand::LiteralBit32(v as u32)
             }
         }
         fn construct_64(self_: &Builder<'_, '_>, _signed: bool, v: u128) -> Operand {
@@ -935,7 +935,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     "Switches to values above u64::MAX not supported: {v:?}"
                 ))
             } else {
-                Operand::LiteralInt64(v as u64)
+                Operand::LiteralBit64(v as u64)
             }
         }
         // pass in signed into the closure to be able to unify closure types
@@ -1217,7 +1217,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         let (ptr, access_ty) = self.adjust_pointer_for_typed_access(ptr, ty);
 
         // TODO: Default to device scope
-        let memory = self.constant_u32(self.span(), Scope::Device as u32);
+        let memory = self.constant_bit32(self.span(), Scope::Device as u32);
         let semantics = self.ordering_to_semantics_def(order);
         let result = self
             .emit()
@@ -1347,7 +1347,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         let val = self.bitcast(val, access_ty);
 
         // TODO: Default to device scope
-        let memory = self.constant_u32(self.span(), Scope::Device as u32);
+        let memory = self.constant_bit32(self.span(), Scope::Device as u32);
         let semantics = self.ordering_to_semantics_def(order);
         self.validate_atomic(val.ty, ptr.def(self));
         self.emit()
@@ -1413,7 +1413,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             let original_ptr = ptr.def(self);
             let indices = indices
                 .into_iter()
-                .map(|idx| self.constant_u32(self.span(), idx).def(self))
+                .map(|idx| self.constant_bit32(self.span(), idx).def(self))
                 .collect::<Vec<_>>();
             return self
                 .emit()
@@ -1433,7 +1433,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         if idx > u32::MAX as u64 {
             self.fatal("struct_gep bigger than u32::MAX");
         }
-        let index_const = self.constant_u32(self.span(), idx as u32).def(self);
+        let index_const = self.constant_bit32(self.span(), idx as u32).def(self);
         self.emit()
             .access_chain(
                 result_type,
@@ -1741,7 +1741,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         ) {
             let indices = indices
                 .into_iter()
-                .map(|idx| self.constant_u32(self.span(), idx).def(self))
+                .map(|idx| self.constant_bit32(self.span(), idx).def(self))
                 .collect::<Vec<_>>();
             self.emit()
                 .access_chain(dest_ty, None, ptr.def(self), indices)
@@ -2292,7 +2292,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
 
         self.validate_atomic(access_ty, dst.def(self));
         // TODO: Default to device scope
-        let memory = self.constant_u32(self.span(), Scope::Device as u32);
+        let memory = self.constant_bit32(self.span(), Scope::Device as u32);
         let semantics_equal = self.ordering_to_semantics_def(order);
         let semantics_unequal = self.ordering_to_semantics_def(failure_order);
         // Note: OpAtomicCompareExchangeWeak is deprecated, and has the same semantics
@@ -2328,7 +2328,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         self.validate_atomic(access_ty, dst.def(self));
         // TODO: Default to device scope
         let memory = self
-            .constant_u32(self.span(), Scope::Device as u32)
+            .constant_bit32(self.span(), Scope::Device as u32)
             .def(self);
         let semantics = self.ordering_to_semantics_def(order).def(self);
         use AtomicRmwBinOp::*;
@@ -2424,7 +2424,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         // Ignore sync scope (it only has "single thread" and "cross thread")
         // TODO: Default to device scope
         let memory = self
-            .constant_u32(self.span(), Scope::Device as u32)
+            .constant_bit32(self.span(), Scope::Device as u32)
             .def(self);
         let semantics = self.ordering_to_semantics_def(order).def(self);
         self.emit().memory_barrier(memory, semantics).unwrap();
@@ -2697,7 +2697,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
 
                         // HACK(eddyb) avoid the logic below that assumes only ID operands
                         if inst.class.opcode == Op::CompositeExtract {
-                            if let (Some(r), &[Operand::IdRef(x), Operand::LiteralInt32(i)]) =
+                            if let (Some(r), &[Operand::IdRef(x), Operand::LiteralBit32(i)]) =
                                 (inst.result_id, &inst.operands[..])
                             {
                                 return Some(Inst::CompositeExtract(r, x, i));
