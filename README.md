@@ -21,7 +21,9 @@ under the Rust-GPU GitHub organization. `rust-gpu` is still used by Embark and t
 gets used for work specific to us. However, its main home has relocated to the community.
 
 <div align="center">
+
 ### [**Active development continues in its new home, under the Rust-GPU org!**](https://github.com/Rust-GPU/rust-gpu)
+
 </div>
 
 ## How `rust-gpu` began
