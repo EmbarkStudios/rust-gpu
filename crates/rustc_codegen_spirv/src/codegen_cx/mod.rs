@@ -90,8 +90,7 @@ impl<'tcx> CodegenCx<'tcx> {
         let sym = Symbols::get();
 
         let mut feature_names = tcx
-            .sess
-            .target_features
+            .sess.target_features
             .iter()
             .map(|s| s.as_str())
             .collect::<Vec<_>>();
@@ -106,7 +105,7 @@ impl<'tcx> CodegenCx<'tcx> {
             .map(|s| s.parse())
             .collect::<Result<_, String>>()
             .unwrap_or_else(|error| {
-                tcx.sess.err(error);
+                tcx.sess.psess.dcx.err(error);
                 Vec::new()
             });
 
@@ -269,7 +268,7 @@ impl CodegenArgs {
     pub fn from_session(sess: &Session) -> Self {
         match CodegenArgs::parse(&sess.opts.cg.llvm_args) {
             Ok(ok) => ok,
-            Err(err) => sess.fatal(format!("Unable to parse llvm-args: {err}")),
+            Err(err) => sess.psess.dcx.fatal(format!("Unable to parse llvm-args: {err}")),
         }
     }
 

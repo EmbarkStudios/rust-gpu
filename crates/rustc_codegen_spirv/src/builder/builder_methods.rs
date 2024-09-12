@@ -28,7 +28,6 @@ use rustc_target::abi::{Abi, Align, Scalar, Size, WrappingRange};
 use smallvec::SmallVec;
 use std::borrow::Cow;
 use std::cell::Cell;
-use std::convert::TryInto;
 use std::iter::{self, empty};
 
 macro_rules! simple_op {
@@ -444,7 +443,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
     ///
     /// That is, try to turn `((_: *T) as *u8).add(offset) as *Leaf` into a series
     /// of struct field and array/vector element accesses.
-    fn recover_access_chain_from_offset(
+    pub(crate) fn recover_access_chain_from_offset(
         &self,
         mut ty: <Self as BackendTypes>::Type,
         mut offset: Size,
@@ -738,7 +737,12 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             current_span: Default::default(),
         }
     }
-
+    fn fadd_algebraic(&mut self, _: <Self as BackendTypes>::Value, _: <Self as BackendTypes>::Value) -> <Self as BackendTypes>::Value { todo!() }
+    fn fsub_algebraic(&mut self, _: <Self as BackendTypes>::Value, _: <Self as BackendTypes>::Value) -> <Self as BackendTypes>::Value { todo!() }
+    fn fmul_algebraic(&mut self, _: <Self as BackendTypes>::Value, _: <Self as BackendTypes>::Value) -> <Self as BackendTypes>::Value { todo!() }
+    fn fdiv_algebraic(&mut self, _: <Self as BackendTypes>::Value, _: <Self as BackendTypes>::Value) -> <Self as BackendTypes>::Value { todo!() }
+    fn frem_algebraic(&mut self, _: <Self as BackendTypes>::Value, _: <Self as BackendTypes>::Value) -> <Self as BackendTypes>::Value { todo!() }
+    
     fn cx(&self) -> &Self::CodegenCx {
         self.cx
     }
@@ -1371,78 +1375,6 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         indices: &[Self::Value],
     ) -> Self::Value {
         self.gep_help(ty, ptr, indices, true)
-    }
-
-    fn struct_gep(&mut self, ty: Self::Type, ptr: Self::Value, idx: u64) -> Self::Value {
-        let (offset, result_pointee_type) = match self.lookup_type(ty) {
-            SpirvType::Adt {
-                field_offsets,
-                field_types,
-                ..
-            } => (field_offsets[idx as usize], field_types[idx as usize]),
-            SpirvType::Array { element, .. }
-            | SpirvType::RuntimeArray { element, .. }
-            | SpirvType::Vector { element, .. }
-            | SpirvType::Matrix { element, .. } => (
-                self.lookup_type(element).sizeof(self).unwrap() * idx,
-                element,
-            ),
-            SpirvType::InterfaceBlock { inner_type } => {
-                assert_eq!(idx, 0);
-                (Size::ZERO, inner_type)
-            }
-            other => self.fatal(format!(
-                "struct_gep not on struct, array, or vector type: {other:?}, index {idx}"
-            )),
-        };
-        let result_type = self.type_ptr_to(result_pointee_type);
-
-        // Special-case field accesses through a `pointercast`, to accesss the
-        // right field in the original type, for the `Logical` addressing model.
-        let ptr = ptr.strip_ptrcasts();
-        let original_pointee_ty = match self.lookup_type(ptr.ty) {
-            SpirvType::Pointer { pointee } => pointee,
-            other => self.fatal(format!("struct_gep called on non-pointer type: {other:?}")),
-        };
-        if let Some((indices, _)) = self.recover_access_chain_from_offset(
-            original_pointee_ty,
-            offset,
-            self.lookup_type(result_pointee_type).sizeof(self),
-            Some(result_pointee_type),
-        ) {
-            let original_ptr = ptr.def(self);
-            let indices = indices
-                .into_iter()
-                .map(|idx| self.constant_u32(self.span(), idx).def(self))
-                .collect::<Vec<_>>();
-            return self
-                .emit()
-                .access_chain(result_type, None, original_ptr, indices)
-                .unwrap()
-                .with_type(result_type);
-        }
-
-        // FIXME(eddyb) can we even get to this point, with valid SPIR-V?
-
-        // HACK(eddyb) temporary workaround for untyped pointers upstream.
-        // FIXME(eddyb) replace with untyped memory SPIR-V + `qptr` or similar.
-        let ptr = self.pointercast(ptr, self.type_ptr_to(ty));
-
-        // Important! LLVM, and therefore intel-compute-runtime, require the `getelementptr` instruction (and therefore
-        // OpAccessChain) on structs to be a constant i32. Not i64! i32.
-        if idx > u32::MAX as u64 {
-            self.fatal("struct_gep bigger than u32::MAX");
-        }
-        let index_const = self.constant_u32(self.span(), idx as u32).def(self);
-        self.emit()
-            .access_chain(
-                result_type,
-                None,
-                ptr.def(self),
-                [index_const].iter().cloned(),
-            )
-            .unwrap()
-            .with_type(result_type)
     }
 
     // intcast has the logic for dealing with bools, so use that
@@ -2282,7 +2214,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         order: AtomicOrdering,
         failure_order: AtomicOrdering,
         _weak: bool,
-    ) -> Self::Value {
+    ) -> (Self::Value,Self::Value) {
         assert_ty_eq!(self, cmp.ty, src.ty);
         let ty = src.ty;
 
@@ -2310,7 +2242,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             )
             .unwrap()
             .with_type(access_ty);
-        self.bitcast(result, ty)
+        (self.bitcast(result, ty),self.bitcast(result, ty))
     }
 
     fn atomic_rmw(
@@ -2987,7 +2919,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
 
                 Err(FormatArgsNotRecognized(step)) => {
                     if let Some(current_span) = self.current_span {
-                        let mut warn = self.tcx.sess.struct_span_warn(
+                        let mut warn = self.tcx.sess.psess.dcx.struct_span_warn(
                             current_span,
                             "failed to find and remove `format_args!` construction for this `panic!`",
                         );
@@ -3037,7 +2969,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         self.intcast(val, dest_ty, false)
     }
 
-    fn do_not_inline(&mut self, _llret: Self::Value) {
+    fn apply_attrs_to_cleanup_callsite(&mut self, _llret: Self::Value) {
         // Ignore
     }
 }

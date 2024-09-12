@@ -3,7 +3,7 @@ use crate::custom_decorations::{
 };
 use crate::custom_insts::{self, CustomInst, CustomOp};
 use rustc_data_structures::fx::FxIndexSet;
-use rustc_errors::DiagnosticBuilder;
+use rustc_errors::{Diag as DiagnosticBuilder, DiagMessage};
 use rustc_session::Session;
 use rustc_span::{Span, DUMMY_SP};
 use smallvec::SmallVec;
@@ -420,7 +420,7 @@ impl DiagnosticReporter<'_> {
                         self.span_regen.spirt_attrs_to_rustc_span(self.cx, attrs)
                     })
                     .unwrap_or(DUMMY_SP);
-                let mut err = self.sess.struct_span_err(def_span, reason.to_string());
+                let mut err = self.sess.psess.dcx.struct_span_err(def_span, reason.to_string());
                 for use_origin in use_stack_for_def.iter().rev() {
                     use_origin.note(self.cx, &mut self.span_regen, &mut err);
                 }
@@ -463,14 +463,14 @@ impl DiagnosticReporter<'_> {
             let msg = [prefix, msg.to_string(), suffix].concat();
             match level {
                 DiagLevel::Bug(_) | DiagLevel::Error => {
-                    let mut err = self.sess.struct_span_err(def_span, msg);
+                    let mut err = self.sess.psess.dcx.struct_span_err(def_span, msg);
                     for use_origin in use_stack_for_def.iter().rev() {
                         use_origin.note(self.cx, &mut self.span_regen, &mut err);
                     }
                     self.overall_result = Err(err.emit());
                 }
                 DiagLevel::Warning => {
-                    let mut warn = self.sess.struct_span_warn(def_span, msg);
+                    let mut warn = self.sess.psess.dcx.struct_span_warn(def_span, msg);
                     for use_origin in use_stack_for_def.iter().rev() {
                         use_origin.note(self.cx, &mut self.span_regen, &mut warn);
                     }

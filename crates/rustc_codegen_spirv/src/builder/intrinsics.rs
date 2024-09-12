@@ -12,8 +12,8 @@ use rustc_codegen_ssa::traits::{BuilderMethods, IntrinsicCallMethods};
 use rustc_middle::bug;
 use rustc_middle::ty::layout::LayoutOf;
 use rustc_middle::ty::{FnDef, Instance, ParamEnv, Ty, TyKind};
-use rustc_span::source_map::Span;
 use rustc_span::sym;
+use rustc_span::Span;
 use rustc_target::abi::call::{FnAbi, PassMode};
 use std::assert_matches::assert_matches;
 
@@ -71,7 +71,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
         args: &[OperandRef<'tcx, Self::Value>],
         llresult: Self::Value,
         _span: Span,
-    ) {
+    ) -> Result<(), rustc_middle::ty::Instance<'tcx>> {
         let callee_ty = instance.ty(self.tcx, ParamEnv::reveal_all());
 
         let (def_id, fn_args) = match *callee_ty.kind() {
@@ -98,7 +98,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
             sym::breakpoint => {
                 self.abort();
                 assert!(fn_abi.ret.is_ignore());
-                return;
+                return Ok(());
             }
 
             sym::volatile_load | sym::unaligned_volatile_load => {
@@ -114,7 +114,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
             | sym::prefetch_write_instruction => {
                 // ignore
                 assert!(fn_abi.ret.is_ignore());
-                return;
+                return Ok(());
             }
 
             sym::saturating_add => {
@@ -342,6 +342,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                 .val
                 .store(self, result);
         }
+        Ok(())
     }
 
     fn abort(&mut self) {

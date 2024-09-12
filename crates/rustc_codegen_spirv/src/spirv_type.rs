@@ -298,7 +298,7 @@ impl SpirvType<'_> {
             ref other => cx
                 .tcx
                 .sess
-                .fatal(format!("def_with_id invalid for type {other:?}")),
+                .psess.dcx.fatal(format!("def_with_id invalid for type {other:?}")),
         };
         cx.type_cache_def(result, self.tcx_arena_alloc_slices(cx), def_span);
         result

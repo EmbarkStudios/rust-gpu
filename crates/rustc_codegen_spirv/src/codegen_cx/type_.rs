@@ -9,7 +9,8 @@ use rustc_middle::ty::layout::{
 };
 use rustc_middle::ty::Ty;
 use rustc_middle::{bug, span_bug};
-use rustc_span::source_map::{Span, Spanned, DUMMY_SP};
+use rustc_span::source_map::Spanned;
+use rustc_span::{Span, DUMMY_SP};
 use rustc_target::abi::call::{CastTarget, FnAbi, Reg};
 use rustc_target::abi::{Abi, AddressSpace, FieldsShape};
 
@@ -19,7 +20,7 @@ impl<'tcx> LayoutOfHelpers<'tcx> for CodegenCx<'tcx> {
     #[inline]
     fn handle_layout_err(&self, err: LayoutError<'tcx>, span: Span, ty: Ty<'tcx>) -> ! {
         if let LayoutError::SizeOverflow(_) = err {
-            self.tcx.sess.span_fatal(span, err.to_string())
+            self.tcx.sess.psess.dcx.span_fatal(span, err.to_string())
         } else {
             span_bug!(span, "failed to get layout for `{}`: {}", ty, err)
         }
@@ -37,7 +38,7 @@ impl<'tcx> FnAbiOfHelpers<'tcx> for CodegenCx<'tcx> {
         fn_abi_request: FnAbiRequest<'tcx>,
     ) -> ! {
         if let FnAbiError::Layout(LayoutError::SizeOverflow(_)) = err {
-            self.tcx.sess.emit_fatal(Spanned { span, node: err })
+            self.tcx.sess.psess.dcx.emit_fatal(Spanned { span, node: err })
         } else {
             match fn_abi_request {
                 FnAbiRequest::OfFnPtr { sig, extra_args } => {
@@ -106,22 +107,22 @@ impl<'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'tcx> {
         }
     }
 
-    fn backend_field_index(&self, layout: TyAndLayout<'tcx>, index: usize) -> u64 {
-        match layout.abi {
-            Abi::Scalar(_) | Abi::ScalarPair(..) => {
-                bug!("backend_field_index({:?}): not applicable", layout);
-            }
-            _ => {}
-        }
-        match layout.fields {
-            FieldsShape::Primitive | FieldsShape::Union(_) => {
-                bug!("backend_field_index({:?}): not applicable", layout)
-            }
-            FieldsShape::Array { .. } => index as u64,
-            // note: codegen_llvm implements this as 1+index*2 due to padding fields
-            FieldsShape::Arbitrary { .. } => layout.fields.memory_index(index) as u64,
-        }
-    }
+    // fn backend_field_index(&self, layout: TyAndLayout<'tcx>, index: usize) -> u64 {
+    //     match layout.abi {
+    //         Abi::Scalar(_) | Abi::ScalarPair(..) => {
+    //             bug!("backend_field_index({:?}): not applicable", layout);
+    //         }
+    //         _ => {}
+    //     }
+    //     match layout.fields {
+    //         FieldsShape::Primitive | FieldsShape::Union(_) => {
+    //             bug!("backend_field_index({:?}): not applicable", layout)
+    //         }
+    //         FieldsShape::Array { .. } => index as u64,
+    //         // note: codegen_llvm implements this as 1+index*2 due to padding fields
+    //         FieldsShape::Arbitrary { .. } => layout.fields.memory_index(index) as u64,
+    //     }
+    // }
 
     fn scalar_pair_element_backend_type(
         &self,
@@ -163,12 +164,17 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
         let ptr_size = self.tcx.data_layout.pointer_size.bits() as u32;
         SpirvType::Integer(ptr_size, false).def(DUMMY_SP, self)
     }
-
+    fn type_f16(&self) -> Self::Type {
+        SpirvType::Float(16).def(DUMMY_SP, self)
+    }
     fn type_f32(&self) -> Self::Type {
         SpirvType::Float(32).def(DUMMY_SP, self)
     }
     fn type_f64(&self) -> Self::Type {
         SpirvType::Float(64).def(DUMMY_SP, self)
+    }
+    fn type_f128(&self) -> Self::Type {
+        SpirvType::Float(128).def(DUMMY_SP, self)
     }
 
     fn type_array(&self, ty: Self::Type, len: u64) -> Self::Type {
@@ -194,7 +200,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
             align,
             size,
             field_types: els,
-            field_offsets: &field_offsets,
+            field_offsets: field_offsets.as_slice(),
             field_names: None,
         }
         .def(DUMMY_SP, self)
@@ -211,7 +217,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
                 other => self
                     .tcx
                     .sess
-                    .fatal(format!("Invalid float width in type_kind: {other}")),
+                    .psess.dcx.fatal(format!("Invalid float width in type_kind: {other}")),
             },
             SpirvType::Adt { .. } | SpirvType::InterfaceBlock { .. } => {
                 TypeKind::Struct
@@ -240,7 +246,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
         match self.lookup_type(ty) {
             SpirvType::Pointer { pointee } => pointee,
             SpirvType::Vector { element, .. } => element,
-            spirv_type => self.tcx.sess.fatal(format!(
+            spirv_type => self.tcx.sess.psess.dcx.fatal(format!(
                 "element_type called on invalid type: {spirv_type:?}"
             )),
         }
@@ -253,7 +259,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
             ty => self
                 .tcx
                 .sess
-                .fatal(format!("vector_length called on non-vector type: {ty:?}")),
+                .psess.dcx.fatal(format!("vector_length called on non-vector type: {ty:?}")),
         }
     }
 
@@ -263,7 +269,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
             ty => self
                 .tcx
                 .sess
-                .fatal(format!("float_width called on non-float type: {ty:?}")),
+                .psess.dcx.fatal(format!("float_width called on non-float type: {ty:?}")),
         }
     }
 
@@ -274,7 +280,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
             ty => self
                 .tcx
                 .sess
-                .fatal(format!("int_width called on non-integer type: {ty:?}")),
+                .psess.dcx.fatal(format!("int_width called on non-integer type: {ty:?}")),
         }
     }
 

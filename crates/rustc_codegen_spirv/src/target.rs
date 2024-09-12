@@ -1,7 +1,7 @@
 use rspirv::spirv::MemoryModel;
 use rustc_target::spec::{Cc, LinkerFlavor, PanicStrategy, Target, TargetOptions};
 use spirv_tools::TargetEnv;
-
+use rustc_target::spec::TargetMetadata;
 const ARCH: &str = "spirv";
 
 pub struct SpirvTarget {
@@ -101,6 +101,7 @@ impl SpirvTarget {
             data_layout: "e-m:e-p:32:32:32-i64:64-n8:16:32:64".into(),
             arch: ARCH.into(),
             options: self.init_target_opts(),
+            metadata: TargetMetadata::default(),
         }
     }
 }

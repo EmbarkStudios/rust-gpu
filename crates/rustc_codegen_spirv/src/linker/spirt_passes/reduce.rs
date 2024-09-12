@@ -10,7 +10,6 @@ use spirt::{
     TypeCtor, TypeDef, Value,
 };
 use std::collections::hash_map::Entry;
-use std::convert::{TryFrom, TryInto};
 use std::hash::Hash;
 use std::{iter, slice};
 
