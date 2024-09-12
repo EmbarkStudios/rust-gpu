@@ -569,7 +569,7 @@ fn parse_local_size_attr(arg: &NestedMetaItem) -> Result<[u32; 3], ParseAttrErro
             }
             Ok(local_size)
         }
-        Some(tuple) if tuple.is_empty() => Err((
+        Some([]) => Err((
             arg.span,
             "#[spirv(compute(threads(x, y, z)))] must have the x dimension specified, trailing ones may be elided".to_string(),
         )),
