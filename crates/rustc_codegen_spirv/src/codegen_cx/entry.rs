@@ -266,25 +266,21 @@ impl<'tcx> CodegenCx<'tcx> {
             }
             ty => ty,
         };
-        let deduced_storage_class_from_ty = match element_ty {
-            SpirvType::Image { .. }
-            | SpirvType::Sampler
-            | SpirvType::SampledImage { .. }
-            | SpirvType::AccelerationStructureKhr { .. } => {
-                if is_ref {
-                    Some(StorageClass::UniformConstant)
-                } else {
-                    self.tcx.sess.span_err(
-                        hir_param.ty_span,
-                        format!(
-                            "entry parameter type must be by-reference: `&{}`",
-                            value_layout.ty,
-                        ),
-                    );
-                    None
-                }
+        let deduced_storage_class_from_ty = if element_ty.is_uniform_constant() {
+            if is_ref {
+                Some(StorageClass::UniformConstant)
+            } else {
+                self.tcx.sess.span_err(
+                    hir_param.ty_span,
+                    format!(
+                        "entry parameter type must be by-reference: `&{}`",
+                        value_layout.ty,
+                    ),
+                );
+                None
             }
-            _ => None,
+        } else {
+            None
         };
         // Storage classes can be specified via attribute. Compute that here, and emit diagnostics.
         let attr_storage_class = attrs.storage_class.map(|storage_class_attr| {
@@ -502,49 +498,56 @@ impl<'tcx> CodegenCx<'tcx> {
             Ok(
                 StorageClass::PushConstant | StorageClass::Uniform | StorageClass::StorageBuffer,
             ) => {
-                let var_spirv_type = SpirvType::InterfaceBlock {
-                    inner_type: value_spirv_type,
-                }
-                .def(hir_param.span, self);
-                var_ptr_spirv_type = self.type_ptr_to(var_spirv_type);
-
-                let value_ptr = bx.struct_gep(
-                    var_spirv_type,
-                    var_id.unwrap().with_type(var_ptr_spirv_type),
-                    0,
-                );
-
-                let value_len = if is_unsized_with_len {
-                    match self.lookup_type(value_spirv_type) {
-                        SpirvType::RuntimeArray { .. } => {}
-                        _ => {
-                            self.tcx.sess.span_err(
-                                hir_param.ty_span,
-                                "only plain slices are supported as unsized types",
-                            );
+                match self.lookup_type(value_spirv_type) {
+                    SpirvType::RuntimeArray { element }
+                        if matches!(
+                            self.lookup_type(element),
+                            SpirvType::InterfaceBlock { .. }
+                        ) =>
+                    {
+                        // array of buffer descriptors
+                        var_ptr_spirv_type = self.type_ptr_to(value_spirv_type);
+                        (Ok(var_id.unwrap().with_type(var_ptr_spirv_type)), None)
+                    }
+                    _ => {
+                        // single buffer descriptor
+                        let var_spirv_type = SpirvType::InterfaceBlock {
+                            inner_type: value_spirv_type,
                         }
+                        .def(hir_param.span, self);
+                        var_ptr_spirv_type = self.type_ptr_to(var_spirv_type);
+
+                        let value_ptr = bx.struct_gep(
+                            var_spirv_type,
+                            var_id.unwrap().with_type(var_ptr_spirv_type),
+                            0,
+                        );
+
+                        let value_len = if is_unsized_with_len {
+                            match self.lookup_type(value_spirv_type) {
+                                SpirvType::RuntimeArray { .. } => {}
+                                _ => {
+                                    self.tcx.sess.span_err(
+                                        hir_param.ty_span,
+                                        "only plain slices are supported as unsized types",
+                                    );
+                                }
+                            }
+
+                            // FIXME(eddyb) shouldn't this be `usize`?
+                            let len_spirv_type = self.type_isize();
+                            let len = bx
+                                .emit()
+                                .array_length(len_spirv_type, None, var_id.unwrap(), 0)
+                                .unwrap();
+                            Some(len.with_type(len_spirv_type))
+                        } else {
+                            None
+                        };
+
+                        (Ok(value_ptr), value_len)
                     }
-
-                    // FIXME(eddyb) shouldn't this be `usize`?
-                    let len_spirv_type = self.type_isize();
-                    let len = bx
-                        .emit()
-                        .array_length(len_spirv_type, None, var_id.unwrap(), 0)
-                        .unwrap();
-
-                    Some(len.with_type(len_spirv_type))
-                } else {
-                    if is_unsized {
-                        // It's OK to use a RuntimeArray<u32> and not have a length parameter, but
-                        // it's just nicer ergonomics to use a slice.
-                        self.tcx
-                            .sess
-                            .span_warn(hir_param.ty_span, "use &[T] instead of &RuntimeArray<T>");
-                    }
-                    None
-                };
-
-                (Ok(value_ptr), value_len)
+                }
             }
             Ok(StorageClass::UniformConstant) => {
                 var_ptr_spirv_type = self.type_ptr_to(value_spirv_type);

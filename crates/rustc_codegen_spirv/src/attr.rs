@@ -98,6 +98,7 @@ pub enum SpirvAttribute {
     // `fn`/closure attributes:
     BufferLoadIntrinsic,
     BufferStoreIntrinsic,
+    RuntimeArrayIndexIntrinsic,
 }
 
 // HACK(eddyb) this is similar to `rustc_span::Spanned` but with `value` as the
@@ -133,6 +134,7 @@ pub struct AggregatedSpirvAttributes {
     // `fn`/closure attributes:
     pub buffer_load_intrinsic: Option<Spanned<()>>,
     pub buffer_store_intrinsic: Option<Spanned<()>>,
+    pub runtime_array_index_intrinsic: Option<Spanned<()>>,
 }
 
 struct MultipleAttrs {
@@ -236,6 +238,12 @@ impl AggregatedSpirvAttributes {
                 (),
                 span,
                 "#[spirv(buffer_store_intrinsic)]",
+            ),
+            RuntimeArrayIndexIntrinsic => try_insert(
+                &mut self.runtime_array_index_intrinsic,
+                (),
+                span,
+                "#[spirv(runtime_array_index_intrinsic)]",
             ),
         }
     }
@@ -358,12 +366,12 @@ impl CheckSpirvAttrVisitor<'_> {
 
                     _ => Err(Expected("function parameter")),
                 },
-                SpirvAttribute::BufferLoadIntrinsic | SpirvAttribute::BufferStoreIntrinsic => {
-                    match target {
-                        Target::Fn => Ok(()),
-                        _ => Err(Expected("function")),
-                    }
-                }
+                SpirvAttribute::BufferLoadIntrinsic
+                | SpirvAttribute::BufferStoreIntrinsic
+                | SpirvAttribute::RuntimeArrayIndexIntrinsic => match target {
+                    Target::Fn => Ok(()),
+                    _ => Err(Expected("function")),
+                },
             };
             match valid_target {
                 Err(Expected(expected_target)) => {

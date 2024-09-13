@@ -3,6 +3,7 @@ mod byte_addressable_buffer;
 mod ext_inst;
 mod intrinsics;
 pub mod libm_intrinsics;
+mod runtime_array;
 mod spirv_asm;
 
 pub use ext_inst::ExtInst;
