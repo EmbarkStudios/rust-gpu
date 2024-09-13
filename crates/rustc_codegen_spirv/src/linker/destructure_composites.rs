@@ -14,29 +14,32 @@ pub fn destructure_composites(function: &mut Function) {
         .all_inst_iter()
         .filter_map(|inst| match inst.class.opcode {
             Op::CompositeConstruct => Some((inst.result_id.unwrap(), inst.clone())),
-            Op::CompositeInsert if inst.operands.len() == 3 => {
-                Some((inst.result_id.unwrap(), inst.clone()))
-            }
+            Op::CompositeInsert => Some((inst.result_id.unwrap(), inst.clone())),
             _ => None,
         })
         .collect();
     for inst in function.all_inst_iter_mut() {
-        if inst.class.opcode == Op::CompositeExtract && inst.operands.len() == 2 {
+        if inst.class.opcode == Op::CompositeExtract {
             let mut composite = inst.operands[0].unwrap_id_ref();
-            let index = inst.operands[1].unwrap_literal_int32();
+            let indices = &inst.operands[1..];
 
             let origin = loop {
                 if let Some(inst) = reference.get(&composite) {
                     match inst.class.opcode {
                         Op::CompositeInsert => {
-                            let insert_index = inst.operands[2].unwrap_literal_int32();
-                            if insert_index == index {
+                            let insert_indices = &inst.operands[2..];
+                            if insert_indices == indices {
                                 break Some(inst.operands[0].unwrap_id_ref());
                             }
                             composite = inst.operands[1].unwrap_id_ref();
                         }
                         Op::CompositeConstruct => {
-                            break inst.operands.get(index as usize).map(|o| o.unwrap_id_ref());
+                            if indices.len() == 1 {
+                                break inst
+                                    .operands
+                                    .get(indices[0].unwrap_literal_int32() as usize)
+                                    .map(|o| o.unwrap_id_ref());
+                            }
                         }
                         _ => unreachable!(),
                     }
