@@ -301,14 +301,14 @@ pub fn link(
                         .insert(inst.result_id.unwrap(), inst.operands[1].unwrap_id_ref());
                 }
                 Op::TypeInt
-                    if inst.operands[0].unwrap_literal_int32() == 32
-                        && inst.operands[1].unwrap_literal_int32() == 0 =>
+                    if inst.operands[0].unwrap_literal_bit32() == 32
+                        && inst.operands[1].unwrap_literal_bit32() == 0 =>
                 {
                     assert!(u32.is_none());
                     u32 = Some(inst.result_id.unwrap());
                 }
                 Op::Constant if u32.is_some() && inst.result_type == u32 => {
-                    let value = inst.operands[0].unwrap_literal_int32();
+                    let value = inst.operands[0].unwrap_literal_bit32();
                     constants.insert(inst.result_id.unwrap(), value);
                 }
                 _ => {}
@@ -357,14 +357,14 @@ pub fn link(
                         .insert(inst.result_id.unwrap(), inst.operands[1].unwrap_id_ref());
                 }
                 Op::TypeInt
-                    if inst.operands[0].unwrap_literal_int32() == 32
-                        && inst.operands[1].unwrap_literal_int32() == 0 =>
+                    if inst.operands[0].unwrap_literal_bit32() == 32
+                        && inst.operands[1].unwrap_literal_bit32() == 0 =>
                 {
                     assert!(u32.is_none());
                     u32 = Some(inst.result_id.unwrap());
                 }
                 Op::Constant if u32.is_some() && inst.result_type == u32 => {
-                    let value = inst.operands[0].unwrap_literal_int32();
+                    let value = inst.operands[0].unwrap_literal_bit32();
                     constants.insert(inst.result_id.unwrap(), value);
                 }
                 _ => {}

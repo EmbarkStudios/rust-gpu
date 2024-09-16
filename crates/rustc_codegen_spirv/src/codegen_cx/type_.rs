@@ -174,7 +174,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
     fn type_array(&self, ty: Self::Type, len: u64) -> Self::Type {
         SpirvType::Array {
             element: ty,
-            count: self.constant_u64(DUMMY_SP, len),
+            count: self.constant_bit64(DUMMY_SP, len),
         }
         .def(DUMMY_SP, self)
     }

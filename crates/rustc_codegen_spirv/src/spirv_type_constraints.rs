@@ -494,6 +494,12 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         Op::IAddCarry | Op::ISubBorrow | Op::UMulExtended | Op::SMulExtended => sig! {
             (T, T) -> Struct([T, T])
         },
+        Op::SDot | Op::UDot | Op::SUDot | Op::SDotAccSat | Op::UDotAccSat | Op::SUDotAccSat => {
+            sig! {
+                // FIXME(eddyb) missing equality constraint between two vectors
+                (Vector(T), T) -> Vector(T)
+            }
+        }
 
         // 3.37.14. Bit Instructions
         Op::ShiftRightLogical
@@ -593,6 +599,8 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         },
         // Capability: Kernel
         Op::AtomicFlagTestAndSet | Op::AtomicFlagClear => {}
+        // SPV_EXT_shader_atomic_float_min_max
+        Op::AtomicFMinEXT | Op::AtomicFMaxEXT => sig! { (Pointer(_, T), _, _, T) -> T },
         // SPV_EXT_shader_atomic_float_add
         Op::AtomicFAddEXT => sig! { (Pointer(_, T), _, _, T) -> T },
 
@@ -821,7 +829,7 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
 
         // Instructions not present in current SPIR-V specification
         // SPV_INTEL_function_pointers
-        Op::FunctionPointerINTEL | Op::FunctionPointerCallINTEL => {
+        Op::ConstantFunctionPointerINTEL | Op::FunctionPointerCallINTEL => {
             reserved!(SPV_INTEL_function_pointers);
         }
         // SPV_INTEL_device_side_avc_motion_estimation
@@ -945,6 +953,182 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         | Op::SubgroupAvcSicGetInterRawSadsINTEL => {
             reserved!(SPV_INTEL_device_side_avc_motion_estimation);
         }
+        // SPV_EXT_mesh_shader
+        Op::EmitMeshTasksEXT | Op::SetMeshOutputsEXT => {
+            // NOTE(eddyb) we actually use these despite not being in the standard yet.
+            // reserved!(SPV_EXT_mesh_shader)
+        }
+        // SPV_NV_ray_tracing_motion_blur
+        Op::TraceMotionNV | Op::TraceRayMotionNV => reserved!(SPV_NV_ray_tracing_motion_blur),
+        // SPV_NV_bindless_texture
+        Op::ConvertUToImageNV
+        | Op::ConvertUToSamplerNV
+        | Op::ConvertImageToUNV
+        | Op::ConvertSamplerToUNV
+        | Op::ConvertUToSampledImageNV
+        | Op::ConvertSampledImageToUNV
+        | Op::SamplerImageAddressingModeNV => reserved!(SPV_NV_bindless_texture),
+        // SPV_INTEL_inline_assembly
+        Op::AsmTargetINTEL | Op::AsmINTEL | Op::AsmCallINTEL => reserved!(SPV_NV_bindless_texture),
+        // SPV_INTEL_variable_length_array
+        Op::VariableLengthArrayINTEL => reserved!(SPV_INTEL_variable_length_array),
+        // SPV_KHR_uniform_group_instructions
+        Op::GroupIMulKHR
+        | Op::GroupFMulKHR
+        | Op::GroupBitwiseAndKHR
+        | Op::GroupBitwiseOrKHR
+        | Op::GroupBitwiseXorKHR
+        | Op::GroupLogicalAndKHR
+        | Op::GroupLogicalOrKHR
+        | Op::GroupLogicalXorKHR => reserved!(SPV_KHR_uniform_group_instructions),
+        // SPV_KHR_expect_assume
+        Op::AssumeTrueKHR | Op::ExpectKHR => reserved!(SPV_KHR_expect_assume),
+        // SPV_KHR_subgroup_rotate
+        Op::GroupNonUniformRotateKHR => reserved!(SPV_KHR_subgroup_rotate),
+        // SPV_NV_shader_invocation_reorder
+        Op::HitObjectRecordHitMotionNV
+        | Op::HitObjectRecordHitWithIndexMotionNV
+        | Op::HitObjectRecordMissMotionNV
+        | Op::HitObjectGetWorldToObjectNV
+        | Op::HitObjectGetObjectToWorldNV
+        | Op::HitObjectGetObjectRayDirectionNV
+        | Op::HitObjectGetObjectRayOriginNV
+        | Op::HitObjectTraceRayMotionNV
+        | Op::HitObjectGetShaderRecordBufferHandleNV
+        | Op::HitObjectGetShaderBindingTableRecordIndexNV
+        | Op::HitObjectRecordEmptyNV
+        | Op::HitObjectTraceRayNV
+        | Op::HitObjectRecordHitNV
+        | Op::HitObjectRecordHitWithIndexNV
+        | Op::HitObjectRecordMissNV
+        | Op::HitObjectExecuteShaderNV
+        | Op::HitObjectGetCurrentTimeNV
+        | Op::HitObjectGetAttributesNV
+        | Op::HitObjectGetHitKindNV
+        | Op::HitObjectGetPrimitiveIndexNV
+        | Op::HitObjectGetGeometryIndexNV
+        | Op::HitObjectGetInstanceIdNV
+        | Op::HitObjectGetInstanceCustomIndexNV
+        | Op::HitObjectGetWorldRayDirectionNV
+        | Op::HitObjectGetWorldRayOriginNV
+        | Op::HitObjectGetRayTMaxNV
+        | Op::HitObjectGetRayTMinNV
+        | Op::HitObjectIsEmptyNV
+        | Op::HitObjectIsHitNV
+        | Op::HitObjectIsMissNV
+        | Op::ReorderThreadWithHitObjectNV
+        | Op::ReorderThreadWithHintNV
+        | Op::TypeHitObjectNV => reserved!(SPV_NV_shader_invocation_reorder),
+        // SPV_INTEL_arbitrary_precision_floating_point
+        Op::ArbitraryFloatAddINTEL
+        | Op::ArbitraryFloatSubINTEL
+        | Op::ArbitraryFloatMulINTEL
+        | Op::ArbitraryFloatDivINTEL
+        | Op::ArbitraryFloatGTINTEL
+        | Op::ArbitraryFloatGEINTEL
+        | Op::ArbitraryFloatLTINTEL
+        | Op::ArbitraryFloatLEINTEL
+        | Op::ArbitraryFloatEQINTEL
+        | Op::ArbitraryFloatRecipINTEL
+        | Op::ArbitraryFloatRSqrtINTEL
+        | Op::ArbitraryFloatCbrtINTEL
+        | Op::ArbitraryFloatHypotINTEL
+        | Op::ArbitraryFloatSqrtINTEL
+        | Op::ArbitraryFloatLogINTEL
+        | Op::ArbitraryFloatLog2INTEL
+        | Op::ArbitraryFloatLog10INTEL
+        | Op::ArbitraryFloatLog1pINTEL
+        | Op::ArbitraryFloatExpINTEL
+        | Op::ArbitraryFloatExp2INTEL
+        | Op::ArbitraryFloatExp10INTEL
+        | Op::ArbitraryFloatExpm1INTEL
+        | Op::ArbitraryFloatSinINTEL
+        | Op::ArbitraryFloatCosINTEL
+        | Op::ArbitraryFloatSinCosINTEL
+        | Op::ArbitraryFloatSinPiINTEL
+        | Op::ArbitraryFloatCosPiINTEL
+        | Op::ArbitraryFloatSinCosPiINTEL
+        | Op::ArbitraryFloatASinINTEL
+        | Op::ArbitraryFloatASinPiINTEL
+        | Op::ArbitraryFloatACosINTEL
+        | Op::ArbitraryFloatACosPiINTEL
+        | Op::ArbitraryFloatATanINTEL
+        | Op::ArbitraryFloatATanPiINTEL
+        | Op::ArbitraryFloatATan2INTEL
+        | Op::ArbitraryFloatPowINTEL
+        | Op::ArbitraryFloatPowRINTEL
+        | Op::ArbitraryFloatPowNINTEL => {
+            reserved!(SPV_INTEL_arbitrary_precision_floating_point)
+        }
+        // TODO these instructions are outdated, and will be replaced by the ones in comments below. When updating, consider merging with the branch above.
+        Op::ArbitraryFloatCastINTEL
+        | Op::ArbitraryFloatCastFromIntINTEL
+        | Op::ArbitraryFloatCastToIntINTEL => {
+            // Op::ArbitraryFloatConvertINTEL
+            // | Op::ArbitraryFloatConvertFromUIntINTEL
+            // | Op::ArbitraryFloatConvertFromSIntINTEL
+            // | Op::ArbitraryFloatConvertToUIntINTEL
+            // | Op::ArbitraryFloatConvertToSIntINTEL
+            reserved!(SPV_INTEL_arbitrary_precision_floating_point)
+        }
+        // SPV_INTEL_arbitrary_precision_fixed_point
+        Op::FixedSqrtINTEL
+        | Op::FixedRecipINTEL
+        | Op::FixedRsqrtINTEL
+        | Op::FixedSinINTEL
+        | Op::FixedCosINTEL
+        | Op::FixedSinCosINTEL
+        | Op::FixedSinPiINTEL
+        | Op::FixedCosPiINTEL
+        | Op::FixedSinCosPiINTEL
+        | Op::FixedLogINTEL
+        | Op::FixedExpINTEL => reserved!(SPV_INTEL_arbitrary_precision_fixed_point),
+        // SPV_EXT_shader_tile_image
+        Op::ColorAttachmentReadEXT | Op::DepthAttachmentReadEXT | Op::StencilAttachmentReadEXT => {
+            reserved!(SPV_EXT_shader_tile_image)
+        }
+        // SPV_KHR_cooperative_matrix
+        Op::TypeCooperativeMatrixKHR
+        | Op::CooperativeMatrixLoadKHR
+        | Op::CooperativeMatrixStoreKHR
+        | Op::CooperativeMatrixMulAddKHR
+        | Op::CooperativeMatrixLengthKHR => reserved!(SPV_KHR_cooperative_matrix),
+        // SPV_QCOM_image_processing
+        Op::ImageSampleWeightedQCOM
+        | Op::ImageBoxFilterQCOM
+        | Op::ImageBlockMatchSSDQCOM
+        | Op::ImageBlockMatchSADQCOM => reserved!(SPV_QCOM_image_processing),
+        // SPV_AMDX_shader_enqueue
+        Op::FinalizeNodePayloadsAMDX
+        | Op::FinishWritingNodePayloadAMDX
+        | Op::InitializeNodePayloadsAMDX => reserved!(SPV_AMDX_shader_enqueue),
+        // SPV_NV_displacement_micromap
+        Op::FetchMicroTriangleVertexPositionNV | Op::FetchMicroTriangleVertexBarycentricNV => {
+            reserved!(SPV_NV_displacement_micromap)
+        }
+        // SPV_KHR_ray_tracing_position_fetch
+        Op::RayQueryGetIntersectionTriangleVertexPositionsKHR => {
+            reserved!(SPV_KHR_ray_tracing_position_fetch)
+        }
+        // SPV_INTEL_bfloat16_conversion
+        Op::ConvertFToBF16INTEL | Op::ConvertBF16ToFINTEL => {
+            reserved!(SPV_INTEL_bfloat16_conversion)
+        }
+
+        // TODO unknown_extension_INTEL
+        Op::SaveMemoryINTEL
+        | Op::RestoreMemoryINTEL
+        | Op::AliasDomainDeclINTEL
+        | Op::AliasScopeDeclINTEL
+        | Op::AliasScopeListDeclINTEL
+        | Op::PtrCastToCrossWorkgroupINTEL
+        | Op::CrossWorkgroupCastToPtrINTEL
+        | Op::TypeBufferSurfaceINTEL
+        | Op::TypeStructContinuedINTEL
+        | Op::ConstantCompositeContinuedINTEL
+        | Op::SpecConstantCompositeContinuedINTEL
+        | Op::ControlBarrierArriveINTEL
+        | Op::ControlBarrierWaitINTEL => reserved!(unknown_extension_INTEL),
     }
 
     None
