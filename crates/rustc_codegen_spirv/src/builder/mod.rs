@@ -20,7 +20,7 @@ use rustc_codegen_ssa::traits::{
     AbiBuilderMethods, ArgAbiMethods, BackendTypes, BuilderMethods, CoverageInfoBuilderMethods,
     DebugInfoBuilderMethods, HasCodegen, StaticBuilderMethods, TypeMembershipMethods,
 };
-use rustc_errors::{DiagnosticBuilder, DiagnosticMessage, ErrorGuaranteed};
+use rustc_errors::{DiagnosticBuilder, DiagnosticMessage};
 use rustc_middle::mir::Coverage;
 use rustc_middle::span_bug;
 use rustc_middle::ty::layout::{
@@ -29,7 +29,7 @@ use rustc_middle::ty::layout::{
 };
 use rustc_middle::ty::{Instance, ParamEnv, Ty, TyCtxt};
 use rustc_span::def_id::DefId;
-use rustc_span::source_map::Span;
+use rustc_span::Span;
 use rustc_target::abi::call::{ArgAbi, FnAbi, PassMode};
 use rustc_target::abi::{HasDataLayout, Size, TargetDataLayout};
 use rustc_target::spec::{HasTargetSpec, Target};
@@ -69,32 +69,29 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
     }
 
     #[track_caller]
-    pub fn struct_err(
-        &self,
-        msg: impl Into<DiagnosticMessage>,
-    ) -> DiagnosticBuilder<'_, ErrorGuaranteed> {
+    pub fn struct_err(&self, msg: impl Into<DiagnosticMessage>) -> DiagnosticBuilder<'_> {
         if let Some(current_span) = self.current_span {
-            self.tcx.sess.struct_span_err(current_span, msg)
+            self.tcx.dcx().struct_span_err(current_span, msg)
         } else {
-            self.tcx.sess.struct_err(msg)
+            self.tcx.dcx().struct_err(msg)
         }
     }
 
     #[track_caller]
     pub fn err(&self, msg: impl Into<DiagnosticMessage>) {
         if let Some(current_span) = self.current_span {
-            self.tcx.sess.span_err(current_span, msg);
+            self.tcx.dcx().span_err(current_span, msg);
         } else {
-            self.tcx.sess.err(msg);
+            self.tcx.dcx().err(msg);
         }
     }
 
     #[track_caller]
     pub fn fatal(&self, msg: impl Into<DiagnosticMessage>) -> ! {
         if let Some(current_span) = self.current_span {
-            self.tcx.sess.span_fatal(current_span, msg)
+            self.tcx.dcx().span_fatal(current_span, msg)
         } else {
-            self.tcx.sess.fatal(msg)
+            self.tcx.dcx().fatal(msg)
         }
     }
 

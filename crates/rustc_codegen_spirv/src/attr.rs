@@ -148,13 +148,13 @@ impl AggregatedSpirvAttributes {
     pub fn parse<'tcx>(cx: &CodegenCx<'tcx>, attrs: &'tcx [Attribute]) -> Self {
         let mut aggregated_attrs = Self::default();
 
-        // NOTE(eddyb) `delay_span_bug` ensures that if attribute checking fails
+        // NOTE(eddyb) `span_delayed_bug` ensures that if attribute checking fails
         // to see an attribute error, it will cause an ICE instead.
         for parse_attr_result in crate::symbols::parse_attrs_for_checking(&cx.sym, attrs) {
             let (span, parsed_attr) = match parse_attr_result {
                 Ok(span_and_parsed_attr) => span_and_parsed_attr,
                 Err((span, msg)) => {
-                    cx.tcx.sess.delay_span_bug(span, msg);
+                    cx.tcx.dcx().span_delayed_bug(span, msg);
                     continue;
                 }
             };
@@ -165,8 +165,8 @@ impl AggregatedSpirvAttributes {
                     category,
                 }) => {
                     cx.tcx
-                        .sess
-                        .delay_span_bug(span, format!("multiple {category} attributes"));
+                        .dcx()
+                        .span_delayed_bug(span, format!("multiple {category} attributes"));
                 }
             }
         }
@@ -278,7 +278,7 @@ impl CheckSpirvAttrVisitor<'_> {
             let (span, parsed_attr) = match parse_attr_result {
                 Ok(span_and_parsed_attr) => span_and_parsed_attr,
                 Err((span, msg)) => {
-                    self.tcx.sess.span_err(span, msg);
+                    self.tcx.dcx().span_err(span, msg);
                     continue;
                 }
             };
@@ -323,7 +323,7 @@ impl CheckSpirvAttrVisitor<'_> {
                                 .filter_map(|r| r.ok())
                                 .any(|(_, attr)| matches!(attr, SpirvAttribute::Entry(_)));
                         if !parent_is_entry_point {
-                            self.tcx.sess.span_err(
+                            self.tcx.dcx().span_err(
                                 span,
                                 "attribute is only valid on a parameter of an entry-point function",
                             );
@@ -346,7 +346,7 @@ impl CheckSpirvAttrVisitor<'_> {
                                 };
 
                                 if let Err(msg) = valid {
-                                    self.tcx.sess.span_err(
+                                    self.tcx.dcx().span_err(
                                         span,
                                         format!("`{storage_class:?}` storage class {msg}"),
                                     );
@@ -367,7 +367,7 @@ impl CheckSpirvAttrVisitor<'_> {
             };
             match valid_target {
                 Err(Expected(expected_target)) => {
-                    self.tcx.sess.span_err(
+                    self.tcx.dcx().span_err(
                         span,
                         format!(
                             "attribute is only valid on a {expected_target}, not on a {target}"
@@ -381,7 +381,7 @@ impl CheckSpirvAttrVisitor<'_> {
                         category,
                     }) => {
                         self.tcx
-                            .sess
+                            .dcx()
                             .struct_span_err(
                                 span,
                                 format!("only one {category} attribute is allowed on a {target}"),
@@ -397,7 +397,7 @@ impl CheckSpirvAttrVisitor<'_> {
         // so we can perform further checks, emit warnings, etc.
 
         if let Some(block_attr) = aggregated_attrs.block {
-            self.tcx.sess.span_warn(
+            self.tcx.dcx().span_warn(
                 block_attr.span,
                 "#[spirv(block)] is no longer needed and should be removed",
             );

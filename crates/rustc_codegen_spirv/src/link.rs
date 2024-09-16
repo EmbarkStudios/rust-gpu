@@ -9,7 +9,7 @@ use rustc_codegen_ssa::back::lto::{LtoModuleCodegen, SerializedModule, ThinModul
 use rustc_codegen_ssa::back::write::CodegenContext;
 use rustc_codegen_ssa::{CodegenResults, NativeLib};
 use rustc_data_structures::fx::FxHashSet;
-use rustc_errors::FatalError;
+use rustc_errors::{DiagnosticBuilder, FatalError};
 use rustc_metadata::fs::METADATA_FILENAME;
 use rustc_middle::bug;
 use rustc_middle::dep_graph::WorkProduct;
@@ -87,7 +87,8 @@ pub fn link(
                     );
                 }
                 other => {
-                    sess.err(format!("CrateType {other:?} not supported yet"));
+                    sess.dcx()
+                        .err(format!("CrateType {other:?} not supported yet"));
                 }
             }
             match out_filename {
@@ -124,7 +125,7 @@ fn link_rlib(sess: &Session, codegen_results: &CodegenResults, out_filename: &Pa
             ..
         } = lib.kind
         {
-            sess.err(format!(
+            sess.dcx().err(format!(
                 "adding native library to rlib not supported yet: {}",
                 lib.name
             ));
@@ -278,7 +279,7 @@ fn post_link_single_module(
                 (optlevel, false) => format!("optlevel={optlevel:?}"),
                 (optlevel, true) => format!("optlevel={optlevel:?}, debuginfo=None"),
             };
-            sess.warn(format!(
+            sess.dcx().warn(format!(
                 "`spirv-opt` should have ran ({reason}) but was disabled by `--no-spirv-opt`"
             ));
             spv_binary
@@ -295,7 +296,9 @@ fn post_link_single_module(
         let save_modules_timer = sess.timer("link_save_modules");
         if let Err(e) = std::fs::write(out_filename, spirv_tools::binary::from_binary(&spv_binary))
         {
-            let mut err = sess.struct_err("failed to serialize spirv-binary to disk");
+            let mut err = sess
+                .dcx()
+                .struct_err("failed to serialize spirv-binary to disk");
             err.note(format!("module `{}`", out_filename.display()));
             err.note(format!("I/O error: {e:#}"));
             err.emit();
@@ -343,14 +346,15 @@ fn do_spirv_opt(
             // TODO: Adds spans here? Not sure how useful with binary, but maybe?
 
             let mut err = match msg.level {
-                Level::Fatal | Level::InternalError => {
-                    // FIXME(eddyb) this was `struct_fatal` but that doesn't seem
-                    // necessary and also lacks `.forget_guarantee()`.
-                    sess.struct_err(msg.message).forget_guarantee()
-                }
-                Level::Error => sess.struct_err(msg.message).forget_guarantee(),
-                Level::Warning => sess.struct_warn(msg.message),
-                Level::Info | Level::Debug => sess.struct_note_without_error(msg.message),
+                // We have to manually construct this after `forget_guarantee` was removed in
+                // <https://github.com/rust-lang/rust/commit/2cd14bc9394ca6675e08d02c02c5f9abfa813616>
+                Level::Error | Level::Fatal | Level::InternalError => DiagnosticBuilder::<()>::new(
+                    sess.dcx(),
+                    rustc_errors::Level::Error,
+                    msg.message,
+                ),
+                Level::Warning => sess.dcx().struct_warn(msg.message),
+                Level::Info | Level::Debug => sess.dcx().struct_note(msg.message),
             };
 
             err.note(format!("module `{}`", filename.display()));
@@ -363,7 +367,7 @@ fn do_spirv_opt(
         Ok(spirv_tools::binary::Binary::OwnedU32(words)) => words,
         Ok(binary) => binary.as_words().to_vec(),
         Err(e) => {
-            let mut err = sess.struct_warn(e.to_string());
+            let mut err = sess.dcx().struct_warn(e.to_string());
             err.note("spirv-opt failed, leaving as unoptimized");
             err.note(format!("module `{}`", filename.display()));
             err.emit();
@@ -383,7 +387,7 @@ fn do_spirv_val(
     let validator = val::create(sess.target.options.env.parse().ok());
 
     if let Err(e) = validator.validate(spv_binary, Some(options)) {
-        let mut err = sess.struct_err(e.to_string());
+        let mut err = sess.dcx().struct_err(e.to_string());
         err.note("spirv-val failed");
         err.note(format!("module `{}`", filename.display()));
         err.emit();
@@ -433,7 +437,7 @@ fn add_upstream_rust_crates(
             Linkage::Static => rlibs.push(src.rlib.as_ref().unwrap().0.clone()),
             //Linkage::Dynamic => rlibs.push(src.dylib.as_ref().unwrap().0.clone()),
             Linkage::Dynamic => {
-                sess.err("TODO: Linkage::Dynamic not supported yet");
+                sess.dcx().err("TODO: Linkage::Dynamic not supported yet");
             }
         }
     }
@@ -467,7 +471,7 @@ fn add_upstream_native_libraries(
                     ..
                 } => {}
 
-                _ => sess.fatal(format!(
+                _ => sess.dcx().fatal(format!(
                     "`NativeLibKind::{:?}` (name={:?}) not supported yet",
                     lib.kind, lib.name
                 )),
@@ -600,7 +604,7 @@ fn do_link(
     match link_result {
         Ok(v) => v,
         Err(rustc_errors::ErrorGuaranteed { .. }) => {
-            sess.abort_if_errors();
+            sess.dcx().abort_if_errors();
             bug!("Linker errored, but no error reported");
         }
     }

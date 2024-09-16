@@ -2282,7 +2282,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         order: AtomicOrdering,
         failure_order: AtomicOrdering,
         _weak: bool,
-    ) -> Self::Value {
+    ) -> (Self::Value, Self::Value) {
         assert_ty_eq!(self, cmp.ty, src.ty);
         let ty = src.ty;
 
@@ -2310,7 +2310,12 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             )
             .unwrap()
             .with_type(access_ty);
-        self.bitcast(result, ty)
+        let result = self.bitcast(result, ty);
+
+        let val = self.extract_value(result, 0);
+        let success = self.extract_value(result, 1);
+
+        (val, success)
     }
 
     fn atomic_rmw(
@@ -2987,7 +2992,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
 
                 Err(FormatArgsNotRecognized(step)) => {
                     if let Some(current_span) = self.current_span {
-                        let mut warn = self.tcx.sess.struct_span_warn(
+                        let mut warn = self.tcx.dcx().struct_span_warn(
                             current_span,
                             "failed to find and remove `format_args!` construction for this `panic!`",
                         );
@@ -3037,7 +3042,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         self.intcast(val, dest_ty, false)
     }
 
-    fn do_not_inline(&mut self, _llret: Self::Value) {
+    fn apply_attrs_to_cleanup_callsite(&mut self, _llret: Self::Value) {
         // Ignore
     }
 }

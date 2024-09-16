@@ -106,7 +106,7 @@ impl<'tcx> CodegenCx<'tcx> {
             .map(|s| s.parse())
             .collect::<Result<_, String>>()
             .unwrap_or_else(|error| {
-                tcx.sess.err(error);
+                tcx.dcx().err(error);
                 Vec::new()
             });
 
@@ -269,7 +269,9 @@ impl CodegenArgs {
     pub fn from_session(sess: &Session) -> Self {
         match CodegenArgs::parse(&sess.opts.cg.llvm_args) {
             Ok(ok) => ok,
-            Err(err) => sess.fatal(format!("Unable to parse llvm-args: {err}")),
+            Err(err) => sess
+                .dcx()
+                .fatal(format!("Unable to parse llvm-args: {err}")),
         }
     }
 

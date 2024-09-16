@@ -163,7 +163,7 @@ impl SpirvValue {
 
             SpirvValueKind::IllegalTypeUsed(id) => {
                 cx.tcx
-                    .sess
+                    .dcx()
                     .struct_span_err(span, "Can't use type as a value")
                     .note(format!("Type: *{}", cx.debug_type(id)))
                     .emit();
@@ -367,7 +367,7 @@ impl Eq for DebugFileKey {}
 impl Hash for DebugFileKey {
     fn hash<H: Hasher>(&self, state: &mut H) {
         let Self(sf) = self;
-        sf.name_hash.hash(state);
+        sf.stable_id.hash(state);
         sf.src_hash.hash(state);
     }
 }
@@ -392,7 +392,7 @@ pub struct DebugFileSpirv<'tcx> {
 /// same time, mutating the central module object all at once.  Unfortunately, rspirv doesn't work
 /// like that. Instead, there is a single builder object, which owns a module and a "cursor". This
 /// cursor indicates to the builder where to append instructions when an instruction is added -
-/// e.g. if add() is called, then `OpAdd` is appended to the basic block pointed to by the cursor.
+/// e.g. if `add()` is called, then `OpAdd` is appended to the basic block pointed to by the cursor.
 ///
 /// So! We emulate the LLVM system by treating the rspirv Builder as the "central module object",
 /// then, when a "builder object" is created, we store a reference to a `RefCell<rspirv builder>`,
@@ -767,7 +767,7 @@ impl<'tcx> BuilderSpirv<'tcx> {
                     FileName::Real(name) => {
                         name.to_string_lossy(FileNameDisplayPreference::Remapped)
                     }
-                    _ => sf.name.prefer_remapped().to_string().into(),
+                    _ => sf.name.prefer_remapped_unconditionaly().to_string().into(),
                 };
                 let file_name = {
                     // FIXME(eddyb) it should be possible to arena-allocate a

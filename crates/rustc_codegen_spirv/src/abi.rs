@@ -12,7 +12,7 @@ use rustc_middle::query::Providers;
 use rustc_middle::ty::layout::{FnAbiOf, LayoutOf, TyAndLayout};
 use rustc_middle::ty::GenericArgsRef;
 use rustc_middle::ty::{
-    self, Const, FloatTy, GeneratorArgs, IntTy, ParamEnv, PolyFnSig, Ty, TyCtxt, TyKind,
+    self, Const, CoroutineArgs, FloatTy, IntTy, ParamEnv, PolyFnSig, Ty, TyCtxt, TyKind,
     TypeAndMut, UintTy,
 };
 use rustc_middle::{bug, span_bug};
@@ -64,6 +64,9 @@ pub(crate) fn provide(providers: &mut Providers) {
     ) -> &'tcx FnAbi<'tcx, Ty<'tcx>> {
         let readjust_arg_abi = |arg: &ArgAbi<'tcx, Ty<'tcx>>| {
             let mut arg = ArgAbi::new(&tcx, arg.layout, |_, _, _| ArgAttributes::new());
+            // FIXME: this is bad! https://github.com/rust-lang/rust/issues/115666
+            // <https://github.com/rust-lang/rust/commit/eaaa03faf77b157907894a4207d8378ecaec7b45>
+            arg.make_direct_deprecated();
 
             // Avoid pointlessly passing ZSTs, just like the official Rust ABI.
             if arg.layout.is_zst() {
@@ -96,7 +99,9 @@ pub(crate) fn provide(providers: &mut Providers) {
 
     // FIXME(eddyb) remove this by deriving `Clone` for `LayoutS` upstream.
     // FIXME(eddyb) the `S` suffix is a naming antipattern, rename upstream.
-    fn clone_layout(layout: &LayoutS) -> LayoutS {
+    fn clone_layout<FieldIdx: Idx, VariantIdx: Idx>(
+        layout: &LayoutS<FieldIdx, VariantIdx>,
+    ) -> LayoutS<FieldIdx, VariantIdx> {
         let LayoutS {
             ref fields,
             ref variants,
@@ -575,7 +580,7 @@ fn dig_scalar_pointee<'tcx>(
             let new_pointee = dig_scalar_pointee(cx, field, offset - field_offset);
             match pointee {
                 Some(old_pointee) if old_pointee != new_pointee => {
-                    cx.tcx.sess.fatal(format!(
+                    cx.tcx.dcx().fatal(format!(
                         "dig_scalar_pointee: unsupported Pointer with different \
                          pointee types ({old_pointee:?} vs {new_pointee:?}) at offset {offset:?} in {layout:#?}"
                     ));
@@ -723,7 +728,7 @@ fn trans_struct<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>) -
             if i == 0 {
                 field_names.push(cx.sym.discriminant);
             } else {
-                cx.tcx.sess.fatal("Variants::Multiple has multiple fields")
+                cx.tcx.dcx().fatal("Variants::Multiple has multiple fields")
             }
         };
     }
@@ -744,7 +749,7 @@ fn trans_struct<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>) -
 fn def_id_for_spirv_type_adt(layout: TyAndLayout<'_>) -> Option<DefId> {
     match *layout.ty.kind() {
         TyKind::Adt(def, _) => Some(def.did()),
-        TyKind::Foreign(def_id) | TyKind::Closure(def_id, _) | TyKind::Generator(def_id, ..) => {
+        TyKind::Foreign(def_id) | TyKind::Closure(def_id, _) | TyKind::Coroutine(def_id, ..) => {
             Some(def_id)
         }
         _ => None,
@@ -779,8 +784,8 @@ impl fmt::Display for TyLayoutNameKey<'_> {
                 write!(f, "::{}", def.variants()[index].name)?;
             }
         }
-        if let (TyKind::Generator(_, _, _), Some(index)) = (self.ty.kind(), self.variant) {
-            write!(f, "::{}", GeneratorArgs::variant_name(index))?;
+        if let (TyKind::Coroutine(_, _), Some(index)) = (self.ty.kind(), self.variant) {
+            write!(f, "::{}", CoroutineArgs::variant_name(index))?;
         }
         Ok(())
     }
@@ -799,7 +804,7 @@ fn trans_intrinsic_type<'tcx>(
             if ty.size != Size::from_bytes(4) {
                 return Err(cx
                     .tcx
-                    .sess
+                    .dcx()
                     .err("#[spirv(generic_image)] type must have size 4"));
             }
 
@@ -843,7 +848,7 @@ fn trans_intrinsic_type<'tcx>(
                 _ => {
                     return Err(cx
                         .tcx
-                        .sess
+                        .dcx()
                         .span_err(span, "Invalid sampled type to `Image`."));
                 }
             };
@@ -866,7 +871,7 @@ fn trans_intrinsic_type<'tcx>(
                     Some(v) => Ok(v),
                     None => Err(cx
                         .tcx
-                        .sess
+                        .dcx()
                         .err(format!("Invalid value for Image const generic: {value}"))),
                 }
             }
@@ -892,7 +897,7 @@ fn trans_intrinsic_type<'tcx>(
         IntrinsicType::Sampler => {
             // see SpirvType::sizeof
             if ty.size != Size::from_bytes(4) {
-                return Err(cx.tcx.sess.err("#[spirv(sampler)] type must have size 4"));
+                return Err(cx.tcx.dcx().err("#[spirv(sampler)] type must have size 4"));
             }
             Ok(SpirvType::Sampler.def(span, cx))
         }
@@ -905,7 +910,7 @@ fn trans_intrinsic_type<'tcx>(
             if ty.size != Size::from_bytes(4) {
                 return Err(cx
                     .tcx
-                    .sess
+                    .dcx()
                     .err("#[spirv(sampled_image)] type must have size 4"));
             }
 
@@ -918,7 +923,7 @@ fn trans_intrinsic_type<'tcx>(
             } else {
                 Err(cx
                     .tcx
-                    .sess
+                    .dcx()
                     .err("#[spirv(sampled_image)] type must have a generic image type"))
             }
         }
@@ -926,7 +931,7 @@ fn trans_intrinsic_type<'tcx>(
             if ty.size != Size::from_bytes(4) {
                 return Err(cx
                     .tcx
-                    .sess
+                    .dcx()
                     .err("#[spirv(runtime_array)] type must have size 4"));
             }
 
@@ -938,7 +943,7 @@ fn trans_intrinsic_type<'tcx>(
             } else {
                 Err(cx
                     .tcx
-                    .sess
+                    .dcx()
                     .err("#[spirv(runtime_array)] type must have a generic element type"))
             }
         }
@@ -953,12 +958,12 @@ fn trans_intrinsic_type<'tcx>(
             if field_types.len() < 2 {
                 return Err(cx
                     .tcx
-                    .sess
+                    .dcx()
                     .span_err(span, "#[spirv(matrix)] type must have at least two fields"));
             }
             let elem_type = field_types[0];
             if !field_types.iter().all(|&ty| ty == elem_type) {
-                return Err(cx.tcx.sess.span_err(
+                return Err(cx.tcx.dcx().span_err(
                     span,
                     "#[spirv(matrix)] type fields must all be the same type",
                 ));
@@ -968,7 +973,7 @@ fn trans_intrinsic_type<'tcx>(
                 ty => {
                     return Err(cx
                         .tcx
-                        .sess
+                        .dcx()
                         .struct_span_err(span, "#[spirv(matrix)] type fields must all be vectors")
                         .note(format!("field type is {}", ty.debug(elem_type, cx)))
                         .emit());

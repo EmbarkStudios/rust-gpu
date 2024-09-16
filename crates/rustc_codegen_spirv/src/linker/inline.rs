@@ -117,7 +117,7 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
     if !inlined_to_legalize_dont_inlines.is_empty() {
         let names = get_names(module);
         for f in inlined_to_legalize_dont_inlines {
-            sess.warn(format!(
+            sess.dcx().warn(format!(
                 "`#[inline(never)]` function `{}` needs to be inlined \
                  because it has illegal argument or return types",
                 get_name(&names, f)
@@ -235,7 +235,7 @@ fn deny_recursion_in_module(sess: &Session, module: &Module) -> super::Result<()
                 let names = get_names(module);
                 let current_name = get_name(&names, module.functions[current].def_id().unwrap());
                 let next_name = get_name(&names, module.functions[next].def_id().unwrap());
-                *has_recursion = Some(sess.err(format!(
+                *has_recursion = Some(sess.dcx().err(format!(
                     "module has recursion, which is not allowed: `{current_name}` calls `{next_name}`"
                 )));
                 break;
@@ -625,8 +625,9 @@ impl Inliner<'_, '_> {
         };
         let return_jump = self.id();
         // Rewrite OpReturns of the callee.
+        #[allow(clippy::needless_borrow)]
         let (mut inlined_callee_blocks, extra_debug_insts_pre_call, extra_debug_insts_post_call) =
-            self.get_inlined_blocks(callee, call_debug_insts, return_variable, return_jump);
+            self.get_inlined_blocks(&callee, call_debug_insts, return_variable, return_jump);
         // Clone the IDs of the callee, because otherwise they'd be defined multiple times if the
         // fn is inlined multiple times.
         self.add_clone_id_rules(&mut rewrite_rules, &inlined_callee_blocks);

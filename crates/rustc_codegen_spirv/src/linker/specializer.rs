@@ -234,7 +234,7 @@ enum CopyOperand {
 }
 
 #[derive(Debug)]
-struct NotSupportedAsCopyOperand(Operand);
+struct NotSupportedAsCopyOperand;
 
 impl TryFrom<&Operand> for CopyOperand {
     type Error = NotSupportedAsCopyOperand;
@@ -242,7 +242,7 @@ impl TryFrom<&Operand> for CopyOperand {
         match *operand {
             Operand::IdRef(id) => Ok(Self::IdRef(id)),
             Operand::StorageClass(s) => Ok(Self::StorageClass(s)),
-            _ => Err(NotSupportedAsCopyOperand(operand.clone())),
+            _ => Err(NotSupportedAsCopyOperand),
         }
     }
 }
