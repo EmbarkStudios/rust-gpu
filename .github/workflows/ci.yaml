@@ -102,6 +102,11 @@ jobs:
           cargo apk build -p example-runner-wgpu --lib --features use-installed-tools --no-default-features
           echo "::endgroup::"
 
+      - name: Ensure libm is not getting into the host build (https://github.com/EmbarkStudios/rust-gpu/issues/1121)
+        run: |
+          LIBM_MATCHES=$(cargo tree -e features -p spirv-std | grep --count libm || true)
+          if [ "$LIBM_MATCHES" != "" ]; then echo "Found libm in dependency tree"; exit 1; fi
+
   # This just allows us to branch protect on this one job rather needing to change
   # it if the test matrix changes
   test_success:
