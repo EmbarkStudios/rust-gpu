@@ -8,6 +8,8 @@
   - [Minimizing bugs in SPIR-V](./spirv-minimization.md)
   - [Publishing Rust-GPU on crates.io](./publishing-rust-gpu.md)
 - [Platform Support](./platform-support.md)
+- [Understanding Shaders]()
+  - [Introduction to Shaders](./shaders-intro.md)
 - [Writing Shader Crates](./writing-shader-crates.md)
 - [Features]()
   - [Attribute syntax](./attributes.md)
