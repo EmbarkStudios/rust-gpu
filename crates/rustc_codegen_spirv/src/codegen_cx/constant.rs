@@ -15,6 +15,11 @@ impl<'tcx> CodegenCx<'tcx> {
         self.builder.def_constant_cx(ty, val, self)
     }
 
+    pub fn constant_i8(&self, span: Span, val: i8) -> SpirvValue {
+        let ty = SpirvType::Integer(8, true).def(span, self);
+        self.def_constant(ty, SpirvConst::U32(val as u32))
+    }
+
     pub fn constant_u8(&self, span: Span, val: u8) -> SpirvValue {
         let ty = SpirvType::Integer(8, false).def(span, self);
         self.def_constant(ty, SpirvConst::U32(val as u32))
@@ -40,6 +45,11 @@ impl<'tcx> CodegenCx<'tcx> {
         self.def_constant(ty, SpirvConst::U32(val))
     }
 
+    pub fn constant_i64(&self, span: Span, val: u64) -> SpirvValue {
+        let ty = SpirvType::Integer(64, true).def(span, self);
+        self.def_constant(ty, SpirvConst::U64(val))
+    }
+
     pub fn constant_u64(&self, span: Span, val: u64) -> SpirvValue {
         let ty = SpirvType::Integer(64, false).def(span, self);
         self.def_constant(ty, SpirvConst::U64(val))
@@ -50,14 +60,12 @@ impl<'tcx> CodegenCx<'tcx> {
             SpirvType::Integer(bits @ 8..=32, signed) => {
                 let size = Size::from_bits(bits);
                 let val = val as u128;
-                self.def_constant(
-                    ty,
-                    SpirvConst::U32(if signed {
-                        size.sign_extend(val)
-                    } else {
-                        size.truncate(val)
-                    } as u32),
-                )
+                let new_val = if signed {
+                    size.sign_extend(val)
+                } else {
+                    size.truncate(val)
+                } as u32;
+                self.def_constant(ty, SpirvConst::U32(new_val))
             }
             SpirvType::Integer(64, _) => self.def_constant(ty, SpirvConst::U64(val)),
             SpirvType::Bool => match val {
@@ -420,7 +428,7 @@ impl<'tcx> CodegenCx<'tcx> {
         // println!(
         //     "Creating const alloc of type {} with {} bytes",
         //     self.debug_type(ty),
-        //     alloc.len()
+        //     alloc.0.len()
         // );
         let mut offset = Size::ZERO;
         let result = self.read_from_const_alloc(alloc, &mut offset, ty);
