@@ -17,9 +17,7 @@
 
 This repository was the nursery of `rust-gpu` during its inception and while it was still under the
 stewardship of [Embark Studios](https://embark.dev/). It has now moved into community ownership
-under the Rust-GPU GitHub organization. `rust-gpu` is still used by Embark and this repository still
-gets used for work specific to us. However, its main home has relocated to the community.
-
+under the Rust-GPU GitHub organization.
 
 <div align="center">
   
