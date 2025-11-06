@@ -288,7 +288,8 @@ fn _fn(
             vertex, // fn-only
             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
         )]
-        (1, 2, 3) // expression
+        (1, 2, 3)
+        // expression
     );
 
     match () {

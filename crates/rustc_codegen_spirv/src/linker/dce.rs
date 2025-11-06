@@ -281,7 +281,7 @@ fn instruction_is_pure(inst: &Instruction) -> bool {
         | PtrEqual
         | PtrNotEqual
         | PtrDiff => true,
-        Variable => inst.operands.get(0) == Some(&Operand::StorageClass(StorageClass::Function)),
+        Variable => inst.operands.first() == Some(&Operand::StorageClass(StorageClass::Function)),
         _ => false,
     }
 }

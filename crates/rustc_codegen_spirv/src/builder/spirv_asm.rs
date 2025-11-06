@@ -15,7 +15,6 @@ use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use rustc_middle::{bug, ty::Instance};
 use rustc_span::{Span, DUMMY_SP};
 use rustc_target::asm::{InlineAsmRegClass, InlineAsmRegOrRegClass, SpirVInlineAsmRegClass};
-use std::convert::TryFrom;
 
 pub struct InstructionTable {
     table: FxHashMap<&'static str, &'static rspirv::grammar::Instruction<'static>>,
@@ -51,7 +50,6 @@ impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
     Placeholder { operand_idx: 2, modifier: None, span: src/lib.rs:20:23: 20:31 (#0) }
     ]
      */
-
     fn codegen_inline_asm(
         &mut self,
         template: &[InlineAsmTemplatePiece],
@@ -59,7 +57,8 @@ impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
         options: InlineAsmOptions,
         _line_spans: &[Span],
         _instance: Instance<'_>,
-        _dest_catch_funclet: Option<(Self::BasicBlock, Self::BasicBlock, Option<&Self::Funclet>)>,
+        _bb1 : Option<Self::BasicBlock>,
+        _dest_catch_funclet : Option<(Self::BasicBlock, Option<&Self::Funclet>)>,
     ) {
         const SUPPORTED_OPTIONS: InlineAsmOptions = InlineAsmOptions::NORETURN;
         let unsupported_options = options & !SUPPORTED_OPTIONS;
@@ -101,7 +100,7 @@ impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
                 } => {
                     if let Some(modifier) = modifier {
                         self.tcx
-                            .sess
+                            .sess.psess.dcx
                             .span_err(span, format!("asm modifiers are not supported: {modifier}"));
                     }
                     let line = tokens.last_mut().unwrap();
@@ -305,14 +304,14 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             Op::TypePointer => {
                 let storage_class = inst.operands[0].unwrap_storage_class();
                 if storage_class != StorageClass::Generic {
-                    self.struct_err("TypePointer in asm! requires `Generic` storage class")
-                        .note(format!(
+                    let mut err = self.struct_err("TypePointer in asm! requires `Generic` storage class")
+                        ;err.note(format!(
                             "`{storage_class:?}` storage class was specified"
-                        ))
-                        .help(format!(
+                        ));
+                        err.help(format!(
                             "the storage class will be inferred automatically (e.g. to `{storage_class:?}`)"
-                        ))
-                        .emit();
+                        ));
+                        err.emit();
                 }
                 SpirvType::Pointer {
                     pointee: inst.operands[1].unwrap_id_ref(),
@@ -359,14 +358,14 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 // NOTE(eddyb) allowing the instruction to be added below avoids
                 // spurious "`noreturn` requires a terminator at the end" errors.
                 if let Op::Return | Op::ReturnValue = op {
-                    self.struct_err(format!(
+                    let mut err = self.struct_err(format!(
                         "using `Op{op:?}` to return from within `asm!` is disallowed"
-                    ))
-                    .note(
+                    ));
+                    err.note(
                         "resuming execution, without falling through the end \
                         of the `asm!` block, is always undefined behavior",
-                    )
-                    .emit();
+                    );
+                    err.emit();
                 }
 
                 self.emit()
@@ -456,7 +455,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             Token::Placeholder(_, span) | Token::Typeof(_, span, _) => {
                 self.tcx
                     .sess
-                    .span_err(span, "cannot use a dynamic value as an instruction type");
+                    .psess.dcx.span_err(span, "cannot use a dynamic value as an instruction type");
                 return;
             }
         };
@@ -582,7 +581,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             ));
         }
         if tokens.next().is_some() {
-            self.tcx.sess.err(format!(
+            self.tcx.sess .psess.dcx.err(format!(
                 "too many operands to instruction: {}",
                 instruction.class.opname
             ));
@@ -799,6 +798,8 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             _ => {
                 self.tcx
                     .sess
+                    .psess
+                    .dcx
                     .span_err(span, format!("invalid register: {reg}"));
             }
         }
@@ -831,7 +832,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             }
             Token::Typeof(_, span, _) => {
                 self.tcx
-                    .sess
+                    .sess.psess.dcx
                     .span_err(span, "cannot assign to a typeof expression");
                 None
             }
@@ -839,10 +840,12 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 InlineAsmOperandRef::In { reg, value: _ } => {
                     self.check_reg(span, reg);
                     self.tcx
-                        .sess
+                        .sess.psess.dcx
                         .span_err(span, "in register cannot be assigned to");
                     None
                 }
+                InlineAsmOperandRef::Label { .. } => todo!(),
+                
                 InlineAsmOperandRef::Out {
                     reg,
                     late: _,
@@ -852,7 +855,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                     match place {
                         Some(place) => Some(OutRegister::Place(*place)),
                         None => {
-                            self.tcx.sess.span_err(span, "missing place for register");
+                            self.tcx.sess.psess.dcx.span_err(span, "missing place for register");
                             None
                         }
                     }
@@ -867,26 +870,26 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                     match out_place {
                         Some(out_place) => Some(OutRegister::Place(*out_place)),
                         None => {
-                            self.tcx.sess.span_err(span, "missing place for register");
+                            self.tcx.sess.psess.dcx.span_err(span, "missing place for register");
                             None
                         }
                     }
                 }
                 InlineAsmOperandRef::Const { string: _ } => {
                     self.tcx
-                        .sess
+                        .sess.psess.dcx
                         .span_err(span, "cannot write to const asm argument");
                     None
                 }
                 InlineAsmOperandRef::SymFn { instance: _ } => {
                     self.tcx
-                        .sess
+                        .sess.psess.dcx
                         .span_err(span, "cannot write to function asm argument");
                     None
                 }
                 InlineAsmOperandRef::SymStatic { def_id: _ } => {
                     self.tcx
-                        .sess
+                        .sess.psess.dcx
                         .span_err(span, "cannot write to static variable asm argument");
                     None
                 }
@@ -913,6 +916,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 None
             }
             Token::Typeof(hole, span, kind) => match hole {
+                InlineAsmOperandRef::Label { .. } => todo!(),
                 InlineAsmOperandRef::In { reg, value } => {
                     self.check_reg(span, reg);
                     let ty = value.immediate().ty;
@@ -921,7 +925,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                         TypeofKind::Dereference => match self.lookup_type(ty) {
                             SpirvType::Pointer { pointee } => pointee,
                             other => {
-                                self.tcx.sess.span_err(
+                                self.tcx.sess.psess.dcx.span_err(
                                     span,
                                     format!(
                                         "cannot use typeof* on non-pointer type: {}",
@@ -943,7 +947,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                         Some(place) => match self.lookup_type(place.llval.ty) {
                             SpirvType::Pointer { pointee } => Some(pointee),
                             other => {
-                                self.tcx.sess.span_err(
+                                self.tcx.sess.psess.dcx.span_err(
                                     span,
                                     format!(
                                         "out register type not pointer: {}",
@@ -955,7 +959,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                         },
                         None => {
                             self.tcx
-                                .sess
+                                .sess.psess.dcx
                                 .span_err(span, "missing place for out register typeof");
                             None
                         }
@@ -972,18 +976,18 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 }
                 InlineAsmOperandRef::Const { string: _ } => {
                     self.tcx
-                        .sess
+                        .sess.psess.dcx
                         .span_err(span, "cannot take the type of a const asm argument");
                     None
                 }
                 InlineAsmOperandRef::SymFn { instance: _ } => {
                     self.tcx
-                        .sess
+                        .sess.psess.dcx
                         .span_err(span, "cannot take the type of a function asm argument");
                     None
                 }
                 InlineAsmOperandRef::SymStatic { def_id: _ } => {
-                    self.tcx.sess.span_err(
+                    self.tcx.sess.psess.dcx.span_err(
                         span,
                         "cannot take the type of a static variable asm argument",
                     );
@@ -995,6 +999,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                     self.check_reg(span, reg);
                     Some(value.immediate().def(self))
                 }
+                InlineAsmOperandRef::Label { .. } => todo!(),
                 InlineAsmOperandRef::Out {
                     reg,
                     late: _,
@@ -1002,7 +1007,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 } => {
                     self.check_reg(span, reg);
                     self.tcx
-                        .sess
+                        .sess.psess.dcx
                         .span_err(span, "out register cannot be used as a value");
                     None
                 }
@@ -1017,19 +1022,19 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 }
                 InlineAsmOperandRef::Const { string: _ } => {
                     self.tcx
-                        .sess
+                        .sess.psess.dcx
                         .span_err(span, "const asm argument not supported yet");
                     None
                 }
                 InlineAsmOperandRef::SymFn { instance: _ } => {
                     self.tcx
-                        .sess
+                        .sess.psess.dcx
                         .span_err(span, "function asm argument not supported yet");
                     None
                 }
                 InlineAsmOperandRef::SymStatic { def_id: _ } => {
                     self.tcx
-                        .sess
+                        .sess.psess.dcx
                         .span_err(span, "static variable asm argument not supported yet");
                     None
                 }
@@ -1161,13 +1166,13 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                             self.err(format!("expected a literal, not a string for a {kind:?}"));
                         }
                         Some(Token::Placeholder(_, span)) => {
-                            self.tcx.sess.span_err(
+                            self.tcx.sess.psess.dcx.span_err(
                                 span,
                                 format!("expected a literal, not a dynamic value for a {kind:?}"),
                             );
                         }
                         Some(Token::Typeof(_, span, _)) => {
-                            self.tcx.sess.span_err(
+                            self.tcx.sess.psess.dcx.span_err(
                                 span,
                                 format!("expected a literal, not a type for a {kind:?}"),
                             );
@@ -1363,13 +1368,13 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                     self.err(format!("expected a literal, not a string for a {kind:?}"));
                 }
                 Token::Placeholder(_, span) => {
-                    self.tcx.sess.span_err(
+                    self.tcx.sess.psess.dcx.span_err(
                         span,
                         format!("expected a literal, not a dynamic value for a {kind:?}"),
                     );
                 }
                 Token::Typeof(_, span, _) => {
-                    self.tcx.sess.span_err(
+                    self.tcx.sess.psess.dcx.span_err(
                         span,
                         format!("expected a literal, not a type for a {kind:?}"),
                     );

@@ -244,13 +244,14 @@ pub fn check_fragment_insts(sess: &Session, module: &Module) -> Result<()> {
                     .chain(stack)
                     .collect::<Vec<_>>()
                     .join("\n");
-                any_err = Some(
-                    sess.struct_err(format!(
+                any_err = Some({
+                    let mut err = sess.psess.dcx.struct_err(format!(
                         "{} cannot be used outside a fragment shader",
                         inst.class.opname
-                    ))
-                    .note(note)
-                    .emit(),
+                    ));
+                    err.note(note);
+                    err.emit()
+                    }
                 );
             }
         }

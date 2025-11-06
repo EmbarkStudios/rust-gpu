@@ -58,7 +58,6 @@ use rustc_data_structures::captures::Captures;
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use smallvec::SmallVec;
 use std::collections::{BTreeMap, VecDeque};
-use std::convert::{TryFrom, TryInto};
 use std::ops::{Range, RangeTo};
 use std::{fmt, io, iter, mem, slice};
 

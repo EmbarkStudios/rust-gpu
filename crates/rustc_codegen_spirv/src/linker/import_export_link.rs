@@ -56,7 +56,7 @@ fn find_import_export_pairs_and_killed_params(
         };
         let type_id = *type_map.get(&id).expect("Unexpected op");
         if exports.insert(name, (id, type_id)).is_some() {
-            return Err(sess.err(format!("Multiple exports found for {name:?}")));
+            return Err(sess.psess.dcx.err(format!("Multiple exports found for {name:?}")));
         }
     }
     let mut any_err = None;
@@ -68,7 +68,7 @@ fn find_import_export_pairs_and_killed_params(
         };
         let (export_id, export_type) = match exports.get(name) {
             None => {
-                any_err = Some(sess.err(format!("Unresolved symbol {name:?}")));
+                any_err = Some(sess.psess.dcx.err(format!("Unresolved symbol {name:?}")));
                 continue;
             }
             Some(&x) => x,
@@ -183,17 +183,16 @@ fn check_tys_equal(
             format_ty(ty_defs, ty, &mut result);
             result
         }
-        Err(sess
-            .struct_err(format!("Types mismatch for {name:?}"))
-            .note(format!(
+        Err({let mut err = sess.psess.dcx
+            .struct_err(format!("Types mismatch for {name:?}"));
+            err.note(format!(
                 "import type: {}",
                 format_ty_(&ty_defs, import_type)
-            ))
-            .note(format!(
+            ));
+            err.note(format!(
                 "export type: {}",
                 format_ty_(&ty_defs, export_type)
-            ))
-            .emit())
+            ));err.emit()})
     }
 }
 
