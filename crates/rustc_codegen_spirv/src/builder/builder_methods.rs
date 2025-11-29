@@ -2531,6 +2531,11 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             .borrow()
             .get(&callee_val)
             .copied();
+        let runtime_array_index_intrinsic = self
+            .runtime_array_index_intrinsic_fn_id
+            .borrow()
+            .get(&callee_val)
+            .copied();
         if let Some(libm_intrinsic) = libm_intrinsic {
             let result = self.call_libm_intrinsic(libm_intrinsic, result_type, args);
             if result_type != result.ty {
@@ -3024,6 +3029,8 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 kind: SpirvValueKind::IllegalTypeUsed(void_ty),
                 ty: void_ty,
             }
+        } else if let Some(mode) = runtime_array_index_intrinsic {
+            self.codegen_runtime_array_index_intrinsic(result_type, args, mode)
         } else {
             let args = args.iter().map(|arg| arg.def(self)).collect::<Vec<_>>();
             self.emit()

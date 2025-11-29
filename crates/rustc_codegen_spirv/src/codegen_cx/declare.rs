@@ -155,6 +155,12 @@ impl<'tcx> CodegenCx<'tcx> {
                 .borrow_mut()
                 .insert(fn_id, mode);
         }
+        if attrs.runtime_array_index_intrinsic.is_some() {
+            let mode = &fn_abi.ret.mode;
+            self.runtime_array_index_intrinsic_fn_id
+                .borrow_mut()
+                .insert(fn_id, mode);
+        }
 
         let instance_def_id = instance.def_id();
 

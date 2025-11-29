@@ -74,6 +74,8 @@ pub struct CodegenCx<'tcx> {
     pub buffer_load_intrinsic_fn_id: RefCell<FxHashMap<Word, &'tcx PassMode>>,
     /// Intrinsic for storing a <T> into a &[u32]. The PassMode is the mode of the <T>.
     pub buffer_store_intrinsic_fn_id: RefCell<FxHashMap<Word, &'tcx PassMode>>,
+    /// Intrinsic for loading a descriptor from a `RuntimeArray`. The PassMode is the mode of the <T>.
+    pub runtime_array_index_intrinsic_fn_id: RefCell<FxHashMap<Word, &'tcx PassMode>>,
 
     /// Some runtimes (e.g. intel-compute-runtime) disallow atomics on i8 and i16, even though it's allowed by the spec.
     /// This enables/disables them.
@@ -132,6 +134,7 @@ impl<'tcx> CodegenCx<'tcx> {
             fmt_rt_arg_new_fn_ids_to_ty_and_spec: Default::default(),
             buffer_load_intrinsic_fn_id: Default::default(),
             buffer_store_intrinsic_fn_id: Default::default(),
+            runtime_array_index_intrinsic_fn_id: Default::default(),
             i8_i16_atomics_allowed: false,
             codegen_args,
         }

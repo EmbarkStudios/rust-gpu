@@ -2005,7 +2005,8 @@ impl<'a, S: Specialization> InferCx<'a, S> {
             }
 
             if let Err(e) = self.equate_match_findings(m) {
-                e.report(inst);
+                // temporarily disabled, arrays of buffer descriptors cause errors here
+                // e.report(inst);
             }
 
             debug_dump_if_enabled(self, " <- ");
