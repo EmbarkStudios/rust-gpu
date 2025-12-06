@@ -331,7 +331,7 @@ impl SpirvType<'_> {
             Self::Integer(width, _) | Self::Float(width) => Size::from_bits(width),
             Self::Adt { size, .. } => size?,
             Self::Vector { element, count } => {
-                cx.lookup_type(element).sizeof(cx)? * count.next_power_of_two() as u64
+                cx.lookup_type(element).sizeof(cx)? * count as u64
             }
             Self::Matrix { element, count } => cx.lookup_type(element).sizeof(cx)? * count as u64,
             Self::Array { element, count } => {
@@ -357,14 +357,8 @@ impl SpirvType<'_> {
             Self::Bool => Align::from_bytes(1).unwrap(),
             Self::Integer(width, _) | Self::Float(width) => Align::from_bits(width as u64).unwrap(),
             Self::Adt { align, .. } => align,
-            // Vectors have size==align
-            Self::Vector { .. } => Align::from_bytes(
-                self.sizeof(cx)
-                    .expect("alignof: Vectors must be sized")
-                    .bytes(),
-            )
-            .expect("alignof: Vectors must have power-of-2 size"),
-            Self::Array { element, .. }
+            Self::Vector { element, .. }
+            | Self::Array { element, .. }
             | Self::RuntimeArray { element }
             | Self::Matrix { element, .. } => cx.lookup_type(element).alignof(cx),
             Self::Pointer { .. } => cx.tcx.data_layout.pointer_align.abi,

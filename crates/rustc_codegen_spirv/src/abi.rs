@@ -8,7 +8,7 @@ use rspirv::spirv::{StorageClass, Word};
 use rustc_data_structures::fx::FxHashMap;
 use rustc_errors::ErrorGuaranteed;
 use rustc_index::Idx;
-use rustc_middle::query::Providers;
+use rustc_middle::query::{Key, Providers};
 use rustc_middle::ty::layout::{FnAbiOf, LayoutOf, TyAndLayout};
 use rustc_middle::ty::GenericArgsRef;
 use rustc_middle::ty::{
@@ -21,7 +21,7 @@ use rustc_span::DUMMY_SP;
 use rustc_span::{Span, Symbol};
 use rustc_target::abi::call::{ArgAbi, ArgAttributes, FnAbi, PassMode};
 use rustc_target::abi::{
-    Abi, Align, FieldsShape, LayoutS, Primitive, Scalar, Size, TagEncoding, VariantIdx, Variants,
+    Abi, Align, FieldsShape, LayoutS, Primitive, Scalar, Size, VariantIdx, Variants,
 };
 use rustc_target::spec::abi::Abi as SpecAbi;
 use std::cell::RefCell;
@@ -94,84 +94,64 @@ pub(crate) fn provide(providers: &mut Providers) {
         Ok(readjust_fn_abi(tcx, result?))
     };
 
-    // FIXME(eddyb) remove this by deriving `Clone` for `LayoutS` upstream.
-    // FIXME(eddyb) the `S` suffix is a naming antipattern, rename upstream.
-    fn clone_layout(layout: &LayoutS) -> LayoutS {
-        let LayoutS {
-            ref fields,
-            ref variants,
-            abi,
-            largest_niche,
-            align,
-            size,
-            max_repr_align,
-            unadjusted_abi_align,
-        } = *layout;
-        LayoutS {
-            fields: match *fields {
-                FieldsShape::Primitive => FieldsShape::Primitive,
-                FieldsShape::Union(count) => FieldsShape::Union(count),
-                FieldsShape::Array { stride, count } => FieldsShape::Array { stride, count },
-                FieldsShape::Arbitrary {
-                    ref offsets,
-                    ref memory_index,
-                } => FieldsShape::Arbitrary {
-                    offsets: offsets.clone(),
-                    memory_index: memory_index.clone(),
-                },
-            },
-            variants: match *variants {
-                Variants::Single { index } => Variants::Single { index },
-                Variants::Multiple {
-                    tag,
-                    ref tag_encoding,
-                    tag_field,
-                    ref variants,
-                } => Variants::Multiple {
-                    tag,
-                    tag_encoding: match *tag_encoding {
-                        TagEncoding::Direct => TagEncoding::Direct,
-                        TagEncoding::Niche {
-                            untagged_variant,
-                            ref niche_variants,
-                            niche_start,
-                        } => TagEncoding::Niche {
-                            untagged_variant,
-                            niche_variants: niche_variants.clone(),
-                            niche_start,
-                        },
-                    },
-                    tag_field,
-                    variants: variants.clone(),
-                },
-            },
-            abi,
-            largest_niche,
-            align,
-            size,
-            max_repr_align,
-            unadjusted_abi_align,
-        }
-    }
     providers.layout_of = |tcx, key| {
-        let TyAndLayout { ty, mut layout } =
-            (rustc_interface::DEFAULT_QUERY_PROVIDERS.layout_of)(tcx, key)?;
+        let orig = (rustc_interface::DEFAULT_QUERY_PROVIDERS.layout_of)(tcx, key)?;
 
-        #[allow(clippy::match_like_matches_macro)]
-        let hide_niche = match ty.kind() {
-            ty::Bool => true,
-            _ => false,
+        let mut modified: Option<LayoutS> = None;
+
+        hide_bool_niche(&tcx, orig, &mut modified);
+        adjust_vector_layout(&tcx, orig, &mut modified);
+
+        let ty = orig.ty;
+
+        let layout = if let Some(modified) = modified {
+            tcx.mk_layout(modified)
+        } else {
+            orig.layout
         };
-
-        if hide_niche {
-            layout = tcx.mk_layout(LayoutS {
-                largest_niche: None,
-                ..clone_layout(layout.0.0)
-            });
-        }
-
         Ok(TyAndLayout { ty, layout })
     };
+}
+
+fn hide_bool_niche<'tcx>(_cx: &TyCtxt<'tcx>, orig: TyAndLayout<'tcx>, modified: &mut Option<LayoutS>) {
+    #[allow(clippy::match_like_matches_macro)]
+    let hide_niche = match orig.ty.kind() {
+        ty::Bool => true,
+        _ => false,
+    };
+
+    if hide_niche {
+        let layout = modified.get_or_insert_with(|| orig.layout.0.0.clone());
+        layout.largest_niche = None;
+    }
+}
+
+fn adjust_vector_layout<'tcx>(cx: &TyCtxt<'tcx>, orig: TyAndLayout<'tcx>, modified: &mut Option<LayoutS>) {
+    // in spirv, in most cases vectors have align equal to their element type. in block resource
+    // contexts (storage, uniform, etc) the rules are sometimes more restrictive than that, but
+    // it's best to use the least common denominator here since if a layout get somputed that is
+    // not valid under the given vulkan environment then spirv-val will catch it and the user
+    // can manually adjust the block layout, whereas if we use the most restrictive rules then
+    // everywhere else suffers.
+    //
+    // it may be possible for us to figure out whether we're in a block context and what the
+    // currently enabled restrictions allow and compute this more intelligently, but I'm not sure
+    // whether that can break rustc assumptions about abi (what if the same type is used in
+    // multiple places with competing requirements?)
+    if let Abi::Vector { element, count } = orig.abi {
+        let layout = modified.get_or_insert_with(|| orig.layout.0.0.clone());
+        let element_align = element.align(cx).abi;
+        let element_size = element.size(cx);
+        let repr_align_align = orig.ty.ty_adt_id()
+            .and_then(|did| cx.repr_options_of_def(did).align);
+        if let Some(align) = repr_align_align {
+            layout.align.abi = align.max(element_align);
+        } else {
+            layout.align.abi = element_align;
+        }
+        layout.align.pref = layout.align.abi;
+        layout.size = (element_size * count).align_to(layout.align.abi);
+    }
 }
 
 /// If a struct contains a pointer to itself, even indirectly, then doing a naiive recursive walk
@@ -634,7 +614,8 @@ fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>
             }
         }
         FieldsShape::Array { stride, count } => {
-            let element_type = ty.field(cx, 0).spirv_type(span, cx);
+            let element_type_hl = ty.field(cx, 0);
+            let element_type = element_type_hl.spirv_type(span, cx);
             if ty.is_unsized() {
                 // There's a potential for this array to be sized, but the element to be unsized, e.g. `[[u8]; 5]`.
                 // However, I think rust disallows all these cases, so assert this here.
@@ -653,6 +634,9 @@ fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>
                     .sizeof(cx)
                     .expect("Unexpected unsized type in sized FieldsShape::Array")
                     .align_to(element_spv.alignof(cx));
+                if stride_spv != stride {
+                    eprintln!("element type: {:?}\nelement spv type: {:?}", &element_type_hl, &element_spv);
+                }
                 assert_eq!(stride_spv, stride);
                 SpirvType::Array {
                     element: element_type,

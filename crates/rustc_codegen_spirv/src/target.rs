@@ -98,6 +98,7 @@ impl SpirvTarget {
         Target {
             llvm_target: self.to_string().into(),
             pointer_width: 32,
+            // note: vector size and align gets patched in abi.rs too
             data_layout: "e-m:e-p:32:32:32-i64:64-n8:16:32:64".into(),
             arch: ARCH.into(),
             options: self.init_target_opts(),
