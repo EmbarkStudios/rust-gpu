@@ -30,6 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed 🛠
+- [PR#1118](https://github.com/EmbarkStudios/rust-gpu/pull/1118) update rspirv to 0.12
+    - added support for `VK_KHR_fragment_shader_barycentric` with `bary_coord`/`bary_coord_no_persp` buildins
 - [PR#1127](https://github.com/EmbarkStudios/rust-gpu/pull/1127) updated `spirv-tools` to `0.10.0`, which follows `vulkan-sdk-1.3.275`
 - [PR#1101](https://github.com/EmbarkStudios/rust-gpu/pull/1101) added `ignore` and `no_run` to documentation to make `cargo test` pass
 - [PR#1112](https://github.com/EmbarkStudios/rust-gpu/pull/1112) updated wgpu and winit in example runners

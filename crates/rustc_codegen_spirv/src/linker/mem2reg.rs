@@ -517,7 +517,7 @@ impl Renamer<'_> {
                         );
                         let mut operands = vec![Operand::IdRef(val), Operand::IdRef(prev_comp)];
                         operands
-                            .extend(var_info.indices.iter().copied().map(Operand::LiteralInt32));
+                            .extend(var_info.indices.iter().copied().map(Operand::LiteralBit32));
                         *inst = Instruction::new(
                             Op::CompositeInsert,
                             Some(self.base_var_type),
@@ -545,7 +545,7 @@ impl Renamer<'_> {
                         let new_id = id(self.header);
                         let mut operands = vec![Operand::IdRef(current_obj)];
                         operands
-                            .extend(var_info.indices.iter().copied().map(Operand::LiteralInt32));
+                            .extend(var_info.indices.iter().copied().map(Operand::LiteralBit32));
                         *inst = Instruction::new(
                             Op::CompositeExtract,
                             Some(var_info.ty),

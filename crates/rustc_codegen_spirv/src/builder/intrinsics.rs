@@ -45,12 +45,12 @@ impl Builder<'_, '_> {
         let int_ty = SpirvType::Integer(width, false).def(self.span(), self);
         let (mask_sign, mask_value) = match width {
             32 => (
-                self.constant_u32(self.span(), 1 << 31),
-                self.constant_u32(self.span(), u32::max_value() >> 1),
+                self.constant_bit32(self.span(), 1 << 31),
+                self.constant_bit32(self.span(), u32::max_value() >> 1),
             ),
             64 => (
-                self.constant_u64(self.span(), 1 << 63),
-                self.constant_u64(self.span(), u64::max_value() >> 1),
+                self.constant_bit64(self.span(), 1 << 63),
+                self.constant_bit64(self.span(), u64::max_value() >> 1),
             ),
             _ => bug!("copysign must have width 32 or 64, not {}", width),
         };
@@ -269,10 +269,10 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                         self.or(tmp1, tmp2)
                     }
                     32 => {
-                        let offset8 = self.constant_u32(self.span(), 8);
-                        let offset24 = self.constant_u32(self.span(), 24);
-                        let mask16 = self.constant_u32(self.span(), 0xFF00);
-                        let mask24 = self.constant_u32(self.span(), 0xFF0000);
+                        let offset8 = self.constant_bit32(self.span(), 8);
+                        let offset24 = self.constant_bit32(self.span(), 24);
+                        let mask16 = self.constant_bit32(self.span(), 0xFF00);
+                        let mask24 = self.constant_bit32(self.span(), 0xFF0000);
                         let tmp4 = self.shl(arg, offset24);
                         let tmp3 = self.shl(arg, offset8);
                         let tmp2 = self.lshr(arg, offset8);
@@ -284,16 +284,16 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                         self.or(res1, res2)
                     }
                     64 => {
-                        let offset8 = self.constant_u64(self.span(), 8);
-                        let offset24 = self.constant_u64(self.span(), 24);
-                        let offset40 = self.constant_u64(self.span(), 40);
-                        let offset56 = self.constant_u64(self.span(), 56);
-                        let mask16 = self.constant_u64(self.span(), 0xff00);
-                        let mask24 = self.constant_u64(self.span(), 0xff0000);
-                        let mask32 = self.constant_u64(self.span(), 0xff000000);
-                        let mask40 = self.constant_u64(self.span(), 0xff00000000);
-                        let mask48 = self.constant_u64(self.span(), 0xff0000000000);
-                        let mask56 = self.constant_u64(self.span(), 0xff000000000000);
+                        let offset8 = self.constant_bit64(self.span(), 8);
+                        let offset24 = self.constant_bit64(self.span(), 24);
+                        let offset40 = self.constant_bit64(self.span(), 40);
+                        let offset56 = self.constant_bit64(self.span(), 56);
+                        let mask16 = self.constant_bit64(self.span(), 0xff00);
+                        let mask24 = self.constant_bit64(self.span(), 0xff0000);
+                        let mask32 = self.constant_bit64(self.span(), 0xff000000);
+                        let mask40 = self.constant_bit64(self.span(), 0xff00000000);
+                        let mask48 = self.constant_bit64(self.span(), 0xff0000000000);
+                        let mask56 = self.constant_bit64(self.span(), 0xff000000000000);
                         let tmp8 = self.shl(arg, offset56);
                         let tmp7 = self.shl(arg, offset40);
                         let tmp6 = self.shl(arg, offset24);
