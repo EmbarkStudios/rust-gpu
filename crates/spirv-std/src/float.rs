@@ -1,5 +1,6 @@
 //! Traits and helper functions related to floats.
 
+use crate::scalar::VectorOrScalar;
 use crate::vector::Vector;
 #[cfg(target_arch = "spirv")]
 use core::arch::asm;
@@ -70,6 +71,9 @@ pub fn f16x2_to_vec2<V: Vector<f32, 2>>(int: u32) -> V {
 struct F32x2 {
     x: f32,
     y: f32,
+}
+unsafe impl VectorOrScalar for F32x2 {
+    type Scalar = f32;
 }
 unsafe impl Vector<f32, 2> for F32x2 {}
 
