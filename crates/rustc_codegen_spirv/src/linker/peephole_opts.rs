@@ -16,7 +16,7 @@ fn composite_count(types: &FxHashMap<Word, Instruction>, ty_id: Word) -> Option<
     let ty = types.get(&ty_id)?;
     match ty.class.opcode {
         Op::TypeStruct => Some(ty.operands.len()),
-        Op::TypeVector => Some(ty.operands[1].unwrap_literal_int32() as usize),
+        Op::TypeVector => Some(ty.operands[1].unwrap_literal_bit32() as usize),
         Op::TypeArray => {
             let length_id = ty.operands[1].unwrap_id_ref();
             let const_inst = types.get(&length_id)?;
@@ -28,8 +28,8 @@ fn composite_count(types: &FxHashMap<Word, Instruction>, ty_id: Word) -> Option<
                 return None;
             }
             let const_value = match const_inst.operands[0] {
-                Operand::LiteralInt32(v) => v as usize,
-                Operand::LiteralInt64(v) => v as usize,
+                Operand::LiteralBit32(v) => v as usize,
+                Operand::LiteralBit64(v) => v as usize,
                 _ => bug!(),
             };
             Some(const_value)
@@ -67,7 +67,7 @@ pub fn composite_construct(types: &FxHashMap<Word, Instruction>, function: &mut 
                     break;
                 }
                 let value = cur_inst.operands[0].unwrap_id_ref();
-                let index = cur_inst.operands[2].unwrap_literal_int32() as usize;
+                let index = cur_inst.operands[2].unwrap_literal_bit32() as usize;
                 if index >= components.len() {
                     // Theoretically shouldn't happen, as it's invalid SPIR-V if the index is out
                     // of bounds, but just stop optimizing instead of panicing here.
@@ -131,7 +131,7 @@ fn get_composite_and_index(
         return None;
     }
     let composite = inst.operands[0].unwrap_id_ref();
-    let index = inst.operands[1].unwrap_literal_int32();
+    let index = inst.operands[1].unwrap_literal_bit32();
 
     let composite_def = defs.get(&composite).or_else(|| types.get(&composite))?;
     let vector_def = types.get(&composite_def.result_type.unwrap())?;
@@ -140,7 +140,7 @@ fn get_composite_and_index(
     // Width mismatch would be doing something like `vec2(a.x + b.x, a.y + b.y)` where `a` is a
     // vec4 - if we optimized it to just `a + b`, it'd be incorrect.
     if vector_def.class.opcode != Op::TypeVector
-        || vector_width != vector_def.operands[1].unwrap_literal_int32()
+        || vector_width != vector_def.operands[1].unwrap_literal_bit32()
     {
         return None;
     }
@@ -330,7 +330,7 @@ fn process_instruction(
     if vector_ty_inst.class.opcode != Op::TypeVector {
         return None;
     }
-    let vector_width = vector_ty_inst.operands[1].unwrap_literal_int32();
+    let vector_width = vector_ty_inst.operands[1].unwrap_literal_bit32();
     // `results` is the defining instruction for each scalar component of the final result.
     let results = match inst
         .operands
@@ -463,7 +463,7 @@ fn can_fuse_bool(
             return None;
         }
         match inst.operands[0] {
-            Operand::LiteralInt32(v) => Some(v),
+            Operand::LiteralBit32(v) => Some(v),
             _ => None,
         }
     }
