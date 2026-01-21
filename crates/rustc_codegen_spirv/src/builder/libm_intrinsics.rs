@@ -7,8 +7,6 @@ use rustc_codegen_ssa::traits::BuilderMethods;
 pub enum LibmCustomIntrinsic {
     CopySign,
     Cbrt,
-    Erf,
-    Erfc,
     Exp10,
     Expm1,
     Fdim,
@@ -70,10 +68,6 @@ pub const TABLE: &[(&str, LibmIntrinsic)] = &[
     ("cosf", LibmIntrinsic::GLOp(GLOp::Cos)),
     ("cosh", LibmIntrinsic::GLOp(GLOp::Cosh)),
     ("coshf", LibmIntrinsic::GLOp(GLOp::Cosh)),
-    ("erf", LibmIntrinsic::Custom(LibmCustomIntrinsic::Erf)),
-    ("erff", LibmIntrinsic::Custom(LibmCustomIntrinsic::Erf)),
-    ("erfc", LibmIntrinsic::Custom(LibmCustomIntrinsic::Erfc)),
-    ("erfcf", LibmIntrinsic::Custom(LibmCustomIntrinsic::Erfc)),
     ("exp10", LibmIntrinsic::Custom(LibmCustomIntrinsic::Exp10)),
     ("exp10f", LibmIntrinsic::Custom(LibmCustomIntrinsic::Exp10)),
     ("exp2", LibmIntrinsic::GLOp(GLOp::Exp2)),
@@ -257,16 +251,6 @@ impl Builder<'_, '_> {
                 let exp = self.gl_op(GLOp::Exp, args[0].ty, [args[0]]);
                 let one = self.constant_float(exp.ty, 1.0);
                 self.sub(exp, one)
-            }
-            LibmIntrinsic::Custom(LibmCustomIntrinsic::Erf) => {
-                let undef = self.undef(result_type);
-                self.zombie(undef.def(self), "Erf not supported yet");
-                undef
-            }
-            LibmIntrinsic::Custom(LibmCustomIntrinsic::Erfc) => {
-                let undef = self.undef(result_type);
-                self.zombie(undef.def(self), "Erfc not supported yet");
-                undef
             }
             LibmIntrinsic::Custom(LibmCustomIntrinsic::Fdim) => {
                 let undef = self.undef(result_type);
